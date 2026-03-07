@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/vault/categories").permitAll()
+                .requestMatchers("/api/v1/trusted-contacts/accept-invite/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
