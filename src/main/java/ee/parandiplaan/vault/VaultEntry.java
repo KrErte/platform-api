@@ -34,6 +34,9 @@ public class VaultEntry {
     @Column(name = "encrypted_data", nullable = false)
     private String encryptedData;
 
+    @Column(name = "title_iv", nullable = false)
+    private String titleIv;
+
     @Column(name = "encryption_iv", nullable = false)
     private String encryptionIv;
 
