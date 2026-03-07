@@ -141,7 +141,7 @@ public class EmailService {
         sendEmail(toEmail, subject, html);
     }
 
-    private void sendEmail(String to, String subject, String html) {
+    public void sendEmail(String to, String subject, String html) {
         if (!enabled) {
             log.info("EMAIL (dry-run) to={}, subject={}", to, subject);
             return;
