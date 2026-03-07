@@ -4,6 +4,7 @@ import ee.parandiplaan.auth.dto.AuthResponse;
 import ee.parandiplaan.auth.dto.LoginRequest;
 import ee.parandiplaan.auth.dto.RegisterRequest;
 import ee.parandiplaan.common.security.JwtService;
+import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.progress.UserProgress;
 import ee.parandiplaan.progress.UserProgressRepository;
 import ee.parandiplaan.subscription.Subscription;
@@ -29,6 +30,7 @@ public class AuthService {
     private final UserProgressRepository userProgressRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -54,6 +56,13 @@ public class AuthService {
         userProgressRepository.save(progress);
 
         log.info("New user registered: {}", user.getEmail());
+
+        // Send verification email
+        emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getFullName(),
+                user.getEmailVerificationToken().toString()
+        );
 
         return buildAuthResponse(user);
     }

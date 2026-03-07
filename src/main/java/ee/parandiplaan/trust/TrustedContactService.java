@@ -1,5 +1,6 @@
 package ee.parandiplaan.trust;
 
+import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.progress.ProgressService;
 import ee.parandiplaan.subscription.Subscription;
 import ee.parandiplaan.subscription.SubscriptionRepository;
@@ -22,6 +23,7 @@ public class TrustedContactService {
     private final TrustedContactRepository contactRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final ProgressService progressService;
+    private final EmailService emailService;
 
     private static final int FREE_CONTACT_LIMIT = 1;
     private static final int PLUS_CONTACT_LIMIT = 5;
@@ -68,6 +70,15 @@ public class TrustedContactService {
 
         contact = contactRepository.save(contact);
         progressService.recalculate(user);
+
+        // Send invite email
+        emailService.sendInviteEmail(
+                contact.getEmail(),
+                contact.getFullName(),
+                user.getFullName(),
+                contact.getInviteToken().toString()
+        );
+
         return toResponse(contact);
     }
 
@@ -137,7 +148,13 @@ public class TrustedContactService {
         contact.setInviteToken(UUID.randomUUID());
         contact = contactRepository.save(contact);
 
-        // TODO: Send invite email via Resend
+        // Send invite email
+        emailService.sendInviteEmail(
+                contact.getEmail(),
+                contact.getFullName(),
+                user.getFullName(),
+                contact.getInviteToken().toString()
+        );
 
         return toResponse(contact);
     }
