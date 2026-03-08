@@ -1,0 +1,369 @@
+/* === Dashboard === */
+
+.dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 2rem 3rem;
+}
+
+/* Greeting */
+.greeting-section {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    margin-bottom: 3rem;
+    padding: 2.5rem;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--green-200);
+    box-shadow: var(--shadow-sm);
+}
+
+.greeting-text h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--green-900);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+}
+
+.greeting-sub {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.dash-progress-ring {
+    flex-shrink: 0;
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.dash-progress-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.dash-progress-ring .progress-bg {
+    fill: none;
+    stroke: var(--green-200);
+    stroke-width: 10;
+}
+
+.dash-progress-ring .progress-fill {
+    fill: none;
+    stroke: var(--green-600);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+}
+
+.dash-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.dash-progress-text .pct {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--green-800);
+    line-height: 1;
+}
+
+.dash-progress-text .pct-sign {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--green-600);
+}
+
+.dash-progress-text .pct-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Section titles */
+.dash-section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--green-900);
+    margin-bottom: 1rem;
+}
+
+/* Vault categories grid */
+.vault-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.vault-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--green-200);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.vault-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--green-400);
+}
+
+.vault-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.vault-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--green-900);
+    margin-bottom: 0.25rem;
+}
+
+.vault-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Two-column layout for contacts + subscription */
+.dash-columns {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.dash-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--green-200);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Trusted contacts list */
+.contacts-list {
+    list-style: none;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--green-100);
+}
+
+.contact-item:last-child {
+    border-bottom: none;
+}
+
+.contact-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.contact-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--green-200);
+    color: var(--green-800);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.contact-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.contact-email {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.contact-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-xl);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.contact-badge.accepted {
+    background: var(--green-200);
+    color: var(--green-800);
+}
+
+.contact-badge.pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.contacts-empty,
+.sub-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Subscription card */
+.sub-plan {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.sub-plan-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--green-900);
+}
+
+.sub-status {
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    border-radius: var(--radius-xl);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.sub-status.active {
+    background: var(--green-200);
+    color: var(--green-800);
+}
+
+.sub-status.trial {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.sub-status.cancelled,
+.sub-status.expired {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.sub-status.past_due {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.sub-detail {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.sub-detail strong {
+    color: var(--text-primary);
+}
+
+/* Nav user area */
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-user-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-logout {
+    padding: 0.4rem 1rem;
+    background: transparent;
+    border: 1.5px solid var(--green-300);
+    border-radius: var(--radius-xl);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-logout:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+    background: #FEF2F2;
+}
+
+/* Loading skeleton */
+.skeleton {
+    background: linear-gradient(90deg, var(--green-100) 25%, var(--green-200) 50%, var(--green-100) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+    height: 1rem;
+    margin-bottom: 0.5rem;
+    width: 60%;
+}
+
+.skeleton-line.short { width: 40%; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .vault-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 5rem 1rem 2rem;
+    }
+
+    .greeting-section {
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .vault-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dash-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-user-name {
+        display: none;
+    }
+}

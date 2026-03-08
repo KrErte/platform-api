@@ -93,6 +93,7 @@
                 localStorage.setItem('refreshToken', data.refreshToken);
                 localStorage.setItem('userEmail', data.email);
                 localStorage.setItem('userName', data.fullName);
+                sessionStorage.setItem('vaultKey', password);
 
                 window.location.href = '/dashboard.html';
 

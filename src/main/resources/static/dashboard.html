@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Töölaud — Pärandiplaan</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/dashboard.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+            <div class="nav-user">
+                <span class="nav-user-name" id="nav-name"></span>
+                <button class="btn-logout" onclick="logout()">Logi välja</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <!-- Greeting + Progress -->
+        <section class="greeting-section">
+            <div class="greeting-text">
+                <h1 id="greeting-title">Tere!</h1>
+                <p class="greeting-sub" id="greeting-sub">Sinu Pärandiplaan on pooleli</p>
+            </div>
+            <div class="dash-progress-ring">
+                <svg viewBox="0 0 120 120">
+                    <circle class="progress-bg" cx="60" cy="60" r="50" />
+                    <circle class="progress-fill" id="progress-circle" cx="60" cy="60" r="50" />
+                </svg>
+                <div class="dash-progress-text">
+                    <span class="pct" id="progress-pct">0</span><span class="pct-sign">%</span>
+                    <span class="pct-label">korrastatud</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vault Categories -->
+        <h2 class="dash-section-title">Tresori kategooriad</h2>
+        <div class="vault-grid" id="vault-grid">
+            <div class="vault-card skeleton" style="height:120px"></div>
+            <div class="vault-card skeleton" style="height:120px"></div>
+            <div class="vault-card skeleton" style="height:120px"></div>
+            <div class="vault-card skeleton" style="height:120px"></div>
+            <div class="vault-card skeleton" style="height:120px"></div>
+        </div>
+
+        <!-- Contacts + Subscription -->
+        <div class="dash-columns">
+            <div class="dash-card">
+                <h2 class="dash-section-title">Usalduskontaktid</h2>
+                <ul class="contacts-list" id="contacts-list">
+                    <li class="skeleton skeleton-line"></li>
+                    <li class="skeleton skeleton-line short"></li>
+                </ul>
+            </div>
+            <div class="dash-card">
+                <h2 class="dash-section-title">Tellimus</h2>
+                <div id="subscription-info">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line short"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auth guard
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        const userName = localStorage.getItem('userName') || '';
+        const headers = {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+
+        // Set nav name
+        document.getElementById('nav-name').textContent = userName;
+        document.getElementById('greeting-title').textContent = 'Tere, ' + (userName.split(' ')[0] || 'kasutaja') + '!';
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.removeItem('vaultKey');
+            window.location.href = '/login.html';
+        }
+
+        function handleAuthError(res) {
+            if (res.status === 401 || res.status === 403) {
+                logout();
+                return true;
+            }
+            return false;
+        }
+
+        // Load progress
+        async function loadProgress() {
+            try {
+                const res = await fetch('/api/v1/progress', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const pct = Math.round(data.progressPercentage || 0);
+                const circle = document.getElementById('progress-circle');
+                const circumference = 2 * Math.PI * 50;
+                circle.style.strokeDasharray = circumference;
+                circle.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+
+                // Animate number
+                const pctEl = document.getElementById('progress-pct');
+                let current = 0;
+                const step = Math.max(1, Math.floor(pct / 30));
+                const interval = setInterval(() => {
+                    current = Math.min(current + step, pct);
+                    pctEl.textContent = current;
+                    if (current >= pct) clearInterval(interval);
+                }, 30);
+
+                // Update subtitle
+                const sub = document.getElementById('greeting-sub');
+                if (pct === 100) {
+                    sub.textContent = 'Suurepärane! Sinu Pärandiplaan on täielikult korrastatud.';
+                } else if (pct >= 50) {
+                    sub.textContent = 'Tubli! Sa oled juba üle poole tee läbinud.';
+                } else if (pct > 0) {
+                    sub.textContent = 'Hea algus! Jätka oma plaani täitmist.';
+                } else {
+                    sub.textContent = 'Alusta oma eluinfo korrastamist allpool olevatest kategooriatest.';
+                }
+            } catch (e) {
+                console.error('Progress load failed:', e);
+            }
+        }
+
+        // Load vault categories
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/v1/vault/categories', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const categories = await res.json();
+
+                const grid = document.getElementById('vault-grid');
+                grid.innerHTML = categories.map(cat =>
+                    '<a href="/vault.html?category=' + cat.slug + '" class="vault-card">' +
+                        '<span class="vault-icon">' + (cat.icon || '📁') + '</span>' +
+                        '<span class="vault-name">' + cat.nameEt + '</span>' +
+                        '<span class="vault-count">' + cat.entryCount + ' kirjet</span>' +
+                    '</a>'
+                ).join('');
+            } catch (e) {
+                console.error('Categories load failed:', e);
+            }
+        }
+
+        // Load trusted contacts
+        async function loadContacts() {
+            try {
+                const res = await fetch('/api/v1/trusted-contacts', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const contacts = await res.json();
+
+                const list = document.getElementById('contacts-list');
+                if (contacts.length === 0) {
+                    list.innerHTML = '<li class="contacts-empty">Sul pole veel usalduskontakte lisatud.</li>';
+                    return;
+                }
+
+                list.innerHTML = contacts.map(c => {
+                    const initials = (c.fullName || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                    const accepted = c.inviteAccepted;
+                    return '<li class="contact-item">' +
+                        '<div class="contact-info">' +
+                            '<div class="contact-avatar">' + initials + '</div>' +
+                            '<div>' +
+                                '<div class="contact-name">' + c.fullName + '</div>' +
+                                '<div class="contact-email">' + c.email + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="contact-badge ' + (accepted ? 'accepted' : 'pending') + '">' +
+                            (accepted ? 'Kinnitatud' : 'Ootel') +
+                        '</span>' +
+                    '</li>';
+                }).join('');
+            } catch (e) {
+                console.error('Contacts load failed:', e);
+            }
+        }
+
+        // Load subscription
+        async function loadSubscription() {
+            try {
+                const res = await fetch('/api/v1/subscription', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const sub = await res.json();
+
+                const container = document.getElementById('subscription-info');
+
+                var planNames = { TRIAL: 'Prooviperiood', PLUS: 'Plus', FAMILY: 'Perekond', NONE: 'Puudub' };
+                var statusNames = { ACTIVE: 'Aktiivne', PAST_DUE: 'Makse hilines', CANCELLED: 'Tühistatud', PAUSED: 'Peatatud', EXPIRED: 'Aegunud' };
+                var statusClass = (sub.status || '').toLowerCase();
+
+                var html = '<div class="sub-plan">' +
+                    '<span class="sub-plan-name">' + (planNames[sub.plan] || sub.plan) + '</span>' +
+                    '<span class="sub-status ' + statusClass + '">' + (statusNames[sub.status] || sub.status) + '</span>' +
+                '</div>';
+
+                if (sub.trialDaysRemaining !== null && sub.trialDaysRemaining !== undefined) {
+                    html += '<p class="sub-detail"><strong>' + sub.trialDaysRemaining + '</strong> prooviperioodi päeva jäänud</p>';
+                }
+
+                if (sub.currentPeriodEnd) {
+                    var endDate = new Date(sub.currentPeriodEnd);
+                    html += '<p class="sub-detail">Kehtib kuni <strong>' + endDate.toLocaleDateString('et-EE') + '</strong></p>';
+                }
+
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('Subscription load failed:', e);
+            }
+        }
+
+        // Load all data in parallel
+        loadProgress();
+        loadCategories();
+        loadContacts();
+        loadSubscription();
+    </script>
+</body>
+</html>

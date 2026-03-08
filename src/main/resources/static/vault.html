@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tresor — Pärandiplaan</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/auth.css">
+    <link rel="stylesheet" href="/assets/vault.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+            <div class="nav-user">
+                <span class="nav-user-name" id="nav-name"></span>
+                <button class="btn-logout" onclick="logout()">Logi välja</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="vault-page">
+        <!-- View 1: Categories Grid -->
+        <div id="view-categories">
+            <div class="vault-page-header">
+                <h1>Tresor</h1>
+            </div>
+            <div class="vault-categories-grid" id="categories-grid">
+                <div class="vault-cat-card skeleton" style="height:140px"></div>
+                <div class="vault-cat-card skeleton" style="height:140px"></div>
+                <div class="vault-cat-card skeleton" style="height:140px"></div>
+                <div class="vault-cat-card skeleton" style="height:140px"></div>
+                <div class="vault-cat-card skeleton" style="height:140px"></div>
+            </div>
+        </div>
+
+        <!-- View 2: Category Detail (entries list) -->
+        <div id="view-detail" style="display:none">
+            <div class="vault-detail-header">
+                <button class="btn-back" onclick="showCategories()">&#8592; Tagasi</button>
+                <div class="vault-detail-title">
+                    <span class="vault-icon" id="detail-icon"></span>
+                    <h1 id="detail-name"></h1>
+                </div>
+                <div class="vault-detail-actions">
+                    <button class="btn btn-primary btn-sm" onclick="openEntryModal()">+ Lisa kirje</button>
+                </div>
+            </div>
+            <div id="entries-container"></div>
+        </div>
+    </main>
+
+    <!-- Modal: Entry Form -->
+    <div id="entry-modal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <h2 id="entry-modal-title">Lisa kirje</h2>
+            <div id="entry-error" class="vault-error" style="display:none"></div>
+            <form id="entry-form">
+                <div class="form-group">
+                    <label for="entry-title-input">Pealkiri</label>
+                    <input type="text" id="entry-title-input" placeholder="Kirje pealkiri" required>
+                </div>
+                <div id="dynamic-fields"></div>
+                <div class="form-group">
+                    <label for="entry-notes">Märkused</label>
+                    <textarea id="entry-notes" placeholder="Valikulised märkused..."></textarea>
+                </div>
+                <!-- Attachments (only in edit mode) -->
+                <div id="attachments-section" class="attachments-section" style="display:none">
+                    <h3>Manused</h3>
+                    <div class="attachment-list" id="attachment-list"></div>
+                    <div class="upload-area">
+                        <input type="file" id="attachment-file">
+                        <button type="button" class="btn btn-sm btn-outline" onclick="uploadAttachment()">Laadi üles</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="closeEntryModal()">Tühista</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="entry-submit-btn">Salvesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation -->
+    <div id="delete-modal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <h2>Kustuta kirje</h2>
+            <p class="modal-confirm-text">Kas oled kindel, et soovid selle kirje kustutada? Seda toimingut ei saa tagasi võtta.</p>
+            <div class="modal-actions">
+                <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()">Tühista</button>
+                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()">Kustuta</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auth guard
+        const token = localStorage.getItem('accessToken');
+        const vaultKey = sessionStorage.getItem('vaultKey');
+        if (!token || !vaultKey) {
+            window.location.href = '/login.html';
+        }
+
+        const userName = localStorage.getItem('userName') || '';
+        document.getElementById('nav-name').textContent = userName;
+
+        const headers = {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'X-Encryption-Key': vaultKey
+        };
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.removeItem('vaultKey');
+            window.location.href = '/login.html';
+        }
+
+        function handleAuthError(res) {
+            if (res.status === 401 || res.status === 403) {
+                logout();
+                return true;
+            }
+            return false;
+        }
+
+        // State
+        let categories = [];
+        let currentCategory = null;
+        let currentEntries = [];
+        let editingEntryId = null;
+        let deleteEntryId = null;
+
+        // ===== Categories View =====
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/v1/vault/categories', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                categories = await res.json();
+                renderCategories();
+
+                // Check URL for deep link
+                const params = new URLSearchParams(window.location.search);
+                const catSlug = params.get('category');
+                if (catSlug) {
+                    const cat = categories.find(c => c.slug === catSlug);
+                    if (cat) {
+                        openCategory(cat);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('Categories load failed:', e);
+            }
+        }
+
+        function renderCategories() {
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = categories.map(cat => {
+                const pct = cat.entryCount > 0 ? Math.round((cat.completedCount / cat.entryCount) * 100) : 0;
+                return '<div class="vault-cat-card" onclick="openCategory(' + JSON.stringify(cat).replace(/"/g, '&quot;') + ')">' +
+                    '<span class="vault-icon">' + (cat.icon || '📁') + '</span>' +
+                    '<span class="vault-name">' + cat.nameEt + '</span>' +
+                    '<div class="vault-progress-bar"><div class="vault-progress-fill" style="width:' + pct + '%"></div></div>' +
+                    '<span class="vault-progress-text">' + (cat.completedCount || 0) + '/' + (cat.entryCount || 0) + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
+        function showCategories() {
+            document.getElementById('view-categories').style.display = '';
+            document.getElementById('view-detail').style.display = 'none';
+            currentCategory = null;
+            // Remove category from URL
+            history.pushState(null, '', '/vault.html');
+            // Refresh categories data
+            loadCategories();
+        }
+
+        // ===== Category Detail View =====
+        function openCategory(cat) {
+            currentCategory = cat;
+            document.getElementById('view-categories').style.display = 'none';
+            document.getElementById('view-detail').style.display = '';
+            document.getElementById('detail-icon').textContent = cat.icon || '📁';
+            document.getElementById('detail-name').textContent = cat.nameEt;
+            history.pushState(null, '', '/vault.html?category=' + cat.slug);
+            loadEntries();
+        }
+
+        async function loadEntries() {
+            if (!currentCategory) return;
+            const container = document.getElementById('entries-container');
+            container.innerHTML = '<div class="skeleton skeleton-line" style="width:80%"></div><div class="skeleton skeleton-line" style="width:60%"></div>';
+
+            try {
+                const res = await fetch('/api/v1/vault/entries?category=' + currentCategory.id, { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    container.innerHTML = '<div class="vault-error">' + (err.message || 'Kirjete laadimine ebaõnnestus') + '</div>';
+                    return;
+                }
+                currentEntries = await res.json();
+                renderEntries();
+            } catch (e) {
+                console.error('Entries load failed:', e);
+                container.innerHTML = '<div class="vault-error">Kirjete laadimine ebaõnnestus</div>';
+            }
+        }
+
+        function renderEntries() {
+            const container = document.getElementById('entries-container');
+            if (currentEntries.length === 0) {
+                container.innerHTML =
+                    '<div class="vault-empty">' +
+                        '<p>Selles kategoorias pole veel kirjeid.</p>' +
+                        '<button class="btn btn-primary btn-sm" onclick="openEntryModal()">Lisa esimene kirje</button>' +
+                    '</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="entries-list">' + currentEntries.map(entry => {
+                const hasContent = entry.title && entry.title.trim();
+                const dotClass = hasContent ? 'filled' : 'empty';
+                const dateStr = entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString('et-EE') : '';
+                return '<div class="entry-card">' +
+                    '<div class="entry-status-dot ' + dotClass + '"></div>' +
+                    '<div class="entry-info">' +
+                        '<div class="entry-title">' + escapeHtml(entry.title || 'Nimetu') + '</div>' +
+                        '<div class="entry-date">' + dateStr + '</div>' +
+                    '</div>' +
+                    '<div class="entry-actions">' +
+                        '<button class="btn-icon" onclick="editEntry(\'' + entry.id + '\')" title="Muuda">&#9998;</button>' +
+                        '<button class="btn-icon danger" onclick="openDeleteModal(\'' + entry.id + '\')" title="Kustuta">&#128465;</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('') + '</div>';
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // ===== Entry Modal =====
+        function openEntryModal(entryData) {
+            editingEntryId = entryData ? entryData.id : null;
+            const modal = document.getElementById('entry-modal');
+            const title = document.getElementById('entry-modal-title');
+            const errorEl = document.getElementById('entry-error');
+            errorEl.style.display = 'none';
+
+            title.textContent = editingEntryId ? 'Muuda kirjet' : 'Lisa kirje';
+
+            document.getElementById('entry-title-input').value = entryData ? entryData.title || '' : '';
+            document.getElementById('entry-notes').value = entryData ? entryData.notes || '' : '';
+
+            // Dynamic fields from category fieldTemplate
+            renderDynamicFields(entryData ? entryData.fields : null);
+
+            // Attachments only in edit mode
+            const attachSection = document.getElementById('attachments-section');
+            if (editingEntryId) {
+                attachSection.style.display = '';
+                loadAttachments(editingEntryId);
+            } else {
+                attachSection.style.display = 'none';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeEntryModal() {
+            document.getElementById('entry-modal').style.display = 'none';
+            editingEntryId = null;
+        }
+
+        function renderDynamicFields(fieldValues) {
+            const container = document.getElementById('dynamic-fields');
+            container.innerHTML = '';
+
+            if (!currentCategory || !currentCategory.fieldTemplate) return;
+
+            let fields;
+            try {
+                fields = typeof currentCategory.fieldTemplate === 'string'
+                    ? JSON.parse(currentCategory.fieldTemplate)
+                    : currentCategory.fieldTemplate;
+            } catch (e) {
+                return;
+            }
+
+            if (!Array.isArray(fields)) return;
+
+            fields.forEach(field => {
+                const value = fieldValues ? (fieldValues[field.name] || '') : '';
+                const group = document.createElement('div');
+                group.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.textContent = field.label || field.name;
+                label.setAttribute('for', 'field-' + field.name);
+                group.appendChild(label);
+
+                let input;
+                if (field.type === 'select' && field.options) {
+                    input = document.createElement('select');
+                    input.innerHTML = '<option value="">Vali...</option>' +
+                        field.options.map(opt => '<option value="' + escapeHtml(opt) + '"' + (value === opt ? ' selected' : '') + '>' + escapeHtml(opt) + '</option>').join('');
+                } else if (field.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.value = value;
+                    input.placeholder = field.placeholder || '';
+                } else if (field.type === 'date') {
+                    input = document.createElement('input');
+                    input.type = 'date';
+                    input.value = value;
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = value;
+                    input.placeholder = field.placeholder || '';
+                }
+
+                input.id = 'field-' + field.name;
+                input.dataset.fieldName = field.name;
+                input.className = 'dynamic-field';
+                group.appendChild(input);
+                container.appendChild(group);
+            });
+        }
+
+        // Entry form submit
+        document.getElementById('entry-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('entry-error');
+            errorEl.style.display = 'none';
+            const submitBtn = document.getElementById('entry-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Salvestamine...';
+
+            const title = document.getElementById('entry-title-input').value.trim();
+            const notes = document.getElementById('entry-notes').value.trim();
+
+            // Gather dynamic fields
+            const fields = {};
+            document.querySelectorAll('.dynamic-field').forEach(el => {
+                fields[el.dataset.fieldName] = el.value;
+            });
+
+            const body = {
+                categoryId: currentCategory.id,
+                title,
+                notes,
+                fields
+            };
+
+            try {
+                let url = '/api/v1/vault/entries';
+                let method = 'POST';
+                if (editingEntryId) {
+                    url += '/' + editingEntryId;
+                    method = 'PUT';
+                }
+
+                const res = await fetch(url, {
+                    method,
+                    headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || 'Salvestamine ebaõnnestus');
+                }
+
+                closeEntryModal();
+                loadEntries();
+                // Refresh categories to update counts
+                refreshCategoryCounts();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Salvesta';
+            }
+        });
+
+        async function editEntry(entryId) {
+            try {
+                const res = await fetch('/api/v1/vault/entries/' + entryId, { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const entry = await res.json();
+                openEntryModal(entry);
+            } catch (e) {
+                console.error('Entry load failed:', e);
+            }
+        }
+
+        // ===== Delete Modal =====
+        function openDeleteModal(entryId) {
+            deleteEntryId = entryId;
+            document.getElementById('delete-modal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            deleteEntryId = null;
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        async function confirmDelete() {
+            if (!deleteEntryId) return;
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.disabled = true;
+            btn.textContent = 'Kustutamine...';
+
+            try {
+                const res = await fetch('/api/v1/vault/entries/' + deleteEntryId, {
+                    method: 'DELETE',
+                    headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.message || 'Kustutamine ebaõnnestus');
+                    return;
+                }
+                closeDeleteModal();
+                loadEntries();
+                refreshCategoryCounts();
+            } catch (e) {
+                console.error('Delete failed:', e);
+                alert('Kustutamine ebaõnnestus');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Kustuta';
+            }
+        }
+
+        // ===== Attachments =====
+        async function loadAttachments(entryId) {
+            const list = document.getElementById('attachment-list');
+            list.innerHTML = '';
+
+            try {
+                const res = await fetch('/api/v1/vault/entries/' + entryId + '/attachments', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const attachments = await res.json();
+
+                if (attachments.length === 0) {
+                    list.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted)">Manuseid pole lisatud.</p>';
+                    return;
+                }
+
+                list.innerHTML = attachments.map(att => {
+                    const sizeStr = formatFileSize(att.fileSize);
+                    return '<div class="attachment-item">' +
+                        '<span class="attachment-name">' + escapeHtml(att.fileName) + '</span>' +
+                        '<span class="attachment-size">' + sizeStr + '</span>' +
+                        '<div class="attachment-actions">' +
+                            '<button onclick="downloadAttachment(\'' + att.id + '\', \'' + escapeHtml(att.fileName).replace(/'/g, "\\'") + '\')" title="Laadi alla">&#8595;</button>' +
+                            '<button class="danger" onclick="deleteAttachment(\'' + att.id + '\')" title="Kustuta">&#10005;</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } catch (e) {
+                console.error('Attachments load failed:', e);
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        async function uploadAttachment() {
+            if (!editingEntryId) return;
+            const fileInput = document.getElementById('attachment-file');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/v1/vault/entries/' + editingEntryId + '/attachments', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'X-Encryption-Key': vaultKey
+                    },
+                    body: formData
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.message || 'Üleslaedimine ebaõnnestus');
+                    return;
+                }
+                fileInput.value = '';
+                loadAttachments(editingEntryId);
+            } catch (e) {
+                console.error('Upload failed:', e);
+                alert('Üleslaedimine ebaõnnestus');
+            }
+        }
+
+        async function downloadAttachment(attachmentId, fileName) {
+            try {
+                const res = await fetch('/api/v1/vault/attachments/' + attachmentId + '/download', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'X-Encryption-Key': vaultKey
+                    }
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    alert('Allalaadimine ebaõnnestus');
+                    return;
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('Download failed:', e);
+                alert('Allalaadimine ebaõnnestus');
+            }
+        }
+
+        async function deleteAttachment(attachmentId) {
+            if (!confirm('Kas oled kindel, et soovid selle manuse kustutada?')) return;
+            try {
+                const res = await fetch('/api/v1/vault/attachments/' + attachmentId, {
+                    method: 'DELETE',
+                    headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    alert('Manuse kustutamine ebaõnnestus');
+                    return;
+                }
+                if (editingEntryId) loadAttachments(editingEntryId);
+            } catch (e) {
+                console.error('Attachment delete failed:', e);
+            }
+        }
+
+        // Refresh category counts after entry changes
+        async function refreshCategoryCounts() {
+            try {
+                const res = await fetch('/api/v1/vault/categories', { headers });
+                if (!res.ok) return;
+                categories = await res.json();
+                // Update current category reference
+                if (currentCategory) {
+                    const updated = categories.find(c => c.id === currentCategory.id);
+                    if (updated) currentCategory = updated;
+                }
+            } catch (e) {
+                // Ignore
+            }
+        }
+
+        // Close modals on overlay click
+        document.getElementById('entry-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeEntryModal();
+        });
+        document.getElementById('delete-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        // Close modals on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEntryModal();
+                closeDeleteModal();
+            }
+        });
+
+        // Browser back/forward
+        window.addEventListener('popstate', function() {
+            const params = new URLSearchParams(window.location.search);
+            const catSlug = params.get('category');
+            if (catSlug) {
+                const cat = categories.find(c => c.slug === catSlug);
+                if (cat) {
+                    openCategory(cat);
+                    return;
+                }
+            }
+            showCategories();
+        });
+
+        // Init
+        loadCategories();
+    </script>
+</body>
+</html>

@@ -109,6 +109,7 @@
                 localStorage.setItem('refreshToken', data.refreshToken);
                 localStorage.setItem('userEmail', data.email);
                 localStorage.setItem('userName', data.fullName);
+                sessionStorage.setItem('vaultKey', password);
 
                 successEl.textContent = 'Konto loodud! Suuname sind edasi...';
                 successEl.style.display = 'block';

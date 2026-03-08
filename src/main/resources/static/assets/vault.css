@@ -1,0 +1,486 @@
+/* === Vault Page === */
+
+.vault-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 2rem 3rem;
+}
+
+.vault-page-header {
+    margin-bottom: 2rem;
+}
+
+.vault-page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--green-900);
+    letter-spacing: -0.02em;
+}
+
+/* Categories grid (vault page) */
+.vault-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+}
+
+.vault-cat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--green-200);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.vault-cat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--green-400);
+}
+
+.vault-cat-card .vault-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.vault-cat-card .vault-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--green-900);
+    margin-bottom: 0.5rem;
+}
+
+/* Progress bar */
+.vault-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--green-200);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.vault-progress-fill {
+    height: 100%;
+    background: var(--green-600);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.vault-progress-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Category detail view */
+.vault-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 1rem;
+    background: transparent;
+    border: 1.5px solid var(--green-300);
+    border-radius: var(--radius-xl);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    border-color: var(--green-600);
+    color: var(--green-800);
+    background: var(--green-100);
+}
+
+.vault-detail-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.vault-detail-title span.vault-icon {
+    font-size: 1.75rem;
+}
+
+.vault-detail-title h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--green-900);
+    letter-spacing: -0.02em;
+}
+
+.vault-detail-actions {
+    margin-left: auto;
+}
+
+/* Entry cards */
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.entry-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--green-200);
+    transition: all 0.2s ease;
+}
+
+.entry-card:hover {
+    border-color: var(--green-400);
+    box-shadow: var(--shadow-sm);
+}
+
+.entry-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.entry-status-dot.filled {
+    background: var(--green-600);
+}
+
+.entry-status-dot.empty {
+    background: var(--green-200);
+    border: 2px solid var(--green-300);
+}
+
+.entry-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.entry-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin-bottom: 0.15rem;
+}
+
+.entry-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.entry-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Icon buttons (edit/delete) */
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1.5px solid var(--green-300);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    border-color: var(--green-600);
+    color: var(--green-800);
+    background: var(--green-100);
+}
+
+.btn-icon.danger:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+    background: #FEF2F2;
+}
+
+/* Empty state */
+.vault-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--green-200);
+}
+
+.vault-empty p {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--green-200);
+    padding: 2rem;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-card h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--green-900);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+/* Danger button */
+.btn-danger {
+    background: #EF4444;
+    color: white;
+    border-color: #EF4444;
+}
+
+.btn-danger:hover {
+    background: #DC2626;
+    border-color: #DC2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+/* Form elements for vault */
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--green-200);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--warm-50);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Attachments section */
+.attachments-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--green-200);
+}
+
+.attachments-section h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--green-900);
+    margin-bottom: 0.75rem;
+}
+
+.attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--green-100);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.attachment-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attachment-size {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.attachment-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.attachment-actions button {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--green-300);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.attachment-actions button:hover {
+    border-color: var(--green-600);
+    color: var(--green-800);
+    background: white;
+}
+
+.attachment-actions button.danger:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+    background: #FEF2F2;
+}
+
+.upload-area {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.upload-area input[type="file"] {
+    flex: 1;
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+/* Error message in vault */
+.vault-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+/* Delete confirm modal */
+.modal-confirm-text {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .vault-categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .vault-page {
+        padding: 5rem 1rem 2rem;
+    }
+
+    .vault-categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .vault-detail-header {
+        flex-wrap: wrap;
+    }
+
+    .vault-detail-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .entry-card {
+        padding: 1rem;
+    }
+
+    .modal-card {
+        padding: 1.5rem;
+    }
+
+    .nav-user-name {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .vault-categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .entry-actions {
+        flex-direction: column;
+    }
+
+    .vault-detail-header {
+        gap: 0.75rem;
+    }
+}
