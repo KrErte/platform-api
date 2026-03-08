@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 
@@ -204,6 +205,7 @@ public class SubscriptionService {
         if (sub == null) return;
 
         sub.setStatus("CANCELLED");
+        sub.setPlan("NONE");
         subscriptionRepository.save(sub);
 
         log.info("Subscription cancelled: {}", lsSubId);
@@ -259,13 +261,20 @@ public class SubscriptionService {
     }
 
     private SubscriptionResponse toResponse(Subscription sub) {
+        Integer trialDaysRemaining = null;
+        if ("TRIAL".equals(sub.getPlan()) && sub.getCurrentPeriodEnd() != null) {
+            long days = ChronoUnit.DAYS.between(Instant.now(), sub.getCurrentPeriodEnd());
+            trialDaysRemaining = (int) Math.max(0, days);
+        }
+
         return new SubscriptionResponse(
                 sub.getPlan(),
                 sub.getStatus(),
                 sub.getCurrentPeriodStart(),
                 sub.getCurrentPeriodEnd(),
                 sub.getLemonsqueezyCustomerId() != null,
-                sub.getCreatedAt()
+                sub.getCreatedAt(),
+                trialDaysRemaining
         );
     }
 
@@ -328,7 +337,8 @@ public class SubscriptionService {
             Instant currentPeriodStart,
             Instant currentPeriodEnd,
             boolean hasPaymentMethod,
-            Instant createdAt
+            Instant createdAt,
+            Integer trialDaysRemaining
     ) {}
 
     public record CheckoutResponse(

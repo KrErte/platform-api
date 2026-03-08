@@ -1,6 +1,8 @@
 package ee.parandiplaan.trust;
 
+import ee.parandiplaan.auth.dto.MessageResponse;
 import ee.parandiplaan.common.security.CurrentUser;
+import ee.parandiplaan.notification.InactivityMonitorService;
 import ee.parandiplaan.trust.dto.CreateHandoverRequest;
 import ee.parandiplaan.trust.dto.HandoverRequestResponse;
 import ee.parandiplaan.user.User;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class HandoverRequestController {
 
     private final HandoverRequestService handoverService;
+    private final InactivityMonitorService inactivityMonitorService;
 
     /**
      * Trusted contact creates a handover request (no auth — uses contact ID).
@@ -64,5 +67,14 @@ public class HandoverRequestController {
             @CurrentUser User user,
             @PathVariable UUID id) {
         return ResponseEntity.ok(handoverService.denyRequest(user, id));
+    }
+
+    /**
+     * User confirms they're alive via email link (no auth required).
+     */
+    @GetMapping("/still-here/{token}")
+    public ResponseEntity<MessageResponse> stillHere(@PathVariable UUID token) {
+        inactivityMonitorService.confirmAlive(token);
+        return ResponseEntity.ok(new MessageResponse("Aitäh! Sinu inaktiivsuskontroll on lähtestatud."));
     }
 }

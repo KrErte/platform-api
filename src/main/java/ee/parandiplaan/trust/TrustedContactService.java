@@ -25,8 +25,8 @@ public class TrustedContactService {
     private final ProgressService progressService;
     private final EmailService emailService;
 
-    private static final int FREE_CONTACT_LIMIT = 1;
     private static final int PLUS_CONTACT_LIMIT = 5;
+    private static final int TRIAL_CONTACT_LIMIT = 1;
 
     @Transactional(readOnly = true)
     public List<TrustedContactResponse> listContacts(User user) {
@@ -161,20 +161,35 @@ public class TrustedContactService {
 
     private void checkPlanLimit(User user) {
         Subscription sub = subscriptionRepository.findByUserId(user.getId()).orElse(null);
-        String plan = (sub != null) ? sub.getPlan() : "FREE";
+        String plan = (sub != null) ? sub.getPlan() : "NONE";
 
-        long count = contactRepository.countByUserId(user.getId());
-
-        int limit = switch (plan) {
-            case "PLUS" -> PLUS_CONTACT_LIMIT;
-            case "FAMILY" -> Integer.MAX_VALUE;
-            default -> FREE_CONTACT_LIMIT;
-        };
-
-        if (count >= limit) {
-            throw new IllegalStateException(
-                    "Sinu plaanil on maksimaalselt " + limit + " usalduskontakti. Uuenda plaani!");
+        if ("PLUS".equals(plan) || "FAMILY".equals(plan)) {
+            long count = contactRepository.countByUserId(user.getId());
+            int limit = "FAMILY".equals(plan) ? Integer.MAX_VALUE : PLUS_CONTACT_LIMIT;
+            if (count >= limit) {
+                throw new IllegalStateException(
+                        "Sinu plaanil on maksimaalselt " + limit + " usalduskontakti. Uuenda plaani!");
+            }
+            return;
         }
+
+        if ("TRIAL".equals(plan) && sub != null) {
+            if (sub.isTrialExpired()) {
+                sub.setPlan("NONE");
+                subscriptionRepository.save(sub);
+                throw new IllegalStateException(
+                        "Sinu prooviperiood on lõppenud. Vali Plus või Perekond plaan jätkamiseks!");
+            }
+            long count = contactRepository.countByUserId(user.getId());
+            if (count >= TRIAL_CONTACT_LIMIT) {
+                throw new IllegalStateException(
+                        "Prooviperioodil saad lisada kuni " + TRIAL_CONTACT_LIMIT + " usalduskontakti. Uuenda plaani!");
+            }
+            return;
+        }
+
+        throw new IllegalStateException(
+                "Usalduskontaktide lisamiseks on vajalik aktiivne tellimus. Vali Plus või Perekond plaan!");
     }
 
     private void validateAccessLevel(String accessLevel) {

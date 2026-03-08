@@ -66,5 +66,37 @@ public class EncryptionService {
         return new SecretKeySpec(keyBytes, "AES");
     }
 
+    public EncryptionResultBytes encryptBytes(byte[] plainBytes, String userKey) {
+        try {
+            byte[] iv = new byte[IV_LENGTH];
+            secureRandom.nextBytes(iv);
+
+            SecretKey key = deriveKey(userKey);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+
+            byte[] cipherBytes = cipher.doFinal(plainBytes);
+
+            return new EncryptionResultBytes(cipherBytes, Base64.getEncoder().encodeToString(iv));
+        } catch (Exception e) {
+            throw new RuntimeException("Byte encryption failed", e);
+        }
+    }
+
+    public byte[] decryptBytes(byte[] cipherBytes, String iv, String userKey) {
+        try {
+            SecretKey key = deriveKey(userKey);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, key,
+                    new GCMParameterSpec(GCM_TAG_LENGTH, Base64.getDecoder().decode(iv)));
+
+            return cipher.doFinal(cipherBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("Byte decryption failed", e);
+        }
+    }
+
     public record EncryptionResult(String ciphertext, String iv) {}
+
+    public record EncryptionResultBytes(byte[] cipherBytes, String iv) {}
 }

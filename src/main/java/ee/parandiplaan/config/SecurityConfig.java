@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/vault/categories").permitAll()
                 .requestMatchers("/api/v1/trusted-contacts/accept-invite/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/handover-requests").permitAll()
+                .requestMatchers("/api/v1/handover-requests/still-here/**").permitAll()
                 .requestMatchers("/api/v1/webhooks/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()

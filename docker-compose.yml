@@ -15,6 +15,22 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: pp-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build: .
     container_name: pp-api
@@ -39,9 +55,16 @@ services:
       LEMONSQUEEZY_STORE_ID: ${LEMONSQUEEZY_STORE_ID:-}
       LEMONSQUEEZY_PLUS_VARIANT_ID: ${LEMONSQUEEZY_PLUS_VARIANT_ID:-}
       LEMONSQUEEZY_FAMILY_VARIANT_ID: ${LEMONSQUEEZY_FAMILY_VARIANT_ID:-}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-parandiplaan-vault}
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
 
 volumes:
   postgres_data:
+  minio_data:

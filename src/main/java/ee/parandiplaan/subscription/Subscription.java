@@ -16,6 +16,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Subscription {
 
+    public static final int TRIAL_DURATION_DAYS = 14;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -25,7 +27,7 @@ public class Subscription {
     private User user;
 
     @Column(nullable = false)
-    private String plan = "FREE";
+    private String plan = "TRIAL";
 
     @Column(nullable = false)
     private String status = "ACTIVE";
@@ -47,6 +49,12 @@ public class Subscription {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    public boolean isTrialExpired() {
+        return "TRIAL".equals(plan)
+                && currentPeriodEnd != null
+                && Instant.now().isAfter(currentPeriodEnd);
+    }
 
     @PrePersist
     protected void onCreate() {

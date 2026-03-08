@@ -1,12 +1,15 @@
 package ee.parandiplaan.progress;
 
 import ee.parandiplaan.common.security.CurrentUser;
+import ee.parandiplaan.progress.dto.SuggestionResponse;
 import ee.parandiplaan.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/progress")
@@ -24,5 +27,10 @@ public class ProgressController {
     public ResponseEntity<ProgressService.ProgressResponse> recalculate(@CurrentUser User user) {
         progressService.recalculate(user);
         return ResponseEntity.ok(progressService.getProgress(user));
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<List<SuggestionResponse>> getSuggestions(@CurrentUser User user) {
+        return ResponseEntity.ok(progressService.getSuggestions(user));
     }
 }

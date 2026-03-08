@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -31,6 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final TotpService totpService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -45,9 +47,12 @@ public class AuthService {
         user.setEmailVerificationToken(UUID.randomUUID());
         user = userRepository.save(user);
 
-        // Create FREE subscription
+        // Create trial subscription
         Subscription sub = new Subscription();
         sub.setUser(user);
+        Instant now = Instant.now();
+        sub.setCurrentPeriodStart(now);
+        sub.setCurrentPeriodEnd(now.plus(Subscription.TRIAL_DURATION_DAYS, ChronoUnit.DAYS));
         subscriptionRepository.save(sub);
 
         // Create empty progress
@@ -74,6 +79,16 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Vale e-post või parool");
+        }
+
+        // Check 2FA if enabled
+        if (user.isTotpEnabled()) {
+            if (request.totpCode() == null || request.totpCode().isBlank()) {
+                throw new IllegalArgumentException("2FA kood on nõutud");
+            }
+            if (!totpService.validate(user, request.totpCode())) {
+                throw new IllegalArgumentException("Vale 2FA kood");
+            }
         }
 
         user.setLastLoginAt(Instant.now());

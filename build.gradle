@@ -41,6 +41,12 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.flywaydb:flyway-core'
 
+    // MinIO (S3-compatible object storage)
+    implementation 'io.minio:minio:8.5.7'
+
+    // TOTP (2FA with Google Authenticator)
+    implementation 'dev.samstevens.totp:totp:1.7.1'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

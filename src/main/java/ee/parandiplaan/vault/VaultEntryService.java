@@ -25,7 +25,7 @@ public class VaultEntryService {
     private final EncryptionService encryptionService;
     private final ProgressService progressService;
 
-    private static final int FREE_ENTRY_LIMIT = 10;
+    private static final int TRIAL_ENTRY_LIMIT = 10;
 
     @Transactional(readOnly = true)
     public List<VaultEntryResponse> listEntries(User user, UUID categoryId, String encryptionKey) {
@@ -124,15 +124,29 @@ public class VaultEntryService {
 
     private void checkPlanLimit(User user) {
         Subscription sub = subscriptionRepository.findByUserId(user.getId()).orElse(null);
-        String plan = (sub != null) ? sub.getPlan() : "FREE";
+        String plan = (sub != null) ? sub.getPlan() : "NONE";
 
-        if ("FREE".equals(plan)) {
-            long count = entryRepository.countByUserId(user.getId());
-            if (count >= FREE_ENTRY_LIMIT) {
-                throw new IllegalStateException(
-                        "Tasuta plaanil on maksimaalselt " + FREE_ENTRY_LIMIT + " kirjet. Uuenda Plus plaanile!");
-            }
+        if ("PLUS".equals(plan) || "FAMILY".equals(plan)) {
+            return; // unlimited
         }
+
+        if ("TRIAL".equals(plan) && sub != null) {
+            if (sub.isTrialExpired()) {
+                sub.setPlan("NONE");
+                subscriptionRepository.save(sub);
+                throw new IllegalStateException(
+                        "Sinu prooviperiood on lõppenud. Vali Plus või Perekond plaan jätkamiseks!");
+            }
+            long count = entryRepository.countByUserId(user.getId());
+            if (count >= TRIAL_ENTRY_LIMIT) {
+                throw new IllegalStateException(
+                        "Prooviperioodil saad lisada kuni " + TRIAL_ENTRY_LIMIT + " kirjet. Uuenda plaani!");
+            }
+            return;
+        }
+
+        throw new IllegalStateException(
+                "Vault kasutamiseks on vajalik aktiivne tellimus. Vali Plus või Perekond plaan!");
     }
 
     private VaultEntryResponse toResponse(VaultEntry entry, String encryptionKey) {
