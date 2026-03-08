@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logi sisse — Pärandiplaan</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/auth.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+            <div class="nav-links">
+                <a href="/register.html" class="btn btn-sm btn-primary">Proovi tasuta</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="auth-page">
+        <div class="auth-card">
+            <h1>Tere tulemast tagasi</h1>
+            <p class="auth-subtitle">Logi sisse oma Pärandiplaani</p>
+
+            <div id="error-message" class="auth-error" style="display: none;"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">E-posti aadress</label>
+                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Parool</label>
+                    <input type="password" id="password" name="password" placeholder="Sinu parool" required>
+                </div>
+                <div id="totp-group" class="form-group" style="display: none;">
+                    <label for="totpCode">2FA kood</label>
+                    <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="6" inputmode="numeric" pattern="[0-9]{6}">
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Logi sisse</button>
+            </form>
+
+            <p class="auth-footer">
+                Pole veel kontot? <a href="/register.html">Proovi 14 päeva tasuta</a>
+            </p>
+        </div>
+    </section>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const errorEl = document.getElementById('error-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const totpGroup = document.getElementById('totp-group');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.style.display = 'none';
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const totpCode = document.getElementById('totpCode').value.trim() || null;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Login sisse...';
+
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, totpCode })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Show 2FA field if needed
+                    if (data.message && data.message.includes('2FA')) {
+                        totpGroup.style.display = 'block';
+                        document.getElementById('totpCode').focus();
+                        throw new Error('Sisesta 2FA kood oma autentimisrakendusest');
+                    }
+                    throw new Error(data.message || 'Sisselogimine ebaõnnestus');
+                }
+
+                // Store tokens
+                localStorage.setItem('accessToken', data.accessToken);
+                localStorage.setItem('refreshToken', data.refreshToken);
+                localStorage.setItem('userEmail', data.email);
+                localStorage.setItem('userName', data.fullName);
+
+                window.location.href = '/dashboard.html';
+
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Logi sisse';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registreeru — Pärandiplaan</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/auth.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+            <div class="nav-links">
+                <a href="/login.html" class="btn btn-sm">Logi sisse</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="auth-page">
+        <div class="auth-card">
+            <h1>Alusta prooviperioodi</h1>
+            <p class="auth-subtitle">14 päeva tasuta. Krediitkaardi pole vaja.</p>
+
+            <div id="error-message" class="auth-error" style="display: none;"></div>
+            <div id="success-message" class="auth-success" style="display: none;"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="fullName">Täisnimi</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Nimi Perekonnanimi" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-posti aadress</label>
+                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Parool</label>
+                    <input type="password" id="password" name="password" placeholder="Vähemalt 8 tähemärki" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Kinnita parool</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Sisesta parool uuesti" required minlength="8">
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Loo konto</button>
+            </form>
+
+            <p class="auth-footer">
+                Juba on konto? <a href="/login.html">Logi sisse</a>
+            </p>
+            <p class="auth-terms">
+                Konto loomisega nõustud meie <a href="#">kasutustingimuste</a> ja <a href="#">privaatsuspoliitikaga</a>.
+            </p>
+        </div>
+    </section>
+
+    <script>
+        const form = document.getElementById('register-form');
+        const errorEl = document.getElementById('error-message');
+        const successEl = document.getElementById('success-message');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                errorEl.textContent = 'Paroolid ei ühti';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 8) {
+                errorEl.textContent = 'Parool peab olema vähemalt 8 tähemärki';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Loon kontot...';
+
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Registreerimine ebaõnnestus');
+                }
+
+                // Store tokens
+                localStorage.setItem('accessToken', data.accessToken);
+                localStorage.setItem('refreshToken', data.refreshToken);
+                localStorage.setItem('userEmail', data.email);
+                localStorage.setItem('userName', data.fullName);
+
+                successEl.textContent = 'Konto loodud! Suuname sind edasi...';
+                successEl.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1500);
+
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Loo konto';
+            }
+        });
+    </script>
+</body>
+</html>

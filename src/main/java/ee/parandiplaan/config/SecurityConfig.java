@@ -25,7 +25,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/index.html", "/register.html", "/login.html", "/assets/**", "/favicon.ico").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/vault/categories").permitAll()
                 .requestMatchers("/api/v1/trusted-contacts/accept-invite/**").permitAll()
