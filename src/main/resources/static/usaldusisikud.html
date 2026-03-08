@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usaldusisikud — Pärandiplaan</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/auth.css">
+    <link rel="stylesheet" href="/assets/vault.css">
+    <link rel="stylesheet" href="/assets/dashboard.css">
+    <link rel="stylesheet" href="/assets/contacts.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+            <div class="nav-user">
+                <span class="nav-user-name" id="nav-name"></span>
+                <button class="btn-logout" onclick="logout()">Logi välja</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="contacts-page">
+        <!-- Header -->
+        <div class="contacts-page-header">
+            <h1>Usaldusisikud</h1>
+            <span class="plan-limit-badge" id="plan-limit" style="display:none"></span>
+            <button class="btn btn-primary btn-sm" id="add-contact-btn" onclick="openAddModal()">+ Lisa kontakt</button>
+        </div>
+
+        <!-- Contacts list -->
+        <div class="contacts-grid" id="contacts-container">
+            <div class="contact-card skeleton" style="height:80px"></div>
+            <div class="contact-card skeleton" style="height:80px"></div>
+        </div>
+
+        <!-- Handover requests section -->
+        <div class="handover-section" id="handover-section" style="display:none">
+            <h2>Üleandmistaotlused</h2>
+            <div class="handover-cards" id="handover-container"></div>
+        </div>
+    </main>
+
+    <!-- Modal: Add/Edit Contact -->
+    <div id="contact-modal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <h2 id="contact-modal-title">Lisa kontakt</h2>
+            <div id="contact-error" class="vault-error" style="display:none"></div>
+            <form id="contact-form">
+                <div class="form-group">
+                    <label for="contact-name-input">Nimi *</label>
+                    <input type="text" id="contact-name-input" placeholder="Täisnimi" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-email-input">E-post *</label>
+                    <input type="email" id="contact-email-input" placeholder="email@näide.ee" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-phone-input">Telefon</label>
+                    <input type="text" id="contact-phone-input" placeholder="+372 ...">
+                </div>
+                <div class="form-group">
+                    <label for="contact-relationship-input">Suhe</label>
+                    <select id="contact-relationship-input">
+                        <option value="">Vali...</option>
+                        <option value="SPOUSE">Abikaasa</option>
+                        <option value="PARTNER">Elukaaslane</option>
+                        <option value="CHILD">Laps</option>
+                        <option value="PARENT">Vanem</option>
+                        <option value="SIBLING">Õde/vend</option>
+                        <option value="FRIEND">Sõber</option>
+                        <option value="LAWYER">Advokaat</option>
+                        <option value="OTHER">Muu</option>
+                    </select>
+                </div>
+                <div class="toggle-group">
+                    <label>Juurdepääsutase</label>
+                    <div class="toggle-options">
+                        <button type="button" class="toggle-option active" onclick="setAccessLevel('FULL')">Täielik</button>
+                        <button type="button" class="toggle-option" onclick="setAccessLevel('LIMITED')">Piiratud</button>
+                    </div>
+                </div>
+                <div class="toggle-group">
+                    <label>Aktiveerimisrežiim</label>
+                    <div class="toggle-options">
+                        <button type="button" class="toggle-option active" onclick="setActivationMode('MANUAL')">Käsitsi</button>
+                        <button type="button" class="toggle-option" onclick="setActivationMode('INACTIVITY')">Inaktiivsus</button>
+                    </div>
+                </div>
+                <div class="inactivity-config" id="inactivity-config" style="display:none">
+                    <label for="inactivity-days-input">Päevade arv:</label>
+                    <input type="number" id="inactivity-days-input" min="30" max="365" value="90">
+                    <span>päeva</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="closeContactModal()">Tühista</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="contact-submit-btn">Salvesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation -->
+    <div id="delete-modal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <h2>Kustuta kontakt</h2>
+            <p class="modal-confirm-text">Kas oled kindel, et soovid selle usaldusisiku kustutada? Seda toimingut ei saa tagasi võtta.</p>
+            <div class="modal-actions">
+                <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()">Tühista</button>
+                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()">Kustuta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Auth guard
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        const userName = localStorage.getItem('userName') || '';
+        document.getElementById('nav-name').textContent = userName;
+
+        const headers = {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.removeItem('vaultKey');
+            window.location.href = '/login.html';
+        }
+
+        function handleAuthError(res) {
+            if (res.status === 401 || res.status === 403) {
+                logout();
+                return true;
+            }
+            return false;
+        }
+
+        function escapeHtml(text) {
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // State
+        var contacts = [];
+        var pendingHandovers = [];
+        var editingContactId = null;
+        var deleteContactId = null;
+        var selectedAccessLevel = 'FULL';
+        var selectedActivationMode = 'MANUAL';
+        var planLimit = null; // null = unlimited
+
+        // ===== Load Data =====
+        async function loadContacts() {
+            try {
+                var res = await fetch('/api/v1/trusted-contacts', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                contacts = await res.json();
+                renderContacts();
+                updatePlanLimit();
+            } catch (e) {
+                console.error('Contacts load failed:', e);
+            }
+        }
+
+        async function loadSubscription() {
+            try {
+                var res = await fetch('/api/v1/subscription', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                var sub = await res.json();
+
+                var limits = { TRIAL: 1, PLUS: 5, FAMILY: null };
+                planLimit = limits[sub.plan] !== undefined ? limits[sub.plan] : 1;
+            } catch (e) {
+                console.error('Subscription load failed:', e);
+            }
+        }
+
+        async function loadPendingHandovers() {
+            try {
+                var res = await fetch('/api/v1/handover-requests/pending', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                pendingHandovers = await res.json();
+                renderHandovers();
+            } catch (e) {
+                console.error('Handovers load failed:', e);
+            }
+        }
+
+        // ===== Render =====
+        function updatePlanLimit() {
+            var badge = document.getElementById('plan-limit');
+            var addBtn = document.getElementById('add-contact-btn');
+            if (planLimit === null) {
+                badge.textContent = contacts.length + ' kontakti';
+                badge.className = 'plan-limit-badge';
+                badge.style.display = '';
+                addBtn.style.display = '';
+            } else {
+                badge.textContent = contacts.length + '/' + planLimit + ' kontakti';
+                badge.className = 'plan-limit-badge' + (contacts.length >= planLimit ? ' at-limit' : '');
+                badge.style.display = '';
+                addBtn.style.display = contacts.length >= planLimit ? 'none' : '';
+            }
+        }
+
+        function renderContacts() {
+            var container = document.getElementById('contacts-container');
+            if (contacts.length === 0) {
+                container.innerHTML =
+                    '<div class="contacts-empty">' +
+                        '<p>Sul pole veel usaldusisikuid lisatud.</p>' +
+                        '<button class="btn btn-primary btn-sm" onclick="openAddModal()">Lisa esimene kontakt</button>' +
+                    '</div>';
+                return;
+            }
+
+            container.innerHTML = contacts.map(function(c) {
+                var initials = (c.fullName || '?').split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+                var badges = '';
+
+                // Status badge
+                badges += '<span class="badge ' + (c.inviteAccepted ? 'badge-accepted' : 'badge-pending') + '">' +
+                    (c.inviteAccepted ? 'Kinnitatud' : 'Ootel') + '</span>';
+
+                // Access level badge
+                if (c.accessLevel) {
+                    badges += '<span class="badge ' + (c.accessLevel === 'FULL' ? 'badge-full' : 'badge-limited') + '">' +
+                        (c.accessLevel === 'FULL' ? 'Täielik' : 'Piiratud') + '</span>';
+                }
+
+                // Activation mode badge
+                if (c.activationMode) {
+                    badges += '<span class="badge ' + (c.activationMode === 'MANUAL' ? 'badge-manual' : 'badge-inactivity') + '">' +
+                        (c.activationMode === 'MANUAL' ? 'Käsitsi' : 'Inaktiivsus') + '</span>';
+                }
+
+                // Relationship badge
+                if (c.relationship) {
+                    badges += '<span class="badge badge-relationship">' + relationshipLabel(c.relationship) + '</span>';
+                }
+
+                var actions = '<button class="btn-icon" onclick="editContact(\'' + c.id + '\')" title="Muuda">&#9998;</button>' +
+                    '<button class="btn-icon danger" onclick="openDeleteModal(\'' + c.id + '\')" title="Kustuta">&#128465;</button>';
+
+                if (!c.inviteAccepted) {
+                    actions += '<button class="btn-icon" onclick="resendInvite(\'' + c.id + '\')" title="Saada kutse uuesti">&#9993;</button>';
+                }
+
+                return '<div class="contact-card">' +
+                    '<div class="contact-avatar">' + initials + '</div>' +
+                    '<div class="contact-details">' +
+                        '<div class="contact-name">' + escapeHtml(c.fullName) + '</div>' +
+                        '<div class="contact-email">' + escapeHtml(c.email) + '</div>' +
+                        '<div class="contact-badges">' + badges + '</div>' +
+                    '</div>' +
+                    '<div class="contact-actions">' + actions + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderHandovers() {
+            var section = document.getElementById('handover-section');
+            var container = document.getElementById('handover-container');
+
+            if (pendingHandovers.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = '';
+            container.innerHTML = pendingHandovers.map(function(h) {
+                var deadlineStr = h.responseDeadline ? formatDeadline(h.responseDeadline) : '';
+                return '<div class="handover-card">' +
+                    '<div class="handover-info">' +
+                        '<div class="handover-name">' + escapeHtml(h.contactName || '') + '</div>' +
+                        (h.reason ? '<div class="handover-reason">' + escapeHtml(h.reason) + '</div>' : '') +
+                        (deadlineStr ? '<div class="handover-deadline">' + deadlineStr + '</div>' : '') +
+                    '</div>' +
+                    '<div class="handover-actions">' +
+                        '<button class="btn-approve" onclick="approveHandover(\'' + h.id + '\')">Kinnita</button>' +
+                        '<button class="btn-deny" onclick="denyHandover(\'' + h.id + '\')">Keeldu</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ===== Modal =====
+        function openAddModal() {
+            editingContactId = null;
+            document.getElementById('contact-modal-title').textContent = 'Lisa kontakt';
+            document.getElementById('contact-error').style.display = 'none';
+            document.getElementById('contact-form').reset();
+            document.getElementById('contact-email-input').readOnly = false;
+
+            selectedAccessLevel = 'FULL';
+            selectedActivationMode = 'MANUAL';
+            updateToggleUI();
+            document.getElementById('inactivity-config').style.display = 'none';
+
+            document.getElementById('contact-modal').style.display = 'flex';
+        }
+
+        function editContact(id) {
+            var c = contacts.find(function(x) { return x.id === id; });
+            if (!c) return;
+
+            editingContactId = id;
+            document.getElementById('contact-modal-title').textContent = 'Muuda kontakti';
+            document.getElementById('contact-error').style.display = 'none';
+
+            document.getElementById('contact-name-input').value = c.fullName || '';
+            document.getElementById('contact-email-input').value = c.email || '';
+            document.getElementById('contact-email-input').readOnly = true;
+            document.getElementById('contact-phone-input').value = c.phone || '';
+            document.getElementById('contact-relationship-input').value = c.relationship || '';
+
+            selectedAccessLevel = c.accessLevel || 'FULL';
+            selectedActivationMode = c.activationMode || 'MANUAL';
+            updateToggleUI();
+
+            if (selectedActivationMode === 'INACTIVITY') {
+                document.getElementById('inactivity-config').style.display = '';
+                document.getElementById('inactivity-days-input').value = c.inactivityDays || 90;
+            } else {
+                document.getElementById('inactivity-config').style.display = 'none';
+            }
+
+            document.getElementById('contact-modal').style.display = 'flex';
+        }
+
+        function closeContactModal() {
+            document.getElementById('contact-modal').style.display = 'none';
+            editingContactId = null;
+        }
+
+        function setAccessLevel(level) {
+            selectedAccessLevel = level;
+            updateToggleUI();
+        }
+
+        function setActivationMode(mode) {
+            selectedActivationMode = mode;
+            updateToggleUI();
+            document.getElementById('inactivity-config').style.display = mode === 'INACTIVITY' ? '' : 'none';
+        }
+
+        function updateToggleUI() {
+            // Access level toggles
+            var accessBtns = document.querySelectorAll('.toggle-group:nth-of-type(1) .toggle-option');
+            // We need to find them more specifically
+            var allToggleGroups = document.querySelectorAll('#contact-form .toggle-group');
+
+            if (allToggleGroups[0]) {
+                var accessOpts = allToggleGroups[0].querySelectorAll('.toggle-option');
+                accessOpts.forEach(function(btn, i) {
+                    if ((i === 0 && selectedAccessLevel === 'FULL') || (i === 1 && selectedAccessLevel === 'LIMITED')) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            if (allToggleGroups[1]) {
+                var modeOpts = allToggleGroups[1].querySelectorAll('.toggle-option');
+                modeOpts.forEach(function(btn, i) {
+                    if ((i === 0 && selectedActivationMode === 'MANUAL') || (i === 1 && selectedActivationMode === 'INACTIVITY')) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+        }
+
+        // Form submit
+        document.getElementById('contact-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var errorEl = document.getElementById('contact-error');
+            errorEl.style.display = 'none';
+            var submitBtn = document.getElementById('contact-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Salvestamine...';
+
+            var fullName = document.getElementById('contact-name-input').value.trim();
+            var email = document.getElementById('contact-email-input').value.trim();
+            var phone = document.getElementById('contact-phone-input').value.trim();
+            var relationship = document.getElementById('contact-relationship-input').value;
+            var inactivityDays = selectedActivationMode === 'INACTIVITY'
+                ? parseInt(document.getElementById('inactivity-days-input').value) || 90
+                : null;
+
+            try {
+                var url = '/api/v1/trusted-contacts';
+                var method = 'POST';
+                var body = {
+                    fullName: fullName,
+                    email: email,
+                    phone: phone || null,
+                    relationship: relationship || null,
+                    accessLevel: selectedAccessLevel,
+                    activationMode: selectedActivationMode,
+                    inactivityDays: inactivityDays
+                };
+
+                if (editingContactId) {
+                    url += '/' + editingContactId;
+                    method = 'PUT';
+                    // Update request doesn't include email
+                    body = {
+                        fullName: fullName,
+                        phone: phone || null,
+                        relationship: relationship || null,
+                        accessLevel: selectedAccessLevel,
+                        activationMode: selectedActivationMode,
+                        inactivityDays: inactivityDays
+                    };
+                }
+
+                var res = await fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    throw new Error(err.message || 'Salvestamine ebaõnnestus');
+                }
+
+                closeContactModal();
+                showToast(editingContactId ? 'Kontakt uuendatud!' : 'Kontakt lisatud ja kutse saadetud!');
+                loadContacts();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Salvesta';
+            }
+        });
+
+        // ===== Delete =====
+        function openDeleteModal(id) {
+            deleteContactId = id;
+            document.getElementById('delete-modal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            deleteContactId = null;
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        async function confirmDelete() {
+            if (!deleteContactId) return;
+            var btn = document.getElementById('confirm-delete-btn');
+            btn.disabled = true;
+            btn.textContent = 'Kustutamine...';
+
+            try {
+                var res = await fetch('/api/v1/trusted-contacts/' + deleteContactId, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    alert(err.message || 'Kustutamine ebaõnnestus');
+                    return;
+                }
+                closeDeleteModal();
+                showToast('Kontakt kustutatud!');
+                loadContacts();
+            } catch (e) {
+                console.error('Delete failed:', e);
+                alert('Kustutamine ebaõnnestus');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Kustuta';
+            }
+        }
+
+        // ===== Resend Invite =====
+        async function resendInvite(id) {
+            try {
+                var res = await fetch('/api/v1/trusted-contacts/' + id + '/resend-invite', {
+                    method: 'POST',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    alert(err.message || 'Kutse saatmine ebaõnnestus');
+                    return;
+                }
+                showToast('Kutse saadetud!');
+            } catch (e) {
+                console.error('Resend invite failed:', e);
+                alert('Kutse saatmine ebaõnnestus');
+            }
+        }
+
+        // ===== Handover Actions =====
+        async function approveHandover(id) {
+            try {
+                var res = await fetch('/api/v1/handover-requests/' + id + '/approve', {
+                    method: 'POST',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    alert(err.message || 'Kinnitamine ebaõnnestus');
+                    return;
+                }
+                showToast('Üleandmine kinnitatud!');
+                loadPendingHandovers();
+            } catch (e) {
+                console.error('Approve failed:', e);
+                alert('Kinnitamine ebaõnnestus');
+            }
+        }
+
+        async function denyHandover(id) {
+            try {
+                var res = await fetch('/api/v1/handover-requests/' + id + '/deny', {
+                    method: 'POST',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    alert(err.message || 'Keeldumine ebaõnnestus');
+                    return;
+                }
+                showToast('Taotlus tagasi lükatud!');
+                loadPendingHandovers();
+            } catch (e) {
+                console.error('Deny failed:', e);
+                alert('Keeldumine ebaõnnestus');
+            }
+        }
+
+        // ===== Helpers =====
+        function showToast(message) {
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function relationshipLabel(value) {
+            var labels = {
+                SPOUSE: 'Abikaasa',
+                PARTNER: 'Elukaaslane',
+                CHILD: 'Laps',
+                PARENT: 'Vanem',
+                SIBLING: 'Õde/vend',
+                FRIEND: 'Sõber',
+                LAWYER: 'Advokaat',
+                OTHER: 'Muu'
+            };
+            return labels[value] || value;
+        }
+
+        function formatDeadline(iso) {
+            var deadline = new Date(iso);
+            var now = new Date();
+            var diffMs = deadline - now;
+
+            if (diffMs <= 0) return 'Tähtaeg möödunud';
+
+            var diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            var diffDays = Math.floor(diffHours / 24);
+
+            if (diffDays > 0) {
+                return 'Tähtaeg: ' + diffDays + ' päeva ' + (diffHours % 24) + ' tundi';
+            }
+            return 'Tähtaeg: ' + diffHours + ' tundi';
+        }
+
+        // ===== Modal Close Handlers =====
+        document.getElementById('contact-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeContactModal();
+        });
+        document.getElementById('delete-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeContactModal();
+                closeDeleteModal();
+            }
+        });
+
+        // ===== Init =====
+        async function init() {
+            await loadSubscription();
+            loadContacts();
+            loadPendingHandovers();
+        }
+
+        init();
+    </script>
+</body>
+</html>

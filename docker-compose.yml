@@ -31,13 +31,26 @@ services:
       timeout: 5s
       retries: 5
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: pp-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
   api:
     build: .
     container_name: pp-api
     restart: unless-stopped
-    ports:
-      - "80:8080"
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       POSTGRES_HOST: postgres
@@ -46,10 +59,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-ppuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pppass}
       JWT_SECRET: ${JWT_SECRET:-ChangeThisToASecureRandomStringAtLeast256BitsLong!!!}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://parandiplaan.ee}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
-      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_URL: ${APP_URL:-https://parandiplaan.ee}
       LEMONSQUEEZY_API_KEY: ${LEMONSQUEEZY_API_KEY:-}
       LEMONSQUEEZY_WEBHOOK_SECRET: ${LEMONSQUEEZY_WEBHOOK_SECRET:-}
       LEMONSQUEEZY_STORE_ID: ${LEMONSQUEEZY_STORE_ID:-}
@@ -68,3 +81,5 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  caddy_data:
+  caddy_config:
