@@ -52,6 +52,12 @@ public class User {
     @Column(name = "email_verification_token")
     private UUID emailVerificationToken;
 
+    @Column(name = "password_reset_token")
+    private UUID passwordResetToken;
+
+    @Column(name = "password_reset_token_expires_at")
+    private Instant passwordResetTokenExpiresAt;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 

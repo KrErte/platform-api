@@ -17,4 +17,6 @@ public interface VaultAttachmentRepository extends JpaRepository<VaultAttachment
 
     @Query("SELECT COALESCE(SUM(a.fileSizeBytes), 0) FROM VaultAttachment a WHERE a.user.id = :userId")
     long sumFileSizeBytesByUserId(UUID userId);
+
+    List<VaultAttachment> findAllByUserId(UUID userId);
 }

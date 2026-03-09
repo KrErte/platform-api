@@ -11,6 +11,7 @@ import ee.parandiplaan.subscription.Subscription;
 import ee.parandiplaan.subscription.SubscriptionRepository;
 import ee.parandiplaan.user.User;
 import ee.parandiplaan.user.UserRepository;
+import ee.parandiplaan.vault.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,6 +35,10 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final TotpService totpService;
+    private final VaultEntryRepository vaultEntryRepository;
+    private final VaultAttachmentRepository vaultAttachmentRepository;
+    private final EncryptionService encryptionService;
+    private final StorageService storageService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -126,6 +132,138 @@ public class AuthService {
         userRepository.save(user);
 
         log.info("Email verified: {}", user.getEmail());
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        var userOpt = userRepository.findByEmail(email.toLowerCase().trim());
+        if (userOpt.isEmpty()) {
+            log.info("Password reset requested for non-existent email: {}", email);
+            return; // Silent return — email enumeration protection
+        }
+
+        User user = userOpt.get();
+        UUID resetToken = UUID.randomUUID();
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiresAt(Instant.now().plus(1, ChronoUnit.HOURS));
+        userRepository.save(user);
+
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetToken.toString());
+        log.info("Password reset token generated for: {}", user.getEmail());
+    }
+
+    @Transactional
+    public AuthResponse resetPassword(UUID token, String newPassword) {
+        User user = userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Kehtetu või aegunud lähtestamislink"));
+
+        if (user.getPasswordResetTokenExpiresAt() == null ||
+                Instant.now().isAfter(user.getPasswordResetTokenExpiresAt())) {
+            throw new IllegalArgumentException("Lähtestamislink on aegunud. Palun taotlege uus.");
+        }
+
+        // Delete all vault attachments (MinIO files + DB records)
+        List<VaultAttachment> attachments = vaultAttachmentRepository.findAllByUserId(user.getId());
+        for (VaultAttachment att : attachments) {
+            try {
+                storageService.delete(att.getStorageKey());
+            } catch (Exception e) {
+                log.error("Failed to delete MinIO file during password reset: {}", att.getStorageKey(), e);
+            }
+        }
+        vaultAttachmentRepository.deleteAll(attachments);
+
+        // Delete all vault entries
+        vaultEntryRepository.deleteAllByUserId(user.getId());
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiresAt(null);
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        log.info("Password reset completed for: {} (vault data cleared)", user.getEmail());
+        return buildAuthResponse(user);
+    }
+
+    @Transactional
+    public AuthResponse changePassword(User user, String currentPassword, String newPassword) {
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Praegune parool on vale");
+        }
+
+        // Re-encrypt all vault entries
+        List<VaultEntry> entries = vaultEntryRepository.findAllByUserId(user.getId());
+        for (VaultEntry entry : entries) {
+            // Decrypt with old password
+            String decTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), currentPassword);
+            String decData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), currentPassword);
+
+            // Re-encrypt with new password
+            EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle, newPassword);
+            EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, newPassword);
+
+            entry.setTitle(titleEnc.ciphertext());
+            entry.setTitleIv(titleEnc.iv());
+            entry.setEncryptedData(dataEnc.ciphertext());
+            entry.setEncryptionIv(dataEnc.iv());
+
+            // Re-encrypt notes if present
+            if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
+                String decNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), currentPassword);
+                EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, newPassword);
+                entry.setNotesEncrypted(notesEnc.ciphertext());
+                entry.setNotesIv(notesEnc.iv());
+            }
+
+            vaultEntryRepository.save(entry);
+        }
+
+        // Re-encrypt all attachments (file names + MinIO file content)
+        List<VaultAttachment> attachments = vaultAttachmentRepository.findAllByUserId(user.getId());
+        for (VaultAttachment att : attachments) {
+            // Re-encrypt file name
+            String decFileName = encryptionService.decrypt(att.getFileNameEncrypted(), att.getFileNameIv(), currentPassword);
+            EncryptionService.EncryptionResult fileNameEnc = encryptionService.encrypt(decFileName, newPassword);
+            att.setFileNameEncrypted(fileNameEnc.ciphertext());
+            att.setFileNameIv(fileNameEnc.iv());
+
+            // Re-encrypt file content in MinIO (IV is prepended: first 12 bytes)
+            try {
+                var inputStream = storageService.download(att.getStorageKey());
+                byte[] combined = inputStream.readAllBytes();
+                inputStream.close();
+
+                byte[] iv = java.util.Arrays.copyOfRange(combined, 0, 12);
+                byte[] cipherBytes = java.util.Arrays.copyOfRange(combined, 12, combined.length);
+                String ivBase64 = java.util.Base64.getEncoder().encodeToString(iv);
+
+                // Decrypt with old password
+                byte[] plainBytes = encryptionService.decryptBytes(cipherBytes, ivBase64, currentPassword);
+
+                // Re-encrypt with new password
+                EncryptionService.EncryptionResultBytes reEnc = encryptionService.encryptBytes(plainBytes, newPassword);
+                byte[] newIv = java.util.Base64.getDecoder().decode(reEnc.iv());
+                byte[] newCombined = java.nio.ByteBuffer.allocate(12 + reEnc.cipherBytes().length)
+                        .put(newIv)
+                        .put(reEnc.cipherBytes())
+                        .array();
+
+                storageService.upload(att.getStorageKey(), newCombined, "application/octet-stream");
+            } catch (Exception e) {
+                log.error("Failed to re-encrypt attachment file during password change: {}", att.getId(), e);
+            }
+
+            vaultAttachmentRepository.save(att);
+        }
+
+        // Update password hash
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        log.info("Password changed for: {} ({} entries re-encrypted)", user.getEmail(), entries.size());
+        return buildAuthResponse(user);
     }
 
     private AuthResponse buildAuthResponse(User user) {

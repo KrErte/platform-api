@@ -46,9 +46,26 @@
                 <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Logi sisse</button>
             </form>
 
+            <p class="auth-footer" style="margin-bottom:0.5rem;">
+                <a href="#" onclick="showForgotPassword(event)" style="font-size:0.85rem;">Unustasid parooli?</a>
+            </p>
             <p class="auth-footer">
                 Pole veel kontot? <a href="/register.html">Proovi 14 päeva tasuta</a>
             </p>
+
+            <!-- Forgot Password Section -->
+            <div id="forgot-section" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--green-200);">
+                <h2 style="font-size:1.15rem; font-weight:700; color:var(--green-900); margin-bottom:0.5rem;">Parooli taastamine</h2>
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">Sisesta oma e-posti aadress ja saadame sulle lähtestamislingi.</p>
+                <div id="forgot-message" style="display:none;"></div>
+                <form id="forgot-form">
+                    <div class="form-group">
+                        <label for="forgot-email">E-posti aadress</label>
+                        <input type="email" id="forgot-email" placeholder="sinu@email.ee" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="forgot-btn">Saada lähtestamislink</button>
+                </form>
+            </div>
         </div>
     </section>
 
@@ -102,6 +119,47 @@
                 errorEl.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Logi sisse';
+            }
+        });
+        // Forgot Password
+        function showForgotPassword(e) {
+            e.preventDefault();
+            var section = document.getElementById('forgot-section');
+            section.style.display = section.style.display === 'none' ? '' : 'none';
+        }
+
+        var forgotForm = document.getElementById('forgot-form');
+        forgotForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var msgEl = document.getElementById('forgot-message');
+            msgEl.style.display = 'none';
+
+            var email = document.getElementById('forgot-email').value.trim();
+            var btn = document.getElementById('forgot-btn');
+            btn.disabled = true;
+            btn.textContent = 'Saatmine...';
+
+            try {
+                var response = await fetch('/api/v1/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                var data = await response.json();
+
+                msgEl.className = 'auth-success';
+                msgEl.textContent = 'Kui see e-posti aadress on registreeritud, saadame lähtestamislingi. Kontrolli oma postkasti.';
+                msgEl.style.display = 'block';
+                forgotForm.querySelector('button').style.display = 'none';
+
+            } catch (err) {
+                msgEl.className = 'auth-error';
+                msgEl.textContent = 'Midagi läks valesti. Proovi uuesti.';
+                msgEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Saada lähtestamislink';
             }
         });
     </script>

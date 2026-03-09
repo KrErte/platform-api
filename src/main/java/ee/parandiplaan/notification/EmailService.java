@@ -57,6 +57,29 @@ public class EmailService {
         sendEmail(toEmail, subject, html);
     }
 
+    public void sendPasswordResetEmail(String toEmail, String fullName, String token) {
+        String subject = "Parooli lähtestamine — Pärandiplaan";
+        String resetUrl = appUrl + "/reset-password.html?token=" + token;
+        String html = """
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1B4332;">Parooli lähtestamine</h2>
+                    <p>Tere, %s!</p>
+                    <p>Saime taotluse sinu parooli lähtestamiseks. Kliki alloleval nupul, et valida uus parool:</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="background: #2D6A4F; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            Lähtesta parool
+                        </a>
+                    </p>
+                    <p style="color: #DC2626; font-weight: bold; font-size: 14px;">⚠️ Hoiatus: Parooli lähtestamisel kaotad ligipääsu kõigile krüpteeritud tresori andmetele. Seda toimingut ei saa tagasi võtta.</p>
+                    <p style="color: #666; font-size: 14px;">See link kehtib 1 tunni. Kui sa ei taotlenud parooli lähtestamist, ignoreeri seda kirja.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">Pärandiplaan — Sinu digitaalne pärand, turvaliselt korraldatud</p>
+                </div>
+                """.formatted(fullName, resetUrl);
+
+        sendEmail(toEmail, subject, html);
+    }
+
     public void sendInviteEmail(String toEmail, String contactName, String ownerName, String inviteToken) {
         String subject = ownerName + " lisas sind usalduskontaktiks — Pärandiplaan";
         String acceptUrl = appUrl + "/invite/" + inviteToken;

@@ -41,6 +41,26 @@ public class AuthController {
         return ResponseEntity.ok(new MessageResponse("E-post kinnitatud!"));
     }
 
+    // --- Password Reset endpoints ---
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.email());
+        return ResponseEntity.ok(new MessageResponse("Kui see e-posti aadress on registreeritud, saadame lähtestamislingi."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request.token(), request.newPassword()));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthResponse> changePassword(
+            @CurrentUser User user,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        return ResponseEntity.ok(authService.changePassword(user, request.currentPassword(), request.newPassword()));
+    }
+
     // --- 2FA endpoints ---
 
     @PostMapping("/2fa/setup")

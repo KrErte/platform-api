@@ -1,0 +1,277 @@
+/* === Settings Page === */
+
+.settings-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 6rem 2rem 4rem;
+}
+
+.settings-page h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--green-900);
+    margin-bottom: 2rem;
+    letter-spacing: -0.02em;
+}
+
+.settings-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--green-200);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.settings-card h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--green-900);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--green-200);
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.settings-grid .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.settings-card .form-group {
+    margin-bottom: 0;
+}
+
+.settings-card .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+}
+
+.settings-card .form-group input,
+.settings-card .form-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--green-200);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--warm-50);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.settings-card .form-group input:focus,
+.settings-card .form-group select:focus {
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15);
+}
+
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* Warning box */
+.settings-warning {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: #92400E;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+/* Success/Error messages */
+.settings-success {
+    background: var(--green-100);
+    border: 1px solid var(--green-400);
+    color: var(--green-800);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.settings-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* 2FA section */
+.twofa-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.twofa-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-xl);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.twofa-badge.active {
+    background: var(--green-200);
+    color: var(--green-800);
+}
+
+.twofa-badge.inactive {
+    background: #FEF2F2;
+    color: #DC2626;
+}
+
+.twofa-setup {
+    margin-top: 1rem;
+}
+
+.twofa-qr {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.twofa-qr img {
+    max-width: 200px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--green-200);
+}
+
+.twofa-code-input {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.twofa-code-input input {
+    width: 160px;
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--green-200);
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    font-family: inherit;
+    text-align: center;
+    letter-spacing: 0.2em;
+    outline: none;
+}
+
+.twofa-code-input input:focus {
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15);
+}
+
+/* Subscription section */
+.sub-card-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.sub-plan-badge {
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-xl);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.sub-plan-badge.trial {
+    background: #FDE68A;
+    color: #92400E;
+}
+
+.sub-plan-badge.plus {
+    background: var(--green-200);
+    color: var(--green-800);
+}
+
+.sub-plan-badge.family {
+    background: var(--green-600);
+    color: white;
+}
+
+.sub-plan-badge.none {
+    background: #FEF2F2;
+    color: #DC2626;
+}
+
+.sub-detail-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.sub-upgrade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.sub-upgrade-card {
+    padding: 1.25rem;
+    border: 2px solid var(--green-200);
+    border-radius: var(--radius-md);
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.sub-upgrade-card:hover {
+    border-color: var(--green-600);
+    box-shadow: var(--shadow-md);
+}
+
+.sub-upgrade-card .plan-name {
+    font-weight: 700;
+    color: var(--green-900);
+    margin-bottom: 0.25rem;
+}
+
+.sub-upgrade-card .plan-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--green-800);
+    margin-bottom: 0.75rem;
+}
+
+.sub-upgrade-card .plan-price span {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .settings-page {
+        padding: 5rem 1rem 3rem;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sub-upgrade-grid {
+        grid-template-columns: 1fr;
+    }
+}

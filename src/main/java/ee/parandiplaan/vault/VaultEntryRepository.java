@@ -33,4 +33,8 @@ public interface VaultEntryRepository extends JpaRepository<VaultEntry, UUID> {
 
     @Query("SELECT COUNT(e) FROM VaultEntry e WHERE e.user.id = :userId AND e.complete = false")
     long countIncompleteByUserId(UUID userId);
+
+    List<VaultEntry> findAllByUserId(UUID userId);
+
+    void deleteAllByUserId(UUID userId);
 }
