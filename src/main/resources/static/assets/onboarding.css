@@ -1,0 +1,235 @@
+/* === Onboarding Wizard === */
+
+.onboarding {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+
+/* Stepper */
+.stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 2.5rem;
+    padding: 0 1rem;
+}
+
+.stepper-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    position: relative;
+    z-index: 1;
+}
+
+.stepper-step span {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--warm-200);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.stepper-step small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.stepper-step.active span {
+    background: var(--green-800);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.2);
+}
+
+.stepper-step.active small {
+    color: var(--green-800);
+    font-weight: 600;
+}
+
+.stepper-step.completed span {
+    background: var(--green-500);
+    color: white;
+}
+
+.stepper-step.completed small {
+    color: var(--green-700);
+}
+
+.stepper-line {
+    flex: 1;
+    height: 2px;
+    background: var(--warm-200);
+    margin: 0 0.25rem;
+    margin-bottom: 1.2rem;
+}
+
+/* Step Card */
+.step-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+    box-shadow: var(--shadow-md);
+    animation: stepFadeIn 0.4s ease;
+    text-align: center;
+}
+
+@keyframes stepFadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.step-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.step-card h1 {
+    font-size: 1.6rem;
+    color: var(--green-900);
+    margin-bottom: 0.75rem;
+}
+
+.step-description {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Onboarding Form */
+.onboarding-form {
+    text-align: left;
+    margin-top: 1.5rem;
+}
+
+.onboarding-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.onboarding-form label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+}
+
+.onboarding-form input,
+.onboarding-form select {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid var(--warm-200);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    background: white;
+}
+
+.onboarding-form input:focus,
+.onboarding-form select:focus {
+    outline: none;
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15);
+}
+
+/* Step Actions */
+.step-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.step-actions .btn {
+    min-width: 140px;
+}
+
+/* Error */
+.onboarding-error {
+    background: #FEF2F2;
+    color: #DC2626;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+/* Summary */
+.summary {
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.summary-list {
+    list-style: none;
+    padding: 0;
+}
+
+.summary-list li {
+    padding: 0.65rem 1rem;
+    background: var(--green-100);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.5rem;
+    color: var(--green-900);
+    font-weight: 500;
+}
+
+.summary-list li::before {
+    content: '\2713 ';
+    color: var(--green-700);
+    font-weight: 700;
+    margin-right: 0.5rem;
+}
+
+.summary-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 1rem;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .onboarding {
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .step-card {
+        padding: 2rem 1.25rem;
+    }
+
+    .step-card h1 {
+        font-size: 1.3rem;
+    }
+
+    .stepper-step small {
+        display: none;
+    }
+
+    .stepper-line {
+        margin-bottom: 0;
+    }
+
+    .step-actions {
+        flex-direction: column-reverse;
+    }
+
+    .step-actions .btn {
+        width: 100%;
+    }
+}

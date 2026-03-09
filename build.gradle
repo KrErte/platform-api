@@ -47,6 +47,9 @@ dependencies {
     // TOTP (2FA with Google Authenticator)
     implementation 'dev.samstevens.totp:totp:1.7.1'
 
+    // PDF generation
+    implementation 'com.github.librepdf:openpdf:2.0.3'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

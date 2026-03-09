@@ -3,7 +3,10 @@ package ee.parandiplaan.vault;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import org.springframework.data.repository.query.Param;
+
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +38,9 @@ public interface VaultEntryRepository extends JpaRepository<VaultEntry, UUID> {
     long countIncompleteByUserId(UUID userId);
 
     List<VaultEntry> findAllByUserId(UUID userId);
+
+    @Query("SELECT e FROM VaultEntry e WHERE e.reminderDate BETWEEN :start AND :end")
+    List<VaultEntry> findByReminderDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     void deleteAllByUserId(UUID userId);
 }

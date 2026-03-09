@@ -25,11 +25,9 @@ public class ProgressService {
     private final TrustedContactRepository trustedContactRepository;
     private final VaultCategoryRepository categoryRepository;
 
-    private static final int TOTAL_CATEGORIES = 10;
-    private static final BigDecimal CATEGORY_POINTS = new BigDecimal("7");   // 7 pts each, 70 total
+    private static final BigDecimal CATEGORY_POINTS = new BigDecimal("5");
     private static final BigDecimal TRUSTED_CONTACT_POINTS = new BigDecimal("15");
     private static final BigDecimal PERSONAL_WISHES_POINTS = new BigDecimal("15");
-    private static final BigDecimal MAX_POINTS = new BigDecimal("100");
 
     @Transactional
     public UserProgress recalculate(User user) {
@@ -40,36 +38,34 @@ public class ProgressService {
                     return p;
                 });
 
+        long totalCategories = categoryRepository.count();
         long totalEntries = entryRepository.countByUserId(user.getId());
         long completedEntries = entryRepository.countCompletedByUserId(user.getId());
         long categoriesWithEntries = entryRepository.countDistinctCategoriesByUserId(user.getId());
         long trustedContacts = trustedContactRepository.countByUserId(user.getId());
 
+        // Dynamic max: 5 pts per category + 15 (trusted contact) + 15 (personal wishes)
+        BigDecimal maxPoints = CATEGORY_POINTS.multiply(BigDecimal.valueOf(totalCategories))
+                .add(TRUSTED_CONTACT_POINTS)
+                .add(PERSONAL_WISHES_POINTS);
+
         // Calculate points
         BigDecimal points = BigDecimal.ZERO;
 
-        // Category points: 7 points for each category that has at least 1 entry
-        points = points.add(CATEGORY_POINTS.multiply(BigDecimal.valueOf(Math.min(categoriesWithEntries, TOTAL_CATEGORIES))));
+        // Category points: 5 points for each category that has at least 1 entry
+        points = points.add(CATEGORY_POINTS.multiply(BigDecimal.valueOf(Math.min(categoriesWithEntries, totalCategories))));
 
         // Trusted contact points: 15 if at least 1 trusted contact
         if (trustedContacts > 0) {
             points = points.add(TRUSTED_CONTACT_POINTS);
         }
 
-        // Personal wishes points: 15 if personal_wishes category has entries
-        // Check by looking for entries in that category
-        // For now, this is included in the category points above
-        // We give extra 15 if personal_wishes specifically has entries
-        // This is handled via the categoriesWithEntries count already contributing 7pts
-        // The extra 8pts (15-7) comes from having personal wishes specifically
-        // Simplified: just use the formula as-is
-
-        BigDecimal percentage = points.min(MAX_POINTS)
-                .divide(MAX_POINTS, 4, RoundingMode.HALF_UP)
+        BigDecimal percentage = points.min(maxPoints)
+                .divide(maxPoints, 4, RoundingMode.HALF_UP)
                 .multiply(new BigDecimal("100"))
                 .setScale(2, RoundingMode.HALF_UP);
 
-        progress.setTotalCategories(TOTAL_CATEGORIES);
+        progress.setTotalCategories((int) totalCategories);
         progress.setCompletedCategories((int) categoriesWithEntries);
         progress.setTotalEntries((int) totalEntries);
         progress.setCompletedEntries((int) completedEntries);

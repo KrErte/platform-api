@@ -31,6 +31,7 @@
         <div id="view-categories">
             <div class="vault-page-header">
                 <h1>Tresor</h1>
+                <button class="btn btn-outline btn-sm" onclick="exportPdf()">Ekspordi PDF</button>
             </div>
             <div class="vault-categories-grid" id="categories-grid">
                 <div class="vault-cat-card skeleton" style="height:140px"></div>
@@ -71,6 +72,11 @@
                 <div class="form-group">
                     <label for="entry-notes">Märkused</label>
                     <textarea id="entry-notes" placeholder="Valikulised märkused..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="entry-reminder">Meeldetuletus</label>
+                    <input type="date" id="entry-reminder">
+                    <span class="field-hint">Saadame meeldetuletuse 30, 14 ja 7 päeva enne</span>
                 </div>
                 <!-- Attachments (only in edit mode) -->
                 <div id="attachments-section" class="attachments-section" style="display:none">
@@ -268,9 +274,18 @@
 
             document.getElementById('entry-title-input').value = entryData ? entryData.title || '' : '';
             document.getElementById('entry-notes').value = entryData ? entryData.notes || '' : '';
+            document.getElementById('entry-reminder').value = entryData ? entryData.reminderDate || '' : '';
 
             // Dynamic fields from category fieldTemplate
-            renderDynamicFields(entryData ? entryData.fields : null);
+            let fieldValues = null;
+            if (entryData) {
+                if (entryData.fields) {
+                    fieldValues = entryData.fields;
+                } else if (entryData.data) {
+                    try { fieldValues = typeof entryData.data === 'string' ? JSON.parse(entryData.data) : entryData.data; } catch(e) { fieldValues = null; }
+                }
+            }
+            renderDynamicFields(fieldValues);
 
             // Attachments only in edit mode
             const attachSection = document.getElementById('attachments-section');
@@ -307,13 +322,14 @@
             if (!Array.isArray(fields)) return;
 
             fields.forEach(field => {
-                const value = fieldValues ? (fieldValues[field.name] || '') : '';
+                const fieldKey = field.key || field.name;
+                const value = fieldValues ? (fieldValues[fieldKey] || '') : '';
                 const group = document.createElement('div');
                 group.className = 'form-group';
 
                 const label = document.createElement('label');
-                label.textContent = field.label || field.name;
-                label.setAttribute('for', 'field-' + field.name);
+                label.textContent = field.label_et || field.label || fieldKey;
+                label.setAttribute('for', 'field-' + fieldKey);
                 group.appendChild(label);
 
                 let input;
@@ -329,6 +345,16 @@
                     input = document.createElement('input');
                     input.type = 'date';
                     input.value = value;
+                    // Auto-fill reminder date from date fields like expiry_date, renewal_date, end_date
+                    const dateKeys = ['expiry_date', 'renewal_date', 'end_date'];
+                    if (dateKeys.includes(field.key)) {
+                        input.addEventListener('change', function() {
+                            const reminderInput = document.getElementById('entry-reminder');
+                            if (this.value && !reminderInput.value) {
+                                reminderInput.value = this.value;
+                            }
+                        });
+                    }
                 } else {
                     input = document.createElement('input');
                     input.type = 'text';
@@ -336,8 +362,8 @@
                     input.placeholder = field.placeholder || '';
                 }
 
-                input.id = 'field-' + field.name;
-                input.dataset.fieldName = field.name;
+                input.id = 'field-' + fieldKey;
+                input.dataset.fieldName = fieldKey;
                 input.className = 'dynamic-field';
                 group.appendChild(input);
                 container.appendChild(group);
@@ -355,6 +381,7 @@
 
             const title = document.getElementById('entry-title-input').value.trim();
             const notes = document.getElementById('entry-notes').value.trim();
+            const reminderDate = document.getElementById('entry-reminder').value || null;
 
             // Gather dynamic fields
             const fields = {};
@@ -365,8 +392,9 @@
             const body = {
                 categoryId: currentCategory.id,
                 title,
+                data: JSON.stringify(fields),
                 notes,
-                fields
+                reminderDate
             };
 
             try {
@@ -616,6 +644,27 @@
             }
             showCategories();
         });
+
+        // ===== PDF Export =====
+        async function exportPdf() {
+            try {
+                const res = await fetch('/api/v1/vault/export/pdf', {
+                    headers: { 'Authorization': 'Bearer ' + token, 'X-Encryption-Key': vaultKey }
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) { alert('Eksport ebaõnnestus'); return; }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'parandiplaan-' + new Date().toISOString().split('T')[0] + '.pdf';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('PDF export failed:', e);
+                alert('Eksport ebaõnnestus');
+            }
+        }
 
         // Init
         loadCategories();

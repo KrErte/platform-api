@@ -31,6 +31,7 @@
             <div class="greeting-text">
                 <h1 id="greeting-title">Tere!</h1>
                 <p class="greeting-sub" id="greeting-sub">Sinu Pärandiplaan on pooleli</p>
+                <button class="btn btn-outline btn-sm" onclick="exportPdf()" style="margin-top:0.75rem">Ekspordi PDF</button>
             </div>
             <div class="dash-progress-ring">
                 <svg viewBox="0 0 120 120">
@@ -237,7 +238,50 @@
             }
         }
 
+        // Check onboarding status
+        async function checkOnboarding() {
+            try {
+                const res = await fetch('/api/v1/users/me', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data.onboardingCompleted) {
+                    window.location.href = '/onboarding.html';
+                }
+            } catch (e) {
+                console.error('Onboarding check failed:', e);
+            }
+        }
+
+        // PDF export
+        async function exportPdf() {
+            const vaultKey = sessionStorage.getItem('vaultKey');
+            if (!vaultKey) {
+                alert('Ava esmalt tresor, et eksportida PDF-i');
+                window.location.href = '/vault.html';
+                return;
+            }
+            try {
+                const res = await fetch('/api/v1/vault/export/pdf', {
+                    headers: { 'Authorization': 'Bearer ' + token, 'X-Encryption-Key': vaultKey }
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) { alert('Eksport ebaõnnestus'); return; }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'parandiplaan-' + new Date().toISOString().split('T')[0] + '.pdf';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('PDF export failed:', e);
+                alert('Eksport ebaõnnestus');
+            }
+        }
+
         // Load all data in parallel
+        checkOnboarding();
         loadProgress();
         loadCategories();
         loadContacts();

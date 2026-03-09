@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tere tulemast — Pärandiplaan</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/onboarding.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="onboarding">
+        <!-- Stepper -->
+        <div class="stepper">
+            <div class="stepper-step active" data-step="1"><span>1</span><small>Tervitus</small></div>
+            <div class="stepper-line"></div>
+            <div class="stepper-step" data-step="2"><span>2</span><small>Pangandus</small></div>
+            <div class="stepper-line"></div>
+            <div class="stepper-step" data-step="3"><span>3</span><small>Digitaalne ID</small></div>
+            <div class="stepper-line"></div>
+            <div class="stepper-step" data-step="4"><span>4</span><small>Usalduskontakt</small></div>
+            <div class="stepper-line"></div>
+            <div class="stepper-step" data-step="5"><span>5</span><small>Valmis!</small></div>
+        </div>
+
+        <!-- Step 1: Welcome -->
+        <div class="step-card" id="step-1">
+            <div class="step-icon">🌿</div>
+            <h1>Tere tulemast Pärandiplaani!</h1>
+            <p class="step-description">
+                Pärandiplaan aitab sul korrastada kogu olulise info — pangakontod, kindlustused,
+                digitaalsed kontod ja palju muud — nii et sinu lähedased on kaitstud, kui sind enam pole.
+            </p>
+            <p class="step-description">
+                Seadistame sinu plaani mõne minutiga. Saad igal sammul ka vahele jätta.
+            </p>
+            <div class="step-actions">
+                <button class="btn btn-primary" onclick="goToStep(2)">Alustame!</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Banking -->
+        <div class="step-card" id="step-2" style="display:none">
+            <div class="step-icon">🏦</div>
+            <h1>Lisa pangakonto</h1>
+            <p class="step-description">Alustame kõige tavalisemaga — sinu pangakontoga.</p>
+            <div id="step2-error" class="onboarding-error" style="display:none"></div>
+            <form id="banking-form" class="onboarding-form">
+                <div class="form-group">
+                    <label for="bank-title">Kirje pealkiri</label>
+                    <input type="text" id="bank-title" placeholder="nt. SEB arvelduskonto" required>
+                </div>
+                <div class="form-group">
+                    <label for="bank-name">Panga nimi</label>
+                    <input type="text" id="bank-name" placeholder="nt. SEB, Swedbank, LHV">
+                </div>
+                <div class="form-group">
+                    <label for="bank-account">Konto number</label>
+                    <input type="text" id="bank-account" placeholder="EE...">
+                </div>
+                <div class="form-group">
+                    <label for="bank-type">Konto tüüp</label>
+                    <select id="bank-type">
+                        <option value="">Vali...</option>
+                        <option value="checking">Arvelduskonto</option>
+                        <option value="savings">Hoiukonto</option>
+                        <option value="investment">Investeerimiskonto</option>
+                        <option value="credit">Krediidikonto</option>
+                    </select>
+                </div>
+                <div class="step-actions">
+                    <button type="button" class="btn btn-ghost" onclick="goToStep(3)">Jäta vahele</button>
+                    <button type="submit" class="btn btn-primary" id="bank-submit">Salvesta ja jätka</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 3: Digital Identity -->
+        <div class="step-card" id="step-3" style="display:none">
+            <div class="step-icon">🪪</div>
+            <h1>Digitaalne identiteet</h1>
+            <p class="step-description">Smart-ID ja Mobile-ID PINid on oluline info, mis peaks olema turvaliselt salvestatud.</p>
+            <div id="step3-error" class="onboarding-error" style="display:none"></div>
+            <form id="digital-id-form" class="onboarding-form">
+                <div class="form-group">
+                    <label for="did-title">Kirje pealkiri</label>
+                    <input type="text" id="did-title" placeholder="nt. Smart-ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="did-service">Teenus</label>
+                    <select id="did-service">
+                        <option value="">Vali...</option>
+                        <option value="Smart-ID">Smart-ID</option>
+                        <option value="Mobile-ID">Mobile-ID</option>
+                        <option value="ID-kaart">ID-kaart</option>
+                        <option value="DigiDoc">DigiDoc</option>
+                        <option value="e-Residency">e-Residency</option>
+                        <option value="muu">Muu</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="did-pin1">PIN1 (autentimine)</label>
+                    <input type="text" id="did-pin1" placeholder="PIN1">
+                </div>
+                <div class="form-group">
+                    <label for="did-pin2">PIN2 (allkirjastamine)</label>
+                    <input type="text" id="did-pin2" placeholder="PIN2">
+                </div>
+                <div class="form-group">
+                    <label for="did-puk">PUK kood</label>
+                    <input type="text" id="did-puk" placeholder="PUK">
+                </div>
+                <div class="step-actions">
+                    <button type="button" class="btn btn-ghost" onclick="goToStep(4)">Jäta vahele</button>
+                    <button type="submit" class="btn btn-primary" id="did-submit">Salvesta ja jätka</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 4: Trusted Contact -->
+        <div class="step-card" id="step-4" style="display:none">
+            <div class="step-icon">🤝</div>
+            <h1>Lisa usalduskontakt</h1>
+            <p class="step-description">
+                Usalduskontakt on isik, kellele antakse vajadusel ligipääs sinu andmetele.
+                See on sinu plaani üks olulisemaid osi.
+            </p>
+            <div id="step4-error" class="onboarding-error" style="display:none"></div>
+            <form id="contact-form" class="onboarding-form">
+                <div class="form-group">
+                    <label for="contact-name">Nimi</label>
+                    <input type="text" id="contact-name" placeholder="Eesnimi Perenimi" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-email">E-posti aadress</label>
+                    <input type="email" id="contact-email" placeholder="nimi@example.com" required>
+                </div>
+                <div class="step-actions">
+                    <button type="button" class="btn btn-ghost" onclick="goToStep(5)">Jäta vahele</button>
+                    <button type="submit" class="btn btn-primary" id="contact-submit">Salvesta ja jätka</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 5: Done! -->
+        <div class="step-card" id="step-5" style="display:none">
+            <div class="step-icon">🎉</div>
+            <h1>Suurepärane!</h1>
+            <p class="step-description">Sinu Pärandiplaan on alustatud.</p>
+            <div class="summary" id="onboarding-summary">
+                <!-- Filled by JS -->
+            </div>
+            <p class="step-description">
+                Sa saad alati oma töölaual lisada uusi kirjeid, kategooriaid täita ja seadeid muuta.
+            </p>
+            <div class="step-actions">
+                <button class="btn btn-primary btn-lg" onclick="completeOnboarding()">Ava töölaud</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auth guard
+        const token = localStorage.getItem('accessToken');
+        const vaultKey = sessionStorage.getItem('vaultKey');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        const headers = {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+
+        const headersWithKey = {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'X-Encryption-Key': vaultKey || ''
+        };
+
+        function handleAuthError(res) {
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('accessToken');
+                window.location.href = '/login.html';
+                return true;
+            }
+            return false;
+        }
+
+        // State
+        let currentStep = 1;
+        let addedItems = { banking: false, digitalId: false, contact: false };
+        let categories = [];
+
+        // Load categories to get IDs
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/v1/vault/categories', { headers });
+                if (!res.ok) return;
+                categories = await res.json();
+            } catch (e) {
+                console.error('Failed to load categories:', e);
+            }
+        }
+
+        function getCategoryBySlug(slug) {
+            return categories.find(c => c.slug === slug);
+        }
+
+        // Step navigation
+        function goToStep(step) {
+            // Hide current
+            document.getElementById('step-' + currentStep).style.display = 'none';
+            // Show target
+            currentStep = step;
+            document.getElementById('step-' + currentStep).style.display = '';
+            // Update stepper
+            document.querySelectorAll('.stepper-step').forEach(el => {
+                const s = parseInt(el.dataset.step);
+                el.classList.toggle('active', s === currentStep);
+                el.classList.toggle('completed', s < currentStep);
+            });
+            // Update summary on last step
+            if (step === 5) updateSummary();
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Step 2: Banking
+        document.getElementById('banking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!vaultKey) { alert('Vault key puudub. Palun logi uuesti sisse.'); return; }
+            const errorEl = document.getElementById('step2-error');
+            errorEl.style.display = 'none';
+            const btn = document.getElementById('bank-submit');
+            btn.disabled = true;
+            btn.textContent = 'Salvestamine...';
+
+            const bankingCat = getCategoryBySlug('banking');
+            if (!bankingCat) { errorEl.textContent = 'Kategooriat ei leitud'; errorEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Salvesta ja jätka'; return; }
+
+            const title = document.getElementById('bank-title').value.trim();
+            const data = JSON.stringify({
+                bank_name: document.getElementById('bank-name').value.trim(),
+                account_number: document.getElementById('bank-account').value.trim(),
+                account_type: document.getElementById('bank-type').value
+            });
+
+            try {
+                const res = await fetch('/api/v1/vault/entries', {
+                    method: 'POST',
+                    headers: headersWithKey,
+                    body: JSON.stringify({ categoryId: bankingCat.id, title, data, notes: '' })
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || 'Salvestamine ebaonnestus');
+                }
+                addedItems.banking = true;
+                goToStep(3);
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salvesta ja jätka';
+            }
+        });
+
+        // Step 3: Digital Identity
+        document.getElementById('digital-id-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!vaultKey) { alert('Vault key puudub. Palun logi uuesti sisse.'); return; }
+            const errorEl = document.getElementById('step3-error');
+            errorEl.style.display = 'none';
+            const btn = document.getElementById('did-submit');
+            btn.disabled = true;
+            btn.textContent = 'Salvestamine...';
+
+            const diCat = getCategoryBySlug('digital_identity');
+            if (!diCat) { errorEl.textContent = 'Kategooriat ei leitud'; errorEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Salvesta ja jätka'; return; }
+
+            const title = document.getElementById('did-title').value.trim();
+            const data = JSON.stringify({
+                service_name: document.getElementById('did-service').value,
+                pin1: document.getElementById('did-pin1').value.trim(),
+                pin2: document.getElementById('did-pin2').value.trim(),
+                puk: document.getElementById('did-puk').value.trim()
+            });
+
+            try {
+                const res = await fetch('/api/v1/vault/entries', {
+                    method: 'POST',
+                    headers: headersWithKey,
+                    body: JSON.stringify({ categoryId: diCat.id, title, data, notes: '' })
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || 'Salvestamine ebaonnestus');
+                }
+                addedItems.digitalId = true;
+                goToStep(4);
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salvesta ja jätka';
+            }
+        });
+
+        // Step 4: Trusted Contact
+        document.getElementById('contact-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('step4-error');
+            errorEl.style.display = 'none';
+            const btn = document.getElementById('contact-submit');
+            btn.disabled = true;
+            btn.textContent = 'Salvestamine...';
+
+            const fullName = document.getElementById('contact-name').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+
+            try {
+                const res = await fetch('/api/v1/trusted-contacts', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ fullName, email })
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || 'Salvestamine ebaonnestus');
+                }
+                addedItems.contact = true;
+                goToStep(5);
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salvesta ja jätka';
+            }
+        });
+
+        // Summary
+        function updateSummary() {
+            const summary = document.getElementById('onboarding-summary');
+            const items = [];
+            if (addedItems.banking) items.push('<li>Pangakonto lisatud</li>');
+            if (addedItems.digitalId) items.push('<li>Digitaalne identiteet lisatud</li>');
+            if (addedItems.contact) items.push('<li>Usalduskontakt lisatud</li>');
+            if (items.length === 0) {
+                summary.innerHTML = '<p class="summary-empty">Sa jätsid kõik sammud vahele — pole hullu! Saad alati hiljem lisada.</p>';
+            } else {
+                summary.innerHTML = '<ul class="summary-list">' + items.join('') + '</ul>';
+            }
+        }
+
+        // Complete onboarding
+        async function completeOnboarding() {
+            try {
+                await fetch('/api/v1/users/me/complete-onboarding', {
+                    method: 'POST',
+                    headers
+                });
+            } catch (e) {
+                console.error('Complete onboarding failed:', e);
+            }
+            window.location.href = '/dashboard.html';
+        }
+
+        // Check if already completed
+        async function checkOnboardingStatus() {
+            try {
+                const res = await fetch('/api/v1/users/me', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.onboardingCompleted) {
+                    window.location.href = '/dashboard.html';
+                }
+            } catch (e) {
+                console.error('Status check failed:', e);
+            }
+        }
+
+        // Init
+        checkOnboardingStatus();
+        loadCategories();
+    </script>
+</body>
+</html>

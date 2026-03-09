@@ -6,6 +6,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 @Service
@@ -160,6 +162,29 @@ public class EmailService {
                     <p style="color: #999; font-size: 12px;">Pärandiplaan — Sinu digitaalne pärand, turvaliselt korraldatud</p>
                 </div>
                 """.formatted(contactName, ownerName);
+
+        sendEmail(toEmail, subject, html);
+    }
+
+    public void sendExpirationReminder(String toEmail, String fullName,
+                                       String categoryName, int daysAhead, LocalDate expiryDate) {
+        String subject = "Meeldetuletus: " + categoryName + " aegub " + daysAhead + " paeva parast";
+        String formattedDate = expiryDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        String html = """
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1B4332;">Meeldetuletus</h2>
+                    <p>Tere, %s!</p>
+                    <p>Sinu <strong>%s</strong> kirje aegub <strong>%d paeva parast</strong> (%s).</p>
+                    <p>Soovitame kontrollida ja vajadusel uuendada seda kirjet oma Parandiplaanis.</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="background: #2D6A4F; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            Ava Parandiplaan
+                        </a>
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">Parandiplaan — Sinu digitaalne parand, turvaliselt korraldatud</p>
+                </div>
+                """.formatted(fullName, categoryName, daysAhead, formattedDate, appUrl);
 
         sendEmail(toEmail, subject, html);
     }

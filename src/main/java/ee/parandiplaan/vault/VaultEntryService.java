@@ -69,6 +69,8 @@ public class VaultEntryService {
             entry.setNotesIv(notesEnc.iv());
         }
 
+        entry.setReminderDate(request.reminderDate());
+
         entry = entryRepository.save(entry);
         progressService.recalculate(user);
         return toResponse(entry, encryptionKey);
@@ -99,6 +101,8 @@ public class VaultEntryService {
         if (request.isComplete() != null) {
             entry.setComplete(request.isComplete());
         }
+
+        entry.setReminderDate(request.reminderDate());
 
         entry = entryRepository.save(entry);
         progressService.recalculate(user);
@@ -169,6 +173,7 @@ public class VaultEntryService {
                 decryptedNotes,
                 entry.isComplete(),
                 entry.isHasAttachments(),
+                entry.getReminderDate(),
                 entry.getLastReviewedAt(),
                 entry.getCreatedAt(),
                 entry.getUpdatedAt()

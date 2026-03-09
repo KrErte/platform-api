@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -51,6 +52,9 @@ public class VaultEntry {
 
     @Column(name = "is_complete", nullable = false)
     private boolean complete = false;
+
+    @Column(name = "reminder_date")
+    private LocalDate reminderDate;
 
     @Column(name = "last_reviewed_at")
     private Instant lastReviewedAt;

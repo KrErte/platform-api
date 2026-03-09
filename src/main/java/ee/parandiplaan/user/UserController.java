@@ -22,6 +22,13 @@ public class UserController {
         return ResponseEntity.ok(buildUserResponse(user));
     }
 
+    @PostMapping("/me/complete-onboarding")
+    public ResponseEntity<Map<String, Object>> completeOnboarding(@CurrentUser User user) {
+        user.setOnboardingCompleted(true);
+        user = userRepository.save(user);
+        return ResponseEntity.ok(buildUserResponse(user));
+    }
+
     @PutMapping("/me")
     public ResponseEntity<Map<String, Object>> updateProfile(
             @CurrentUser User user,
@@ -50,6 +57,7 @@ public class UserController {
         map.put("language", user.getLanguage());
         map.put("emailVerified", user.isEmailVerified());
         map.put("totpEnabled", user.isTotpEnabled());
+        map.put("onboardingCompleted", user.isOnboardingCompleted());
         map.put("createdAt", user.getCreatedAt().toString());
         return map;
     }

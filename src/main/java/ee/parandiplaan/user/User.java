@@ -58,6 +58,9 @@ public class User {
     @Column(name = "password_reset_token_expires_at")
     private Instant passwordResetTokenExpiresAt;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    private boolean onboardingCompleted = false;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
