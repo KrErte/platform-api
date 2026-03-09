@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Tegevuslogi — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/dashboard.css">
+    <style>
+        .activity-page { max-width: 800px; margin: 0 auto; padding: 6rem 2rem 3rem; }
+        .activity-page h1 { font-size: 1.75rem; font-weight: 800; color: var(--green-900); margin-bottom: 2rem; }
+        .activity-list { display: flex; flex-direction: column; gap: 0; }
+        .activity-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.25rem; background: white; border: 1px solid var(--green-200); border-bottom: none; }
+        .activity-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+        .activity-item:last-child { border-bottom: 1px solid var(--green-200); border-radius: 0 0 var(--radius-md) var(--radius-md); }
+        .activity-item:only-child { border-radius: var(--radius-md); border-bottom: 1px solid var(--green-200); }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-600); flex-shrink: 0; margin-top: 0.45rem; }
+        .activity-info { flex: 1; }
+        .activity-action { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .activity-detail { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.1rem; }
+        .activity-time { font-size: 0.8rem; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; }
+        .activity-empty { text-align: center; padding: 4rem 2rem; background: white; border-radius: var(--radius-lg); border: 1px solid var(--green-200); color: var(--text-muted); }
+        .load-more { display: block; margin: 1.5rem auto 0; padding: 0.5rem 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <nav>
+        <div class="nav-inner">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+            <div class="nav-user">
+                <span class="nav-user-name" id="nav-name"></span>
+                <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
+                <button class="btn-logout" onclick="logout()">Logi välja</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="activity-page">
+        <h1>Tegevuslogi</h1>
+        <div id="activity-container">
+            <div class="skeleton skeleton-line" style="width:80%"></div>
+            <div class="skeleton skeleton-line" style="width:60%"></div>
+        </div>
+        <button id="load-more-btn" class="btn btn-outline btn-sm load-more" style="display:none" onclick="loadMore()">Laadi rohkem</button>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('accessToken');
+        if (!token) window.location.href = '/login.html';
+
+        const userName = localStorage.getItem('userName') || '';
+        document.getElementById('nav-name').textContent = userName;
+
+        const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.removeItem('vaultKey');
+            window.location.href = '/login.html';
+        }
+
+        function handleAuthError(res) {
+            if (res.status === 401 || res.status === 403) { logout(); return true; }
+            return false;
+        }
+
+        var actionLabels = {
+            LOGIN: 'Sisselogimine',
+            ENTRY_CREATED: 'Kirje loodud',
+            ENTRY_UPDATED: 'Kirje muudetud',
+            ENTRY_DELETED: 'Kirje kustutatud',
+            CONTACT_ADDED: 'Kontakt lisatud',
+            CONTACT_REMOVED: 'Kontakt eemaldatud',
+            HANDOVER_APPROVED: 'Üleandmine kinnitatud',
+            HANDOVER_DENIED: 'Üleandmine keelatud'
+        };
+
+        var currentPage = 0;
+        var allLoaded = false;
+
+        async function loadAudit(page) {
+            try {
+                var res = await fetch('/api/v1/audit?page=' + page + '&size=20', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                var data = await res.json();
+                var items = data.content || [];
+                if (items.length < 20 || data.last) allLoaded = true;
+                renderItems(items, page === 0);
+                document.getElementById('load-more-btn').style.display = allLoaded ? 'none' : 'block';
+            } catch (e) {
+                console.error('Audit load failed:', e);
+            }
+        }
+
+        function renderItems(items, replace) {
+            var container = document.getElementById('activity-container');
+            if (replace && items.length === 0) {
+                container.innerHTML = '<div class="activity-empty">Tegevusi pole veel salvestatud.</div>';
+                return;
+            }
+
+            var html = items.map(function(item) {
+                var label = actionLabels[item.action] || item.action;
+                var time = new Date(item.createdAt).toLocaleString('et-EE');
+                return '<div class="activity-item">' +
+                    '<div class="activity-dot"></div>' +
+                    '<div class="activity-info">' +
+                        '<div class="activity-action">' + label + '</div>' +
+                        (item.detail ? '<div class="activity-detail">' + escapeHtml(item.detail) + '</div>' : '') +
+                    '</div>' +
+                    '<div class="activity-time">' + time + '</div>' +
+                '</div>';
+            }).join('');
+
+            if (replace) {
+                container.innerHTML = '<div class="activity-list">' + html + '</div>';
+            } else {
+                container.querySelector('.activity-list').insertAdjacentHTML('beforeend', html);
+            }
+        }
+
+        function escapeHtml(text) {
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function loadMore() {
+            currentPage++;
+            loadAudit(currentPage);
+        }
+
+        loadAudit(0);
+    </script>
+    <script src="/assets/session-guard.js"></script>
+</body>
+</html>

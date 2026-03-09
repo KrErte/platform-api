@@ -1,5 +1,6 @@
 package ee.parandiplaan.trust;
 
+import ee.parandiplaan.audit.AuditService;
 import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.trust.dto.CreateHandoverRequest;
 import ee.parandiplaan.trust.dto.HandoverRequestResponse;
@@ -22,6 +23,7 @@ public class HandoverRequestService {
     private final TrustedContactRepository contactRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final AuditService auditService;
 
     private static final int RESPONSE_DEADLINE_HOURS = 72;
 
@@ -105,6 +107,7 @@ public class HandoverRequestService {
         handover.setRespondedAt(Instant.now());
         handover.setRespondedBy("USER");
         handover = handoverRepository.save(handover);
+        auditService.log(user, "HANDOVER_APPROVED", handover.getTrustedContact().getFullName());
 
         // Notify contact
         TrustedContact contact = handover.getTrustedContact();
@@ -133,6 +136,7 @@ public class HandoverRequestService {
         handover.setRespondedAt(Instant.now());
         handover.setRespondedBy("USER");
         handover = handoverRepository.save(handover);
+        auditService.log(user, "HANDOVER_DENIED", handover.getTrustedContact().getFullName());
 
         // Notify contact
         TrustedContact contact = handover.getTrustedContact();

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Töölaud — Pärandiplaan</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="stylesheet" href="/assets/dashboard.css">
 </head>
@@ -31,7 +32,6 @@
             <div class="greeting-text">
                 <h1 id="greeting-title">Tere!</h1>
                 <p class="greeting-sub" id="greeting-sub">Sinu Pärandiplaan on pooleli</p>
-                <button class="btn btn-outline btn-sm" onclick="exportPdf()" style="margin-top:0.75rem">Ekspordi PDF</button>
             </div>
             <div class="dash-progress-ring">
                 <svg viewBox="0 0 120 120">
@@ -45,14 +45,22 @@
             </div>
         </section>
 
-        <!-- Vault Categories -->
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="/vault.html" class="quick-action-btn"><span class="qa-icon">+</span> Lisa kirje</a>
+            <a href="/usaldusisikud.html" class="quick-action-btn"><span class="qa-icon">&#128100;</span> Lisa kontakt</a>
+            <button class="quick-action-btn" onclick="exportPdf()"><span class="qa-icon">&#128196;</span> Ekspordi PDF</button>
+            <a href="/activity.html" class="quick-action-btn"><span class="qa-icon">&#128337;</span> Tegevuslogi</a>
+        </div>
+
+        <!-- Vault Categories with progress bars -->
         <h2 class="dash-section-title">Tresori kategooriad</h2>
         <div class="vault-grid" id="vault-grid">
-            <div class="vault-card skeleton" style="height:120px"></div>
-            <div class="vault-card skeleton" style="height:120px"></div>
-            <div class="vault-card skeleton" style="height:120px"></div>
-            <div class="vault-card skeleton" style="height:120px"></div>
-            <div class="vault-card skeleton" style="height:120px"></div>
+            <div class="vault-card skeleton" style="height:140px"></div>
+            <div class="vault-card skeleton" style="height:140px"></div>
+            <div class="vault-card skeleton" style="height:140px"></div>
+            <div class="vault-card skeleton" style="height:140px"></div>
+            <div class="vault-card skeleton" style="height:140px"></div>
         </div>
 
         <!-- Suggestions -->
@@ -61,8 +69,15 @@
             <div class="suggestions-list" id="suggestions-list"></div>
         </div>
 
-        <!-- Contacts + Subscription -->
-        <div class="dash-columns">
+        <!-- Activity + Contacts + Subscription -->
+        <div class="dash-columns-3">
+            <div class="dash-card">
+                <h2 class="dash-section-title">Viimane tegevus <a href="/activity.html" style="font-size:0.8rem;font-weight:600;color:var(--green-700);text-decoration:none;margin-left:0.5rem">Vaata k&otilde;iki →</a></h2>
+                <div id="recent-activity">
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line short"></div>
+                </div>
+            </div>
             <div class="dash-card">
                 <h2 class="dash-section-title">Usalduskontaktid <a href="/usaldusisikud.html" style="font-size:0.8rem;font-weight:600;color:var(--green-700);text-decoration:none;margin-left:0.5rem">Halda →</a></h2>
                 <ul class="contacts-list" id="contacts-list">
@@ -165,13 +180,15 @@
                 dashCategories = await res.json();
 
                 const grid = document.getElementById('vault-grid');
-                grid.innerHTML = dashCategories.map(cat =>
-                    '<a href="/vault.html?category=' + cat.slug + '" class="vault-card">' +
+                grid.innerHTML = dashCategories.map(cat => {
+                    var pct = cat.entryCount > 0 ? Math.round((cat.completedCount / cat.entryCount) * 100) : 0;
+                    return '<a href="/vault.html?category=' + cat.slug + '" class="vault-card">' +
                         '<span class="vault-icon">' + (cat.icon || '📁') + '</span>' +
                         '<span class="vault-name">' + cat.nameEt + '</span>' +
-                        '<span class="vault-count">' + cat.entryCount + ' kirjet</span>' +
-                    '</a>'
-                ).join('');
+                        '<div class="vault-card-progress"><div class="vault-card-progress-fill" style="width:' + pct + '%"></div></div>' +
+                        '<span class="vault-count">' + cat.completedCount + '/' + cat.entryCount + '</span>' +
+                    '</a>';
+                }).join('');
 
                 // Load suggestions after categories are available
                 loadSuggestions();
@@ -329,12 +346,84 @@
             }
         }
 
+        // Load recent activity
+        var activityLabels = {
+            LOGIN: 'Sisselogimine',
+            ENTRY_CREATED: 'Kirje loodud',
+            ENTRY_UPDATED: 'Kirje muudetud',
+            ENTRY_DELETED: 'Kirje kustutatud',
+            CONTACT_ADDED: 'Kontakt lisatud',
+            CONTACT_REMOVED: 'Kontakt eemaldatud',
+            HANDOVER_APPROVED: 'Üleandmine kinnitatud',
+            HANDOVER_DENIED: 'Üleandmine keelatud'
+        };
+
+        async function loadRecentActivity() {
+            try {
+                var res = await fetch('/api/v1/audit/recent', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                var items = await res.json();
+                var container = document.getElementById('recent-activity');
+                if (items.length === 0) {
+                    container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Tegevusi pole veel.</p>';
+                    return;
+                }
+                container.innerHTML = '<ul class="recent-activity-list">' + items.slice(0, 5).map(function(item) {
+                    var label = activityLabels[item.action] || item.action;
+                    var ago = timeAgo(item.createdAt);
+                    return '<li class="recent-activity-item">' +
+                        '<span class="ra-label">' + label + '</span>' +
+                        (item.detail ? '<span class="ra-detail"> — ' + item.detail + '</span>' : '') +
+                        '<span class="ra-time">' + ago + '</span>' +
+                    '</li>';
+                }).join('') + '</ul>';
+            } catch (e) {
+                console.error('Activity load failed:', e);
+            }
+        }
+
+        function timeAgo(dateStr) {
+            var diff = Date.now() - new Date(dateStr).getTime();
+            var mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'just nüüd';
+            if (mins < 60) return mins + ' min tagasi';
+            var hours = Math.floor(mins / 60);
+            if (hours < 24) return hours + 'h tagasi';
+            var days = Math.floor(hours / 24);
+            return days + 'p tagasi';
+        }
+
+        // Load pending handovers badge
+        async function loadHandoverBadge() {
+            try {
+                var res = await fetch('/api/v1/handover-requests/pending', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                var pending = await res.json();
+                if (pending.length > 0) {
+                    var badge = document.createElement('span');
+                    badge.className = 'nav-badge';
+                    badge.textContent = pending.length;
+                    badge.title = pending.length + ' ootel üleandmistaotlust';
+                    var navUser = document.querySelector('.nav-user');
+                    var settingsLink = navUser.querySelector('.nav-settings-link');
+                    settingsLink.insertAdjacentElement('afterend', badge);
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
         // Load all data in parallel
         checkOnboarding();
         loadProgress();
         loadCategories();
         loadContacts();
         loadSubscription();
+        loadRecentActivity();
+        loadHandoverBadge();
     </script>
+    <script src="/assets/session-guard.js"></script>
 </body>
 </html>

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Tresor — Pärandiplaan</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="stylesheet" href="/assets/auth.css">
     <link rel="stylesheet" href="/assets/vault.css">
@@ -68,6 +69,14 @@
                     <h1 id="detail-name"></h1>
                 </div>
                 <div class="vault-detail-actions">
+                    <select id="sort-select" class="sort-dropdown" onchange="sortEntries(this.value)">
+                        <option value="newest">Uuemad enne</option>
+                        <option value="oldest">Vanemad enne</option>
+                        <option value="az">A-Z</option>
+                        <option value="za">Z-A</option>
+                        <option value="incomplete">Pooleli enne</option>
+                        <option value="complete">Valmis enne</option>
+                    </select>
                     <button class="btn btn-primary btn-sm" onclick="openEntryModal()">+ Lisa kirje</button>
                 </div>
             </div>
@@ -256,21 +265,80 @@
             }
 
             container.innerHTML = '<div class="entries-list">' + currentEntries.map(entry => {
-                const hasContent = entry.title && entry.title.trim();
-                const dotClass = hasContent ? 'filled' : 'empty';
                 const dateStr = entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString('et-EE') : '';
                 return '<div class="entry-card">' +
-                    '<div class="entry-status-dot ' + dotClass + '"></div>' +
+                    '<label class="entry-checkbox-wrapper" onclick="event.stopPropagation()">' +
+                        '<input type="checkbox" class="entry-checkbox" ' + (entry.isComplete ? 'checked' : '') +
+                        ' onchange="toggleComplete(\'' + entry.id + '\', this)">' +
+                        '<span class="entry-checkbox-custom"></span>' +
+                    '</label>' +
                     '<div class="entry-info">' +
-                        '<div class="entry-title">' + escapeHtml(entry.title || 'Nimetu') + '</div>' +
+                        '<div class="entry-title' + (entry.isComplete ? ' completed' : '') + '">' + escapeHtml(entry.title || 'Nimetu') + '</div>' +
                         '<div class="entry-date">' + dateStr + '</div>' +
                     '</div>' +
                     '<div class="entry-actions">' +
+                        '<button class="btn-icon" onclick="duplicateEntry(\'' + entry.id + '\')" title="Dubleeri">&#128203;</button>' +
                         '<button class="btn-icon" onclick="editEntry(\'' + entry.id + '\')" title="Muuda">&#9998;</button>' +
                         '<button class="btn-icon danger" onclick="openDeleteModal(\'' + entry.id + '\')" title="Kustuta">&#128465;</button>' +
                     '</div>' +
                 '</div>';
             }).join('') + '</div>';
+        }
+
+        async function toggleComplete(entryId, checkbox) {
+            try {
+                const res = await fetch('/api/v1/vault/entries/' + entryId + '/toggle-complete', {
+                    method: 'PATCH',
+                    headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) { checkbox.checked = !checkbox.checked; return; }
+                const updated = await res.json();
+                const entry = currentEntries.find(e => e.id === entryId);
+                if (entry) {
+                    entry.isComplete = updated.isComplete;
+                    const titleEl = checkbox.closest('.entry-card').querySelector('.entry-title');
+                    if (titleEl) titleEl.classList.toggle('completed', updated.isComplete);
+                }
+                refreshCategoryCounts();
+            } catch (e) {
+                console.error('Toggle failed:', e);
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+
+        async function duplicateEntry(entryId) {
+            try {
+                const res = await fetch('/api/v1/vault/entries/' + entryId + '/duplicate', {
+                    method: 'POST',
+                    headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.message || 'Dubleerimine ebaõnnestus');
+                    return;
+                }
+                loadEntries();
+                refreshCategoryCounts();
+            } catch (e) {
+                console.error('Duplicate failed:', e);
+                alert('Dubleerimine ebaõnnestus');
+            }
+        }
+
+        function sortEntries(sortBy) {
+            const sorted = [...currentEntries];
+            switch (sortBy) {
+                case 'newest': sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); break;
+                case 'oldest': sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break;
+                case 'az': sorted.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'et')); break;
+                case 'za': sorted.sort((a, b) => (b.title || '').localeCompare(a.title || '', 'et')); break;
+                case 'incomplete': sorted.sort((a, b) => (a.isComplete === b.isComplete) ? 0 : a.isComplete ? 1 : -1); break;
+                case 'complete': sorted.sort((a, b) => (a.isComplete === b.isComplete) ? 0 : a.isComplete ? -1 : 1); break;
+            }
+            currentEntries = sorted;
+            renderEntries();
         }
 
         function escapeHtml(text) {
@@ -761,5 +829,6 @@
         // Init
         loadCategories();
     </script>
+    <script src="/assets/session-guard.js"></script>
 </body>
 </html>

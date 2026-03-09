@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pärandiplaan aitab sul koondada kogu olulise eluinfo ühte turvalisse kohta — pangakontod, kindlustused, lepingud, soovid — ja tagab, et su lähedased saavad sellele ligipääsu siis, kui seda vaja on.">
+    <meta name="keywords" content="pärandiplaan, digitaalne pärand, elukorraldus, turvaline tresor, usaldusisikud, Eesti">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Pärandiplaan — Su elu, korrastatud">
+    <meta property="og:description" content="Koonda kogu oluline eluinfo ühte turvalisse kohta. AES-256 krüpteerimine, usaldusisikud, automaatne üleandmine.">
+    <meta property="og:url" content="https://parandiplaan.ee">
+    <meta property="og:site_name" content="Pärandiplaan">
+    <meta property="og:locale" content="et_EE">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Pärandiplaan — Su elu, korrastatud">
+    <meta name="twitter:description" content="Koonda kogu oluline eluinfo ühte turvalisse kohta. AES-256 krüpteerimine, usaldusisikud, automaatne üleandmine.">
     <title>Pärandiplaan — Su elu, korrastatud</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
@@ -195,7 +206,7 @@
                     <li>Inaktiivsuskontroll</li>
                     <li>Prioriteetne tugi</li>
                 </ul>
-                <a href="/register.html" class="btn btn-primary">Vali Plus</a>
+                <a href="#" onclick="selectPlan('PLUS'); return false;" class="btn btn-primary">Vali Plus</a>
             </div>
             <div class="price-card">
                 <div class="price-tier">Perekond</div>
@@ -209,7 +220,7 @@
                     <li>Perekonna jagamine</li>
                     <li>Prioriteetne tugi</li>
                 </ul>
-                <a href="/register.html" class="btn btn-outline">Vali Perekond</a>
+                <a href="#" onclick="selectPlan('FAMILY'); return false;" class="btn btn-outline">Vali Perekond</a>
             </div>
         </div>
     </section>
@@ -280,6 +291,37 @@
                 }
             });
             observer.observe(document.querySelector('.hero-visual'));
+        }
+
+        // Plan selection / checkout
+        function selectPlan(plan) {
+            var token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = '/register.html?plan=' + plan;
+                return;
+            }
+            // Logged in — try checkout
+            fetch('/api/v1/subscription/checkout', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan: plan })
+            }).then(function(res) {
+                if (res.status === 401 || res.status === 403) {
+                    window.location.href = '/register.html?plan=' + plan;
+                    return;
+                }
+                return res.json();
+            }).then(function(data) {
+                if (data && data.checkoutUrl) {
+                    window.location.href = data.checkoutUrl;
+                } else if (data && data.message) {
+                    alert(data.message);
+                } else {
+                    window.location.href = '/register.html?plan=' + plan;
+                }
+            }).catch(function() {
+                window.location.href = '/register.html?plan=' + plan;
+            });
         }
 
         // Smooth scroll

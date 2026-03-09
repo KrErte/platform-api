@@ -72,6 +72,22 @@ public class VaultEntryController {
         return ResponseEntity.ok(new MessageResponse("Kirje kustutatud"));
     }
 
+    @PatchMapping("/{id}/toggle-complete")
+    public ResponseEntity<VaultEntryResponse> toggleComplete(
+            @CurrentUser User user,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(entryService.toggleComplete(user, id));
+    }
+
+    @PostMapping("/{id}/duplicate")
+    public ResponseEntity<VaultEntryResponse> duplicate(
+            @CurrentUser User user,
+            @PathVariable UUID id,
+            @RequestHeader("X-Encryption-Key") String encryptionKey) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(entryService.duplicateEntry(user, id, encryptionKey));
+    }
+
     @PutMapping("/{id}/review")
     public ResponseEntity<VaultEntryResponse> markReviewed(
             @CurrentUser User user,

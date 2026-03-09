@@ -1,5 +1,6 @@
 package ee.parandiplaan.trust;
 
+import ee.parandiplaan.audit.AuditService;
 import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.progress.ProgressService;
 import ee.parandiplaan.subscription.Subscription;
@@ -24,6 +25,7 @@ public class TrustedContactService {
     private final SubscriptionRepository subscriptionRepository;
     private final ProgressService progressService;
     private final EmailService emailService;
+    private final AuditService auditService;
 
     private static final int PLUS_CONTACT_LIMIT = 5;
     private static final int TRIAL_CONTACT_LIMIT = 1;
@@ -70,6 +72,7 @@ public class TrustedContactService {
 
         contact = contactRepository.save(contact);
         progressService.recalculate(user);
+        auditService.log(user, "CONTACT_ADDED", contact.getFullName());
 
         // Send invite email
         emailService.sendInviteEmail(
@@ -116,8 +119,10 @@ public class TrustedContactService {
     public void deleteContact(User user, UUID contactId) {
         TrustedContact contact = contactRepository.findByIdAndUserId(contactId, user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usalduskontakti ei leitud"));
+        String name = contact.getFullName();
         contactRepository.delete(contact);
         progressService.recalculate(user);
+        auditService.log(user, "CONTACT_REMOVED", name);
     }
 
     @Transactional

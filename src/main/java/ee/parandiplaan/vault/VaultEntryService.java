@@ -1,5 +1,6 @@
 package ee.parandiplaan.vault;
 
+import ee.parandiplaan.audit.AuditService;
 import ee.parandiplaan.progress.ProgressService;
 import ee.parandiplaan.subscription.Subscription;
 import ee.parandiplaan.subscription.SubscriptionRepository;
@@ -24,6 +25,7 @@ public class VaultEntryService {
     private final SubscriptionRepository subscriptionRepository;
     private final EncryptionService encryptionService;
     private final ProgressService progressService;
+    private final AuditService auditService;
 
     private static final int TRIAL_ENTRY_LIMIT = 10;
 
@@ -73,6 +75,7 @@ public class VaultEntryService {
 
         entry = entryRepository.save(entry);
         progressService.recalculate(user);
+        auditService.log(user, "ENTRY_CREATED", category.getNameEt());
         return toResponse(entry, encryptionKey);
     }
 
@@ -106,6 +109,7 @@ public class VaultEntryService {
 
         entry = entryRepository.save(entry);
         progressService.recalculate(user);
+        auditService.log(user, "ENTRY_UPDATED", entry.getCategory().getNameEt());
         return toResponse(entry, encryptionKey);
     }
 
@@ -113,8 +117,10 @@ public class VaultEntryService {
     public void deleteEntry(User user, UUID entryId) {
         VaultEntry entry = entryRepository.findByIdAndUserId(entryId, user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
+        String catName = entry.getCategory().getNameEt();
         entryRepository.delete(entry);
         progressService.recalculate(user);
+        auditService.log(user, "ENTRY_DELETED", catName);
     }
 
     @Transactional
@@ -124,6 +130,54 @@ public class VaultEntryService {
         entry.setLastReviewedAt(Instant.now());
         entry = entryRepository.save(entry);
         return toResponse(entry, encryptionKey);
+    }
+
+    @Transactional
+    public VaultEntryResponse toggleComplete(User user, UUID entryId) {
+        VaultEntry entry = entryRepository.findByIdAndUserId(entryId, user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
+        entry.setComplete(!entry.isComplete());
+        entry = entryRepository.save(entry);
+        progressService.recalculate(user);
+        return new VaultEntryResponse(
+                entry.getId(), entry.getCategory().getId(), entry.getCategory().getSlug(),
+                entry.getCategory().getIcon(), null, null, null, entry.isComplete(),
+                entry.isHasAttachments(), entry.getReminderDate(), entry.getLastReviewedAt(),
+                entry.getCreatedAt(), entry.getUpdatedAt()
+        );
+    }
+
+    @Transactional
+    public VaultEntryResponse duplicateEntry(User user, UUID entryId, String encryptionKey) {
+        checkPlanLimit(user);
+        VaultEntry source = entryRepository.findByIdAndUserId(entryId, user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
+
+        String decTitle = encryptionService.decrypt(source.getTitle(), source.getTitleIv(), encryptionKey);
+        String decData = encryptionService.decrypt(source.getEncryptedData(), source.getEncryptionIv(), encryptionKey);
+
+        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle + " (koopia)", encryptionKey);
+        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, encryptionKey);
+
+        VaultEntry copy = new VaultEntry();
+        copy.setUser(user);
+        copy.setCategory(source.getCategory());
+        copy.setTitle(titleEnc.ciphertext());
+        copy.setTitleIv(titleEnc.iv());
+        copy.setEncryptedData(dataEnc.ciphertext());
+        copy.setEncryptionIv(dataEnc.iv());
+
+        if (source.getNotesEncrypted() != null && source.getNotesIv() != null) {
+            String decNotes = encryptionService.decrypt(source.getNotesEncrypted(), source.getNotesIv(), encryptionKey);
+            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, encryptionKey);
+            copy.setNotesEncrypted(notesEnc.ciphertext());
+            copy.setNotesIv(notesEnc.iv());
+        }
+
+        copy.setReminderDate(source.getReminderDate());
+        copy = entryRepository.save(copy);
+        progressService.recalculate(user);
+        return toResponse(copy, encryptionKey);
     }
 
     @Transactional(readOnly = true)

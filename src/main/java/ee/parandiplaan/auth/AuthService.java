@@ -1,5 +1,6 @@
 package ee.parandiplaan.auth;
 
+import ee.parandiplaan.audit.AuditService;
 import ee.parandiplaan.auth.dto.AuthResponse;
 import ee.parandiplaan.auth.dto.LoginRequest;
 import ee.parandiplaan.auth.dto.RegisterRequest;
@@ -39,6 +40,7 @@ public class AuthService {
     private final VaultAttachmentRepository vaultAttachmentRepository;
     private final EncryptionService encryptionService;
     private final StorageService storageService;
+    private final AuditService auditService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -101,6 +103,7 @@ public class AuthService {
         userRepository.save(user);
 
         log.info("User logged in: {}", user.getEmail());
+        auditService.log(user, "LOGIN", "Kasutaja logis sisse");
 
         return buildAuthResponse(user);
     }
