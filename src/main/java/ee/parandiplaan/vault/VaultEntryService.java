@@ -126,6 +126,18 @@ public class VaultEntryService {
         return toResponse(entry, encryptionKey);
     }
 
+    @Transactional(readOnly = true)
+    public List<VaultEntryResponse> searchEntries(User user, String query, String encryptionKey) {
+        List<VaultEntry> entries = entryRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        String lowerQuery = query.toLowerCase();
+        return entries.stream()
+                .map(e -> toResponse(e, encryptionKey))
+                .filter(r -> r.title().toLowerCase().contains(lowerQuery)
+                        || (r.data() != null && r.data().toLowerCase().contains(lowerQuery))
+                        || (r.notes() != null && r.notes().toLowerCase().contains(lowerQuery)))
+                .toList();
+    }
+
     private void checkPlanLimit(User user) {
         Subscription sub = subscriptionRepository.findByUserId(user.getId()).orElse(null);
         String plan = (sub != null) ? sub.getPlan() : "NONE";

@@ -55,6 +55,12 @@
             <div class="vault-card skeleton" style="height:120px"></div>
         </div>
 
+        <!-- Suggestions -->
+        <div id="suggestions-section" style="display:none">
+            <h2 class="dash-section-title">Soovitused</h2>
+            <div class="suggestions-list" id="suggestions-list"></div>
+        </div>
+
         <!-- Contacts + Subscription -->
         <div class="dash-columns">
             <div class="dash-card">
@@ -149,21 +155,26 @@
         }
 
         // Load vault categories
+        let dashCategories = [];
+
         async function loadCategories() {
             try {
                 const res = await fetch('/api/v1/vault/categories', { headers });
                 if (handleAuthError(res)) return;
                 if (!res.ok) return;
-                const categories = await res.json();
+                dashCategories = await res.json();
 
                 const grid = document.getElementById('vault-grid');
-                grid.innerHTML = categories.map(cat =>
+                grid.innerHTML = dashCategories.map(cat =>
                     '<a href="/vault.html?category=' + cat.slug + '" class="vault-card">' +
                         '<span class="vault-icon">' + (cat.icon || '📁') + '</span>' +
                         '<span class="vault-name">' + cat.nameEt + '</span>' +
                         '<span class="vault-count">' + cat.entryCount + ' kirjet</span>' +
                     '</a>'
                 ).join('');
+
+                // Load suggestions after categories are available
+                loadSuggestions();
             } catch (e) {
                 console.error('Categories load failed:', e);
             }
@@ -277,6 +288,44 @@
             } catch (e) {
                 console.error('PDF export failed:', e);
                 alert('Eksport ebaõnnestus');
+            }
+        }
+
+        // Load suggestions
+        async function loadSuggestions() {
+            try {
+                const res = await fetch('/api/v1/progress/suggestions', { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                const suggestions = await res.json();
+
+                if (!suggestions || suggestions.length === 0) return;
+
+                const section = document.getElementById('suggestions-section');
+                section.style.display = '';
+
+                const list = document.getElementById('suggestions-list');
+                list.innerHTML = suggestions.map(s => {
+                    const cat = dashCategories.find(c => c.id === s.categoryId);
+                    const slug = cat ? cat.slug : '';
+                    const icon = cat ? (cat.icon || '📁') : '📁';
+                    const typeClass = s.type === 'MISSING' ? 'missing' : s.type === 'INCOMPLETE' ? 'incomplete' : 'default';
+                    const typeLabel = s.type === 'MISSING' ? 'Puuduv' : s.type === 'INCOMPLETE' ? 'Pooleli' : s.type;
+
+                    return '<a href="/vault.html?category=' + slug + '" class="suggestion-card">' +
+                        '<span class="suggestion-icon">' + icon + '</span>' +
+                        '<div class="suggestion-info">' +
+                            '<div class="suggestion-title">' + (s.titleEt || '') + '</div>' +
+                            '<div class="suggestion-desc">' + (s.descriptionEt || '') + '</div>' +
+                        '</div>' +
+                        '<div class="suggestion-meta">' +
+                            '<span class="suggestion-badge ' + typeClass + '">' + typeLabel + '</span>' +
+                            '<span class="suggestion-points">+' + s.pointsToGain + ' punkti</span>' +
+                        '</div>' +
+                    '</a>';
+                }).join('');
+            } catch (e) {
+                console.error('Suggestions load failed:', e);
             }
         }
 

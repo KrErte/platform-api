@@ -30,6 +30,14 @@ public class VaultEntryController {
         return ResponseEntity.ok(entryService.listEntries(user, category, encryptionKey));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<VaultEntryResponse>> search(
+            @CurrentUser User user,
+            @RequestParam("q") String query,
+            @RequestHeader("X-Encryption-Key") String encryptionKey) {
+        return ResponseEntity.ok(entryService.searchEntries(user, query, encryptionKey));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<VaultEntryResponse> get(
             @CurrentUser User user,

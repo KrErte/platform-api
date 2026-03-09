@@ -31,7 +31,13 @@
         <div id="view-categories">
             <div class="vault-page-header">
                 <h1>Tresor</h1>
-                <button class="btn btn-outline btn-sm" onclick="exportPdf()">Ekspordi PDF</button>
+                <div class="vault-header-actions">
+                    <div class="vault-search-wrapper">
+                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." oninput="handleSearch(this.value)">
+                        <span class="vault-search-icon">&#128269;</span>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="exportPdf()">Ekspordi PDF</button>
+                </div>
             </div>
             <div class="vault-categories-grid" id="categories-grid">
                 <div class="vault-cat-card skeleton" style="height:140px"></div>
@@ -40,6 +46,17 @@
                 <div class="vault-cat-card skeleton" style="height:140px"></div>
                 <div class="vault-cat-card skeleton" style="height:140px"></div>
             </div>
+        </div>
+
+        <!-- View 3: Search Results -->
+        <div id="view-search" style="display:none">
+            <div class="vault-detail-header">
+                <button class="btn-back" onclick="closeSearch()">&#8592; Tagasi</button>
+                <div class="vault-detail-title">
+                    <h1 id="search-title">Otsingutulemused</h1>
+                </div>
+            </div>
+            <div id="search-results-container"></div>
         </div>
 
         <!-- View 2: Category Detail (entries list) -->
@@ -664,6 +681,81 @@
                 console.error('PDF export failed:', e);
                 alert('Eksport ebaõnnestus');
             }
+        }
+
+        // ===== Search =====
+        let searchTimeout = null;
+
+        function handleSearch(query) {
+            clearTimeout(searchTimeout);
+            const trimmed = query.trim();
+            if (trimmed.length < 2) {
+                if (document.getElementById('view-search').style.display !== 'none') {
+                    closeSearch();
+                }
+                return;
+            }
+            searchTimeout = setTimeout(() => performSearch(trimmed), 300);
+        }
+
+        async function performSearch(query) {
+            document.getElementById('view-categories').style.display = 'none';
+            document.getElementById('view-detail').style.display = 'none';
+            document.getElementById('view-search').style.display = '';
+            document.getElementById('search-title').textContent = 'Otsing: "' + escapeHtml(query) + '"';
+
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = '<div class="skeleton skeleton-line" style="width:80%"></div><div class="skeleton skeleton-line" style="width:60%"></div>';
+
+            try {
+                const res = await fetch('/api/v1/vault/entries/search?q=' + encodeURIComponent(query), { headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    container.innerHTML = '<div class="vault-error">Otsing ebaõnnestus</div>';
+                    return;
+                }
+                const results = await res.json();
+                renderSearchResults(results);
+            } catch (e) {
+                console.error('Search failed:', e);
+                container.innerHTML = '<div class="vault-error">Otsing ebaõnnestus</div>';
+            }
+        }
+
+        function renderSearchResults(results) {
+            const container = document.getElementById('search-results-container');
+            if (results.length === 0) {
+                container.innerHTML = '<div class="vault-empty"><p>Tulemusi ei leitud</p></div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="entries-list">' + results.map(entry => {
+                const cat = categories.find(c => c.id === entry.categoryId);
+                const catName = cat ? cat.nameEt : '';
+                const catIcon = entry.categoryIcon || '📁';
+                return '<div class="search-result-card" onclick="goToSearchResult(\'' + entry.categorySlug + '\')">' +
+                    '<span class="search-result-icon">' + catIcon + '</span>' +
+                    '<div class="search-result-info">' +
+                        '<div class="entry-title">' + escapeHtml(entry.title || 'Nimetu') + '</div>' +
+                        '<div class="search-result-category">' + escapeHtml(catName) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('') + '</div>';
+        }
+
+        function goToSearchResult(categorySlug) {
+            const cat = categories.find(c => c.slug === categorySlug);
+            if (cat) {
+                document.getElementById('vault-search-input').value = '';
+                document.getElementById('view-search').style.display = 'none';
+                openCategory(cat);
+            }
+        }
+
+        function closeSearch() {
+            document.getElementById('view-search').style.display = 'none';
+            document.getElementById('view-categories').style.display = '';
+            document.getElementById('vault-search-input').value = '';
         }
 
         // Init
