@@ -23,7 +23,7 @@
         </div>
     </nav>
 
-    <section class="auth-page">
+    <main class="auth-page">
         <div class="auth-card">
             <h1>Tere tulemast tagasi</h1>
             <p class="auth-subtitle">Logi sisse oma Pärandiplaani</p>
@@ -37,7 +37,7 @@
                 </div>
                 <div class="form-group">
                     <label for="password">Parool</label>
-                    <input type="password" id="password" name="password" placeholder="Sinu parool" required>
+                    <input type="password" id="password" name="password" placeholder="Sinu parool" required autocomplete="off">
                 </div>
                 <div id="totp-group" class="form-group" style="display: none;">
                     <label for="totpCode">2FA kood</label>
@@ -67,13 +67,16 @@
                 </form>
             </div>
         </div>
-    </section>
+    </main>
 
     <script>
         const form = document.getElementById('login-form');
         const errorEl = document.getElementById('error-message');
         const submitBtn = document.getElementById('submit-btn');
         const totpGroup = document.getElementById('totp-group');
+
+        // Clear form on page load to prevent stale password after logout
+        form.reset();
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();

@@ -11,23 +11,26 @@
     <link rel="stylesheet" href="/assets/settings.css">
 </head>
 <body>
+    <a href="#main-content" class="skip-nav">Otse sisu juurde</a>
     <div class="grain"></div>
 
-    <nav>
-        <div class="nav-inner">
-            <a href="/dashboard.html" class="logo">
-                <span class="logo-icon">🌿</span>
-                <span class="logo-text">Pärandiplaan</span>
-            </a>
-            <div class="nav-user">
-                <span class="nav-user-name" id="nav-name"></span>
-                <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                <button class="btn-logout" onclick="logout()">Logi välja</button>
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/dashboard.html" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+                <div class="nav-user">
+                    <span class="nav-user-name" id="nav-name"></span>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <main class="settings-page">
+    <main class="settings-page" id="main-content">
         <h1>Seaded</h1>
 
         <!-- Profile Section -->
@@ -334,7 +337,7 @@
                 section.innerHTML =
                     '<div class="twofa-qr">' +
                         '<p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:0.75rem;">Skänni see QR kood oma autentimisrakendusega (Google Authenticator, Authy vms):</p>' +
-                        '<img src="' + data.qrCodeUrl + '" alt="2FA QR kood">' +
+                        '<img src="' + data.qrCodeDataUri + '" alt="2FA QR kood" style="max-width:200px;display:block;margin:0 auto 1rem;">' +
                     '</div>' +
                     '<div class="twofa-code-input">' +
                         '<input type="text" id="twofa-enable-code" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]{6}">' +

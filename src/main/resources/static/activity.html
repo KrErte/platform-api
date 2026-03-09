@@ -26,22 +26,25 @@
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-nav">Otse sisu juurde</a>
     <div class="grain"></div>
-    <nav>
-        <div class="nav-inner">
-            <a href="/dashboard.html" class="logo">
-                <span class="logo-icon">🌿</span>
-                <span class="logo-text">Pärandiplaan</span>
-            </a>
-            <div class="nav-user">
-                <span class="nav-user-name" id="nav-name"></span>
-                <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                <button class="btn-logout" onclick="logout()">Logi välja</button>
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/dashboard.html" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+                <div class="nav-user">
+                    <span class="nav-user-name" id="nav-name"></span>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <main class="activity-page">
+    <main class="activity-page" id="main-content">
         <h1>Tegevuslogi</h1>
         <div id="activity-container">
             <div class="skeleton skeleton-line" style="width:80%"></div>

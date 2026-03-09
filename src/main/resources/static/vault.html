@@ -11,30 +11,33 @@
     <link rel="stylesheet" href="/assets/vault.css">
 </head>
 <body>
+    <a href="#main-content" class="skip-nav">Otse sisu juurde</a>
     <div class="grain"></div>
 
-    <nav>
-        <div class="nav-inner">
-            <a href="/dashboard.html" class="logo">
-                <span class="logo-icon">🌿</span>
-                <span class="logo-text">Pärandiplaan</span>
-            </a>
-            <div class="nav-user">
-                <span class="nav-user-name" id="nav-name"></span>
-                <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                <button class="btn-logout" onclick="logout()">Logi välja</button>
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/dashboard.html" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+                <div class="nav-user">
+                    <span class="nav-user-name" id="nav-name"></span>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <main class="vault-page">
+    <main class="vault-page" id="main-content">
         <!-- View 1: Categories Grid -->
         <div id="view-categories">
             <div class="vault-page-header">
                 <h1>Tresor</h1>
                 <div class="vault-header-actions">
                     <div class="vault-search-wrapper">
-                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." oninput="handleSearch(this.value)">
+                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." aria-label="Otsi tresori kirjeid" oninput="handleSearch(this.value)">
                         <span class="vault-search-icon">&#128269;</span>
                     </div>
                     <button class="btn btn-outline btn-sm" onclick="exportPdf()">Ekspordi PDF</button>
@@ -69,7 +72,7 @@
                     <h1 id="detail-name"></h1>
                 </div>
                 <div class="vault-detail-actions">
-                    <select id="sort-select" class="sort-dropdown" onchange="sortEntries(this.value)">
+                    <select id="sort-select" class="sort-dropdown" aria-label="Sorteeri kirjeid" onchange="sortEntries(this.value)">
                         <option value="newest">Uuemad enne</option>
                         <option value="oldest">Vanemad enne</option>
                         <option value="az">A-Z</option>
@@ -109,7 +112,7 @@
                     <h3>Manused</h3>
                     <div class="attachment-list" id="attachment-list"></div>
                     <div class="upload-area">
-                        <input type="file" id="attachment-file">
+                        <input type="file" id="attachment-file" aria-label="Vali manus üleslaadimiseks">
                         <button type="button" class="btn btn-sm btn-outline" onclick="uploadAttachment()">Laadi üles</button>
                     </div>
                 </div>

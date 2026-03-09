@@ -13,23 +13,26 @@
     <link rel="stylesheet" href="/assets/contacts.css">
 </head>
 <body>
+    <a href="#main-content" class="skip-nav">Otse sisu juurde</a>
     <div class="grain"></div>
 
-    <nav>
-        <div class="nav-inner">
-            <a href="/dashboard.html" class="logo">
-                <span class="logo-icon">🌿</span>
-                <span class="logo-text">Pärandiplaan</span>
-            </a>
-            <div class="nav-user">
-                <span class="nav-user-name" id="nav-name"></span>
-                <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                <button class="btn-logout" onclick="logout()">Logi välja</button>
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/dashboard.html" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+                <div class="nav-user">
+                    <span class="nav-user-name" id="nav-name"></span>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <main class="contacts-page">
+    <main class="contacts-page" id="main-content">
         <!-- Header -->
         <div class="contacts-page-header">
             <h1>Usaldusisikud</h1>
@@ -88,6 +91,9 @@
                         <button type="button" class="toggle-option active" onclick="setAccessLevel('FULL')">Täielik</button>
                         <button type="button" class="toggle-option" onclick="setAccessLevel('LIMITED')">Piiratud</button>
                     </div>
+                </div>
+                <div id="limited-info" class="field-hint" style="display:none;margin-top:-0.25rem;margin-bottom:0.75rem;font-size:0.85rem;color:var(--text-muted);">
+                    Piiratud juurdepääsuga kontakt näeb ainult kategooriaid, mille sa eraldi jagad.
                 </div>
                 <div class="toggle-group">
                     <label>Aktiveerimisrežiim</label>
@@ -332,16 +338,23 @@
             editingContactId = id;
             document.getElementById('contact-modal-title').textContent = 'Muuda kontakti';
             document.getElementById('contact-error').style.display = 'none';
+            document.getElementById('contact-form').reset();
 
             document.getElementById('contact-name-input').value = c.fullName || '';
             document.getElementById('contact-email-input').value = c.email || '';
             document.getElementById('contact-email-input').readOnly = true;
             document.getElementById('contact-phone-input').value = c.phone || '';
-            document.getElementById('contact-relationship-input').value = c.relationship || '';
+            var relSelect = document.getElementById('contact-relationship-input');
+            relSelect.value = c.relationship || '';
+            if (relSelect.value !== (c.relationship || '')) {
+                relSelect.selectedIndex = 0;
+            }
 
             selectedAccessLevel = c.accessLevel || 'FULL';
             selectedActivationMode = c.activationMode || 'MANUAL';
             updateToggleUI();
+
+            document.getElementById('limited-info').style.display = selectedAccessLevel === 'LIMITED' ? '' : 'none';
 
             if (selectedActivationMode === 'INACTIVITY') {
                 document.getElementById('inactivity-config').style.display = '';
@@ -361,6 +374,7 @@
         function setAccessLevel(level) {
             selectedAccessLevel = level;
             updateToggleUI();
+            document.getElementById('limited-info').style.display = level === 'LIMITED' ? '' : 'none';
         }
 
         function setActivationMode(mode) {

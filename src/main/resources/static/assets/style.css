@@ -35,6 +35,23 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+.skip-nav {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1.25rem;
+    background: var(--green-900);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s;
+}
+.skip-nav:focus {
+    top: 1rem;
+}
+
 html {
     scroll-behavior: smooth;
     font-size: 16px;
