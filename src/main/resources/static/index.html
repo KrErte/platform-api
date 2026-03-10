@@ -19,13 +19,14 @@
     <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
+    <a href="#main-content" class="skip-nav">Liigu põhisisu juurde</a>
     <div class="grain"></div>
 
     <!-- Nav -->
-    <nav>
+    <nav aria-label="Peamine navigatsioon">
         <div class="nav-inner">
-            <a href="/" class="logo">
-                <span class="logo-icon">🌿</span>
+            <a href="/" class="logo" aria-label="Pärandiplaan avaleht">
+                <span class="logo-icon" aria-hidden="true">🌿</span>
                 <span class="logo-text">Pärandiplaan</span>
             </a>
             <div class="nav-links">
@@ -38,7 +39,7 @@
     </nav>
 
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero" id="main-content">
         <div class="hero-content">
             <div class="hero-badge">Digitaalne elukorraldus</div>
             <h1>Su elu on <span class="highlight">0%</span> korrastatud.<br>Alustame?</h1>
@@ -250,8 +251,8 @@
                 <div class="footer-col">
                     <h4>Ettevõte</h4>
                     <a href="#">Meist</a>
-                    <a href="#">Privaatsuspoliitika</a>
-                    <a href="#">Kasutustingimused</a>
+                    <a href="/privaatsuspoliitika.html">Privaatsuspoliitika</a>
+                    <a href="/tingimused.html">Kasutustingimused</a>
                 </div>
                 <div class="footer-col">
                     <h4>Tugi</h4>
@@ -266,6 +267,7 @@
         </div>
     </footer>
 
+    <script src="/assets/cookie-consent.js"></script>
     <script>
         // Animate progress ring on scroll
         const ring = document.querySelector('.progress-fill');

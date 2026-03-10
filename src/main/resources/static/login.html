@@ -7,11 +7,27 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="stylesheet" href="/assets/auth.css">
+    <style>
+        .auth-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--green-200); }
+        .auth-tab { flex: 1; padding: 0.65rem 0.5rem; text-align: center; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: var(--warm-50); color: var(--text-secondary); border: none; transition: background 0.2s, color 0.2s; }
+        .auth-tab.active { background: var(--green-600); color: white; }
+        .auth-tab:hover:not(.active) { background: var(--green-100); }
+        .auth-panel { display: none; }
+        .auth-panel.active { display: block; }
+        .eid-verification { text-align: center; padding: 1.5rem 0; }
+        .eid-verification .vc-code { font-size: 2.5rem; font-weight: 800; color: var(--green-900); letter-spacing: 0.1em; margin: 1rem 0; }
+        .eid-verification .vc-label { font-size: 0.85rem; color: var(--text-secondary); }
+        .eid-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--green-200); border-top-color: var(--green-600); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .vault-key-prompt { text-align: center; padding: 1rem 0; }
+        .vault-key-prompt p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    </style>
 </head>
 <body>
+    <a href="#login-content" class="skip-nav">Liigu põhisisu juurde</a>
     <div class="grain"></div>
 
-    <nav>
+    <nav aria-label="Peamine navigatsioon">
         <div class="nav-inner">
             <a href="/" class="logo">
                 <span class="logo-icon">🌿</span>
@@ -23,29 +39,95 @@
         </div>
     </nav>
 
-    <main class="auth-page">
+    <main class="auth-page" id="login-content">
         <div class="auth-card">
             <h1>Tere tulemast tagasi</h1>
             <p class="auth-subtitle">Logi sisse oma Pärandiplaani</p>
 
             <div id="error-message" class="auth-error" style="display: none;"></div>
+            <div id="success-message" class="auth-success" style="display: none;"></div>
 
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="email">E-posti aadress</label>
-                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required>
+            <!-- Auth method tabs -->
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab active" role="tab" data-tab="email" aria-selected="true">E-post</button>
+                <button class="auth-tab" role="tab" data-tab="smart-id" aria-selected="false">Smart-ID</button>
+                <button class="auth-tab" role="tab" data-tab="mobile-id" aria-selected="false">Mobiil-ID</button>
+            </div>
+
+            <!-- Email/Password panel -->
+            <div id="panel-email" class="auth-panel active" role="tabpanel">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">E-posti aadress</label>
+                        <input type="email" id="email" name="email" placeholder="sinu@email.ee" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Parool</label>
+                        <input type="password" id="password" name="password" placeholder="Sinu parool" required autocomplete="off">
+                    </div>
+                    <div id="totp-group" class="form-group" style="display: none;">
+                        <label for="totpCode" id="totp-label">2FA kood</label>
+                        <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="8" inputmode="numeric">
+                        <a href="#" id="backup-code-link" onclick="toggleBackupCodeMode(event)" style="font-size:0.8rem;color:var(--green-700);display:none;">Kasuta varukoodi</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Logi sisse</button>
+                </form>
+            </div>
+
+            <!-- Smart-ID panel -->
+            <div id="panel-smart-id" class="auth-panel" role="tabpanel">
+                <div id="sid-form-section">
+                    <form id="sid-form">
+                        <div class="form-group">
+                            <label for="sid-personal-code">Isikukood</label>
+                            <input type="text" id="sid-personal-code" placeholder="38001085718" required maxlength="11" inputmode="numeric" pattern="[0-9]{11}">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg btn-full" id="sid-btn">Logi sisse Smart-ID-ga</button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label for="password">Parool</label>
-                    <input type="password" id="password" name="password" placeholder="Sinu parool" required autocomplete="off">
+                <div id="sid-verify-section" class="eid-verification" style="display:none;">
+                    <p class="vc-label">Kontrolli, et Smart-ID rakenduses kuvatav kood on:</p>
+                    <div class="vc-code" id="sid-vc-code"></div>
+                    <p><span class="eid-spinner"></span>Ootan kinnitust...</p>
                 </div>
-                <div id="totp-group" class="form-group" style="display: none;">
-                    <label for="totpCode" id="totp-label">2FA kood</label>
-                    <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="8" inputmode="numeric">
-                    <a href="#" id="backup-code-link" onclick="toggleBackupCodeMode(event)" style="font-size:0.8rem;color:var(--green-700);display:none;">Kasuta varukoodi</a>
+            </div>
+
+            <!-- Mobile-ID panel -->
+            <div id="panel-mobile-id" class="auth-panel" role="tabpanel">
+                <div id="mid-form-section">
+                    <form id="mid-form">
+                        <div class="form-group">
+                            <label for="mid-personal-code">Isikukood</label>
+                            <input type="text" id="mid-personal-code" placeholder="38001085718" required maxlength="11" inputmode="numeric" pattern="[0-9]{11}">
+                        </div>
+                        <div class="form-group">
+                            <label for="mid-phone">Telefoninumber</label>
+                            <input type="tel" id="mid-phone" placeholder="+37256789012" required pattern="\+372[0-9]{7,8}">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg btn-full" id="mid-btn">Logi sisse Mobiil-ID-ga</button>
+                    </form>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Logi sisse</button>
-            </form>
+                <div id="mid-verify-section" class="eid-verification" style="display:none;">
+                    <p class="vc-label">Kontrolli, et telefonile kuvatav kood on:</p>
+                    <div class="vc-code" id="mid-vc-code"></div>
+                    <p><span class="eid-spinner"></span>Ootan kinnitust...</p>
+                </div>
+            </div>
+
+            <!-- Vault key prompt (shown after eID login) -->
+            <div id="vault-key-section" style="display:none;">
+                <div class="vault-key-prompt">
+                    <p>Sisesta oma tresorivõti, et pääseda ligi oma andmetele.</p>
+                </div>
+                <form id="vault-key-form">
+                    <div class="form-group">
+                        <label for="vault-key">Tresorivõti (parool)</label>
+                        <input type="password" id="vault-key" placeholder="Sinu tresorivõti" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-full">Ava tresor</button>
+                </form>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.75rem; text-align:center;">Kui logid esimest korda eID-ga, loo endale tresorivõti.</p>
+            </div>
 
             <p class="auth-footer" style="margin-bottom:0.5rem;">
                 <a href="#" onclick="showForgotPassword(event)" style="font-size:0.85rem;">Unustasid parooli?</a>
@@ -70,37 +152,46 @@
         </div>
     </main>
 
+    <script src="/assets/cookie-consent.js"></script>
     <script>
-        const form = document.getElementById('login-form');
         const errorEl = document.getElementById('error-message');
+        const successEl = document.getElementById('success-message');
+
+        // === Tab switching ===
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.auth-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+                document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+                errorEl.style.display = 'none';
+                successEl.style.display = 'none';
+            });
+        });
+
+        // === Email/Password Login ===
+        const form = document.getElementById('login-form');
         const submitBtn = document.getElementById('submit-btn');
         const totpGroup = document.getElementById('totp-group');
-
-        // Clear form on page load to prevent stale password after logout
         form.reset();
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorEl.style.display = 'none';
-
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const totpCode = document.getElementById('totpCode').value.trim() || null;
-
             submitBtn.disabled = true;
             submitBtn.textContent = 'Login sisse...';
-
             try {
                 const response = await fetch('/api/v1/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, totpCode })
                 });
-
                 const data = await response.json();
-
                 if (!response.ok) {
-                    // Show 2FA field if needed
                     if (data.message && data.message.includes('2FA')) {
                         totpGroup.style.display = 'block';
                         document.getElementById('backup-code-link').style.display = '';
@@ -109,16 +200,7 @@
                     }
                     throw new Error(data.message || 'Sisselogimine ebaõnnestus');
                 }
-
-                // Store tokens
-                localStorage.setItem('accessToken', data.accessToken);
-                localStorage.setItem('refreshToken', data.refreshToken);
-                localStorage.setItem('userEmail', data.email);
-                localStorage.setItem('userName', data.fullName);
-                sessionStorage.setItem('vaultKey', password);
-
-                window.location.href = '/dashboard.html';
-
+                storeAuthAndRedirect(data, password);
             } catch (err) {
                 errorEl.textContent = err.message;
                 errorEl.style.display = 'block';
@@ -126,7 +208,125 @@
                 submitBtn.textContent = 'Logi sisse';
             }
         });
-        // Forgot Password
+
+        // === Smart-ID Login ===
+        document.getElementById('sid-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.style.display = 'none';
+            const personalCode = document.getElementById('sid-personal-code').value.trim();
+            document.getElementById('sid-btn').disabled = true;
+            try {
+                const res = await fetch('/api/v1/auth/eid/smart-id/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personalCode: personalCode, country: 'EE' })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Smart-ID viga');
+                document.getElementById('sid-form-section').style.display = 'none';
+                document.getElementById('sid-verify-section').style.display = '';
+                document.getElementById('sid-vc-code').textContent = data.verificationCode;
+                pollEIdSession(data.sessionId);
+            } catch (err) {
+                showError(err.message);
+                document.getElementById('sid-btn').disabled = false;
+            }
+        });
+
+        // === Mobile-ID Login ===
+        document.getElementById('mid-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.style.display = 'none';
+            const personalCode = document.getElementById('mid-personal-code').value.trim();
+            const phoneNumber = document.getElementById('mid-phone').value.trim();
+            document.getElementById('mid-btn').disabled = true;
+            try {
+                const res = await fetch('/api/v1/auth/eid/mobile-id/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ personalCode, phoneNumber })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Mobiil-ID viga');
+                document.getElementById('mid-form-section').style.display = 'none';
+                document.getElementById('mid-verify-section').style.display = '';
+                document.getElementById('mid-vc-code').textContent = data.verificationCode;
+                pollEIdSession(data.sessionId);
+            } catch (err) {
+                showError(err.message);
+                document.getElementById('mid-btn').disabled = false;
+            }
+        });
+
+        // === eID Polling ===
+        async function pollEIdSession(sessionId) {
+            try {
+                const res = await fetch('/api/v1/auth/eid/poll/' + sessionId);
+                const data = await res.json();
+                if (data.status === 'RUNNING') {
+                    setTimeout(() => pollEIdSession(sessionId), 2000);
+                    return;
+                }
+                if (data.status === 'COMPLETE' && data.auth) {
+                    // eID login success — show vault key prompt
+                    localStorage.setItem('accessToken', data.auth.accessToken);
+                    localStorage.setItem('refreshToken', data.auth.refreshToken);
+                    localStorage.setItem('userEmail', data.auth.email);
+                    localStorage.setItem('userName', data.auth.fullName);
+                    showVaultKeyPrompt();
+                } else {
+                    showError(data.error || 'Autentimine ebaõnnestus');
+                    resetEIdForms();
+                }
+            } catch (err) {
+                showError('Ühenduse viga. Proovige uuesti.');
+                resetEIdForms();
+            }
+        }
+
+        // === Vault Key Prompt (for eID users) ===
+        function showVaultKeyPrompt() {
+            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+            document.getElementById('vault-key-section').style.display = '';
+            successEl.textContent = 'Isik tuvastatud!';
+            successEl.style.display = 'block';
+            document.getElementById('vault-key').focus();
+        }
+
+        document.getElementById('vault-key-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const vaultKey = document.getElementById('vault-key').value;
+            if (!vaultKey) return;
+            sessionStorage.setItem('vaultKey', vaultKey);
+            window.location.href = '/dashboard.html';
+        });
+
+        // === Helpers ===
+        function storeAuthAndRedirect(data, password) {
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            localStorage.setItem('userEmail', data.email);
+            localStorage.setItem('userName', data.fullName);
+            sessionStorage.setItem('vaultKey', password);
+            window.location.href = '/dashboard.html';
+        }
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+
+        function resetEIdForms() {
+            document.getElementById('sid-form-section').style.display = '';
+            document.getElementById('sid-verify-section').style.display = 'none';
+            document.getElementById('sid-btn').disabled = false;
+            document.getElementById('mid-form-section').style.display = '';
+            document.getElementById('mid-verify-section').style.display = 'none';
+            document.getElementById('mid-btn').disabled = false;
+        }
+
+        // === Forgot Password ===
         function showForgotPassword(e) {
             e.preventDefault();
             var section = document.getElementById('forgot-section');
@@ -141,55 +341,28 @@
             var label = document.getElementById('totp-label');
             var link = document.getElementById('backup-code-link');
             if (backupMode) {
-                label.textContent = 'Varukood';
-                input.placeholder = '8-kohaline varukood';
-                input.maxLength = 8;
-                input.inputMode = 'text';
-                link.textContent = 'Kasuta 2FA koodi';
+                label.textContent = 'Varukood'; input.placeholder = '8-kohaline varukood'; input.maxLength = 8; input.inputMode = 'text'; link.textContent = 'Kasuta 2FA koodi';
             } else {
-                label.textContent = '2FA kood';
-                input.placeholder = '6-kohaline kood';
-                input.maxLength = 8;
-                input.inputMode = 'numeric';
-                link.textContent = 'Kasuta varukoodi';
+                label.textContent = '2FA kood'; input.placeholder = '6-kohaline kood'; input.maxLength = 8; input.inputMode = 'numeric'; link.textContent = 'Kasuta varukoodi';
             }
-            input.value = '';
-            input.focus();
+            input.value = ''; input.focus();
         }
 
-        var forgotForm = document.getElementById('forgot-form');
-        forgotForm.addEventListener('submit', async function(e) {
+        document.getElementById('forgot-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             var msgEl = document.getElementById('forgot-message');
             msgEl.style.display = 'none';
-
             var email = document.getElementById('forgot-email').value.trim();
             var btn = document.getElementById('forgot-btn');
-            btn.disabled = true;
-            btn.textContent = 'Saatmine...';
-
+            btn.disabled = true; btn.textContent = 'Saatmine...';
             try {
-                var response = await fetch('/api/v1/auth/forgot-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
-                });
-
-                var data = await response.json();
-
+                await fetch('/api/v1/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
                 msgEl.className = 'auth-success';
                 msgEl.textContent = 'Kui see e-posti aadress on registreeritud, saadame lähtestamislingi. Kontrolli oma postkasti.';
                 msgEl.style.display = 'block';
-                forgotForm.querySelector('button').style.display = 'none';
-
             } catch (err) {
-                msgEl.className = 'auth-error';
-                msgEl.textContent = 'Midagi läks valesti. Proovi uuesti.';
-                msgEl.style.display = 'block';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Saada lähtestamislink';
-            }
+                msgEl.className = 'auth-error'; msgEl.textContent = 'Midagi läks valesti. Proovi uuesti.'; msgEl.style.display = 'block';
+            } finally { btn.disabled = false; btn.textContent = 'Saada lähtestamislink'; }
         });
     </script>
 </body>

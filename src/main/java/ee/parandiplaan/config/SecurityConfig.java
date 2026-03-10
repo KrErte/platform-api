@@ -29,7 +29,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/register.html", "/login.html", "/dashboard.html", "/vault.html", "/usaldusisikud.html", "/reset-password.html", "/settings.html", "/onboarding.html", "/activity.html", "/assets/**", "/favicon.ico", "/favicon.svg", "/error", "/error/**").permitAll()
+                .requestMatchers("/", "/index.html", "/register.html", "/login.html", "/dashboard.html", "/vault.html", "/usaldusisikud.html", "/reset-password.html", "/settings.html", "/onboarding.html", "/activity.html", "/privaatsuspoliitika.html", "/tingimused.html", "/assets/**", "/favicon.ico", "/favicon.svg", "/error", "/error/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/vault/categories").permitAll()
                 .requestMatchers("/api/v1/trusted-contacts/accept-invite/**").permitAll()

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privaatsuspoliitika — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .legal-page { max-width: 800px; margin: 0 auto; padding: 6rem 1.5rem 3rem; }
+        .legal-page h1 { font-size: 2rem; font-weight: 800; color: var(--green-900); margin-bottom: 0.5rem; }
+        .legal-page .legal-date { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2rem; }
+        .legal-page h2 { font-size: 1.25rem; font-weight: 700; color: var(--green-800); margin-top: 2rem; margin-bottom: 0.75rem; }
+        .legal-page p, .legal-page li { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; }
+        .legal-page ul { padding-left: 1.5rem; margin: 0.5rem 0 1rem; }
+        .legal-page li { margin-bottom: 0.3rem; }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo"><span class="logo-icon">🌿</span><span class="logo-text">Pärandiplaan</span></a>
+            <div class="nav-links"><a href="/login.html" class="btn btn-sm">Logi sisse</a></div>
+        </div>
+    </nav>
+
+    <main class="legal-page">
+        <h1>Privaatsuspoliitika</h1>
+        <p class="legal-date">Kehtib alates: 10.03.2026</p>
+
+        <h2>1. Vastutav töötleja</h2>
+        <p>Pärandiplaan OÜ (edaspidi "meie", "Pärandiplaan") vastutab teie isikuandmete töötlemise eest. Kontakt: info@parandiplaan.ee</p>
+
+        <h2>2. Milliseid andmeid kogume</h2>
+        <ul>
+            <li><strong>Konto andmed:</strong> nimi, e-posti aadress, telefoninumber (valikuline), isikukood (eID sisselogimisel)</li>
+            <li><strong>Tresori andmed:</strong> kõik tresori kirjed on krüpteeritud AES-256 algoritmiga. Meil puudub ligipääs teie krüpteeritud andmetele.</li>
+            <li><strong>Tehnilised andmed:</strong> IP-aadress, brauseri tüüp, sisselogimise ajad, seadme info</li>
+            <li><strong>Maksete andmed:</strong> töödeldakse kolmanda osapoole (LemonSqueezy) kaudu. Me ei salvesta krediitkaardi andmeid.</li>
+        </ul>
+
+        <h2>3. Töötlemise eesmärgid ja õiguslikud alused</h2>
+        <ul>
+            <li><strong>Lepingu täitmine (GDPR art. 6(1)(b)):</strong> konto loomine, teenuse osutamine, tresorifunktsionaalsus</li>
+            <li><strong>Õigustatud huvi (GDPR art. 6(1)(f)):</strong> turvalisuse tagamine, pettuste ennetamine, teenuse parendamine</li>
+            <li><strong>Nõusolek (GDPR art. 6(1)(a)):</strong> turundussõnumite saatmine (ainult teie nõusolekul)</li>
+            <li><strong>Juriidiline kohustus (GDPR art. 6(1)(c)):</strong> raamatupidamiskohustused</li>
+        </ul>
+
+        <h2>4. Andmete säilitamine</h2>
+        <ul>
+            <li><strong>Konto andmed:</strong> kuni konto kustutamiseni</li>
+            <li><strong>Tresori andmed:</strong> kuni konto kustutamiseni (krüpteeritud kujul)</li>
+            <li><strong>Logid:</strong> kuni 12 kuud</li>
+            <li><strong>Arveldusandmed:</strong> 7 aastat (raamatupidamiskohustus)</li>
+        </ul>
+
+        <h2>5. Andmete jagamine</h2>
+        <p>Me ei müü ega jaga teie isikuandmeid kolmandate osapooltega, välja arvatud:</p>
+        <ul>
+            <li><strong>Usaldusisikud:</strong> teie poolt määratud isikud saavad ligipääsu vastavalt teie seadistustele</li>
+            <li><strong>Teenusepakkujad:</strong> serveriteenused (Contabo, Saksamaa), e-posti saatmine (Resend), maksed (LemonSqueezy)</li>
+            <li><strong>Seadusest tulenevalt:</strong> kui kohustab seadus või kohtuotsus</li>
+        </ul>
+
+        <h2>6. Turvalisus</h2>
+        <p>Kasutame järgmisi turvameetmeid:</p>
+        <ul>
+            <li>AES-256-GCM krüpteerimine kõigile tresori andmetele</li>
+            <li>PBKDF2 võtme tuletamine kasutaja paroolist (100 000 iteratsiooni)</li>
+            <li>Null-teadmise arhitektuur — meil puudub ligipääs teie andmetele</li>
+            <li>TLS/HTTPS kõigile ühendustele</li>
+            <li>Kaheastmeline autentimine (2FA)</li>
+            <li>Smart-ID ja Mobiil-ID tugi</li>
+        </ul>
+
+        <h2>7. Teie õigused</h2>
+        <p>GDPR alusel on teil õigus:</p>
+        <ul>
+            <li>Tutvuda oma andmetega (art. 15)</li>
+            <li>Parandada oma andmeid (art. 16)</li>
+            <li>Kustutada oma konto ja andmed (art. 17) — seadete lehel</li>
+            <li>Piirata töötlemist (art. 18)</li>
+            <li>Andmete ülekandmisele (art. 20) — JSON eksport</li>
+            <li>Esitada vastuväide (art. 21)</li>
+            <li>Esitada kaebus Andmekaitse Inspektsioonile (aki.ee)</li>
+        </ul>
+
+        <h2>8. Küpsised</h2>
+        <p>Kasutame ainult hädavajalikke küpsiseid teenuse toimimiseks. Me ei kasuta analüütika- ega reklaamiküpsiseid.</p>
+
+        <h2>9. Andmeedastus väljaspool EL-i</h2>
+        <p>Meie serverid asuvad Saksamaal (EL). E-posti teenus (Resend) ja makseteenused võivad töödelda andmeid USA-s, kaitstuna standardsete lepingutingimustega (SCC).</p>
+
+        <h2>10. Muudatused</h2>
+        <p>Teavitame privaatsuspoliitika olulistest muudatustest e-posti teel. Kehtiv versioon on alati saadaval sellel lehel.</p>
+
+        <h2>Kontakt</h2>
+        <p>Küsimuste korral kirjutage: <a href="mailto:info@parandiplaan.ee" style="color:var(--green-700);">info@parandiplaan.ee</a></p>
+    </main>
+
+    <footer>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Pärandiplaan. Kõik õigused kaitstud.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -9,9 +9,10 @@
     <link rel="stylesheet" href="/assets/auth.css">
 </head>
 <body>
+    <a href="#register-content" class="skip-nav">Liigu põhisisu juurde</a>
     <div class="grain"></div>
 
-    <nav>
+    <nav aria-label="Peamine navigatsioon">
         <div class="nav-inner">
             <a href="/" class="logo">
                 <span class="logo-icon">🌿</span>
@@ -23,7 +24,7 @@
         </div>
     </nav>
 
-    <main class="auth-page">
+    <main class="auth-page" id="register-content">
         <div class="auth-card">
             <h1>Alusta prooviperioodi</h1>
             <p class="auth-subtitle">14 päeva tasuta. Krediitkaardi pole vaja.</p>
@@ -55,11 +56,12 @@
                 Juba on konto? <a href="/login.html">Logi sisse</a>
             </p>
             <p class="auth-terms">
-                Konto loomisega nõustud meie <a href="#">kasutustingimuste</a> ja <a href="#">privaatsuspoliitikaga</a>.
+                Konto loomisega nõustud meie <a href="/tingimused.html">kasutustingimuste</a> ja <a href="/privaatsuspoliitika.html">privaatsuspoliitikaga</a>.
             </p>
         </div>
     </main>
 
+    <script src="/assets/cookie-consent.js"></script>
     <script>
         const form = document.getElementById('register-form');
         const errorEl = document.getElementById('error-message');

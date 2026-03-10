@@ -76,6 +76,9 @@ public class User {
     @Column(name = "encryption_salt", length = 64)
     private String encryptionSalt;
 
+    @Column(name = "personal_code", length = 20, unique = true)
+    private String personalCode;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
