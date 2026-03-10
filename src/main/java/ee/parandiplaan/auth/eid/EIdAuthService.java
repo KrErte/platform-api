@@ -31,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.net.ssl.SSLContext;
+
 import javax.security.auth.x500.X500Principal;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -80,11 +82,16 @@ public class EIdAuthService {
         smartIdClient.setHostUrl(props.getSmartId().getHostUrl());
 
         // Initialize Mobile-ID client
-        this.midClient = MidClient.newBuilder()
-                .withRelyingPartyUUID(props.getMobileId().getRelyingPartyUuid())
-                .withRelyingPartyName(props.getMobileId().getRelyingPartyName())
-                .withHostUrl(props.getMobileId().getHostUrl())
-                .build();
+        try {
+            this.midClient = MidClient.newBuilder()
+                    .withRelyingPartyUUID(props.getMobileId().getRelyingPartyUuid())
+                    .withRelyingPartyName(props.getMobileId().getRelyingPartyName())
+                    .withHostUrl(props.getMobileId().getHostUrl())
+                    .withTrustSslContext(SSLContext.getDefault())
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize Mobile-ID client", e);
+        }
     }
 
     // ---- Smart-ID ----
