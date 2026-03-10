@@ -8,6 +8,8 @@ import ee.parandiplaan.common.security.JwtService;
 import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.progress.UserProgress;
 import ee.parandiplaan.progress.UserProgressRepository;
+import ee.parandiplaan.session.SessionService;
+import ee.parandiplaan.session.UserSession;
 import ee.parandiplaan.subscription.Subscription;
 import ee.parandiplaan.subscription.SubscriptionRepository;
 import ee.parandiplaan.user.User;
@@ -41,6 +43,7 @@ public class AuthService {
     private final EncryptionService encryptionService;
     private final StorageService storageService;
     private final AuditService auditService;
+    private final SessionService sessionService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -77,11 +80,11 @@ public class AuthService {
                 user.getEmailVerificationToken().toString()
         );
 
-        return buildAuthResponse(user);
+        return buildAuthResponseNoSession(user);
     }
 
     @Transactional
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request, String ip, String userAgent) {
         User user = userRepository.findByEmail(request.email().toLowerCase().trim())
                 .orElseThrow(() -> new IllegalArgumentException("Vale e-post või parool"));
 
@@ -103,9 +106,9 @@ public class AuthService {
         userRepository.save(user);
 
         log.info("User logged in: {}", user.getEmail());
-        auditService.log(user, "LOGIN", "Kasutaja logis sisse");
+        auditService.log(user, "LOGIN", "Kasutaja logis sisse", ip);
 
-        return buildAuthResponse(user);
+        return buildAuthResponseWithSession(user, ip, userAgent);
     }
 
     @Transactional
@@ -118,11 +121,28 @@ public class AuthService {
             throw new IllegalArgumentException("Vale tokeni tüüp");
         }
 
+        // Validate session — denies refresh if session is revoked
+        UserSession session = sessionService.validateAndTouchSession(refreshToken);
+
         UUID userId = jwtService.getUserIdFromToken(refreshToken);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Kasutajat ei leitud"));
 
-        return buildAuthResponse(user);
+        // Generate new tokens with session context
+        String newRefreshToken = jwtService.generateRefreshToken(userId);
+        String accessToken = jwtService.generateAccessToken(userId, user.getEmail(), session.getId());
+
+        // Rotate the refresh token hash
+        sessionService.updateRefreshTokenHash(session.getId(), newRefreshToken);
+
+        return new AuthResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                accessToken,
+                newRefreshToken,
+                user.isEmailVerified()
+        );
     }
 
     @Transactional
@@ -186,12 +206,15 @@ public class AuthService {
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
 
+        // Revoke all existing sessions
+        sessionService.revokeAllSessions(user.getId());
+
         log.info("Password reset completed for: {} (vault data cleared)", user.getEmail());
-        return buildAuthResponse(user);
+        return buildAuthResponseNoSession(user);
     }
 
     @Transactional
-    public AuthResponse changePassword(User user, String currentPassword, String newPassword) {
+    public AuthResponse changePassword(User user, String currentPassword, String newPassword, String ip, String userAgent) {
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Praegune parool on vale");
         }
@@ -265,12 +288,30 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
+        // Revoke all sessions and create fresh one
+        sessionService.revokeAllSessions(user.getId());
+
         log.info("Password changed for: {} ({} entries re-encrypted)", user.getEmail(), entries.size());
-        return buildAuthResponse(user);
+        return buildAuthResponseWithSession(user, ip, userAgent);
     }
 
-    private AuthResponse buildAuthResponse(User user) {
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail());
+    private AuthResponse buildAuthResponseWithSession(User user, String ip, String userAgent) {
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        UserSession session = sessionService.createSession(user, refreshToken, ip, userAgent);
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), session.getId());
+
+        return new AuthResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                accessToken,
+                refreshToken,
+                user.isEmailVerified()
+        );
+    }
+
+    private AuthResponse buildAuthResponseNoSession(User user) {
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), null);
         String refreshToken = jwtService.generateRefreshToken(user.getId());
 
         return new AuthResponse(

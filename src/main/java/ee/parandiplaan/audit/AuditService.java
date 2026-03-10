@@ -18,10 +18,16 @@ public class AuditService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void log(User user, String action, String detail) {
+        log(user, action, detail, null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void log(User user, String action, String detail, String ipAddress) {
         AuditLog entry = new AuditLog();
         entry.setUser(user);
         entry.setAction(action);
         entry.setDetail(detail);
+        entry.setIpAddress(ipAddress);
         auditLogRepository.save(entry);
     }
 

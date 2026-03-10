@@ -28,11 +28,15 @@ public class JwtService {
         this.refreshExpirationMs = refreshExpirationDays * 24 * 60 * 60 * 1000;
     }
 
-    public String generateAccessToken(UUID userId, String email) {
-        return Jwts.builder()
+    public String generateAccessToken(UUID userId, String email, UUID sessionId) {
+        var builder = Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
-                .claim("type", "access")
+                .claim("type", "access");
+        if (sessionId != null) {
+            builder.claim("sid", sessionId.toString());
+        }
+        return builder
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpirationMs))
                 .signWith(key)
@@ -56,6 +60,12 @@ public class JwtService {
 
     public String getTokenType(String token) {
         return parseToken(token).get("type", String.class);
+    }
+
+    public UUID getSessionIdFromToken(String token) {
+        Claims claims = parseToken(token);
+        String sid = claims.get("sid", String.class);
+        return sid != null ? UUID.fromString(sid) : null;
     }
 
     public boolean isTokenValid(String token) {

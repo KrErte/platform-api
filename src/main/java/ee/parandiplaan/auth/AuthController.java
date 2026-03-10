@@ -2,7 +2,9 @@ package ee.parandiplaan.auth;
 
 import ee.parandiplaan.auth.dto.*;
 import ee.parandiplaan.common.security.CurrentUser;
+import ee.parandiplaan.common.util.IpUtils;
 import ee.parandiplaan.user.User;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,8 +28,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        String ip = IpUtils.getClientIp(httpRequest);
+        String ua = httpRequest.getHeader("User-Agent");
+        return ResponseEntity.ok(authService.login(request, ip, ua));
     }
 
     @PostMapping("/refresh")
@@ -57,8 +61,11 @@ public class AuthController {
     @PostMapping("/change-password")
     public ResponseEntity<AuthResponse> changePassword(
             @CurrentUser User user,
-            @Valid @RequestBody ChangePasswordRequest request) {
-        return ResponseEntity.ok(authService.changePassword(user, request.currentPassword(), request.newPassword()));
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletRequest httpRequest) {
+        String ip = IpUtils.getClientIp(httpRequest);
+        String ua = httpRequest.getHeader("User-Agent");
+        return ResponseEntity.ok(authService.changePassword(user, request.currentPassword(), request.newPassword(), ip, ua));
     }
 
     // --- 2FA endpoints ---

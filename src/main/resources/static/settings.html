@@ -131,6 +131,19 @@
             </div>
         </div>
 
+        <!-- Active Sessions Section -->
+        <div class="settings-card">
+            <h2>Aktiivsed sessioonid</h2>
+            <div id="sessions-message"></div>
+            <div id="sessions-list">
+                <div class="skeleton skeleton-line" style="width:60%"></div>
+                <div class="skeleton skeleton-line short" style="width:40%"></div>
+            </div>
+            <div class="settings-actions" id="sessions-actions" style="display:none;">
+                <button class="btn btn-ghost btn-sm" onclick="revokeAllSessions()">Tühista kõik teised</button>
+            </div>
+        </div>
+
         <!-- Subscription Section -->
         <div class="settings-card">
             <h2>Tellimus</h2>
@@ -679,9 +692,95 @@
             }
         }
 
+        // ===== Active Sessions =====
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function formatSessionDate(isoStr) {
+            if (!isoStr) return '—';
+            var d = new Date(isoStr);
+            return d.toLocaleDateString('et-EE') + ' ' + d.toLocaleTimeString('et-EE', {hour:'2-digit',minute:'2-digit'});
+        }
+
+        async function loadSessions() {
+            try {
+                var res = await fetch('/api/v1/sessions', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    document.getElementById('sessions-list').innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Sessioonide laadimine ebaõnnestus.</p>';
+                    return;
+                }
+                var sessions = await res.json();
+                var container = document.getElementById('sessions-list');
+
+                if (sessions.length === 0) {
+                    container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Aktiivseid sessioone ei leitud.</p>';
+                    return;
+                }
+
+                var html = '';
+                var hasOthers = false;
+                for (var i = 0; i < sessions.length; i++) {
+                    var s = sessions[i];
+                    if (!s.current) hasOthers = true;
+                    html += '<div class="session-item' + (s.current ? ' session-current' : '') + '">' +
+                        '<div class="session-info">' +
+                            '<div class="session-device">' + escapeHtml(s.deviceLabel || 'Tundmatu seade') +
+                                (s.current ? ' <span class="session-badge-current">See sessioon</span>' : '') +
+                            '</div>' +
+                            '<div class="session-meta">' +
+                                '<span>IP: ' + escapeHtml(s.ipAddress || '—') + '</span>' +
+                                '<span>Loodud: ' + formatSessionDate(s.createdAt) + '</span>' +
+                                '<span>Viimane kasutus: ' + formatSessionDate(s.lastUsedAt) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        (!s.current ? '<button class="session-revoke-btn" onclick="revokeSession(\'' + s.id + '\')">Tühista</button>' : '') +
+                    '</div>';
+                }
+                container.innerHTML = html;
+                document.getElementById('sessions-actions').style.display = hasOthers ? '' : 'none';
+            } catch (e) {
+                console.error('Sessions load failed:', e);
+                document.getElementById('sessions-list').innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Sessioonide laadimine ebaõnnestus.</p>';
+            }
+        }
+
+        async function revokeSession(id) {
+            try {
+                var res = await fetch('/api/v1/sessions/' + id, { method: 'DELETE', headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    throw new Error(err.message || 'Tühistamine ebaõnnestus');
+                }
+                showMessage('sessions-message', 'Sessioon tühistatud!', false);
+                loadSessions();
+            } catch (err) {
+                showMessage('sessions-message', err.message, true);
+            }
+        }
+
+        async function revokeAllSessions() {
+            try {
+                var res = await fetch('/api/v1/sessions', { method: 'DELETE', headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    throw new Error(err.message || 'Tühistamine ebaõnnestus');
+                }
+                showMessage('sessions-message', 'Kõik teised sessioonid tühistatud!', false);
+                loadSessions();
+            } catch (err) {
+                showMessage('sessions-message', err.message, true);
+            }
+        }
+
         // ===== Init =====
         loadProfile();
         loadSubscription();
+        loadSessions();
     </script>
     <script src="/assets/session-guard.js"></script>
 </body>
