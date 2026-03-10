@@ -166,6 +166,22 @@ public class EmailService {
         sendEmail(toEmail, subject, html);
     }
 
+    public void sendAccountDeletedEmail(String toEmail, String fullName) {
+        String subject = "Konto kustutatud — Pärandiplaan";
+        String html = """
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1B4332;">Konto kustutatud</h2>
+                    <p>Tere, %s!</p>
+                    <p>Sinu Pärandiplaani konto ja kõik sellega seotud andmed on edukalt kustutatud.</p>
+                    <p>Kui sa ei soovinud oma kontot kustutada, võta meiega kohe ühendust.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">Pärandiplaan — Sinu digitaalne pärand, turvaliselt korraldatud</p>
+                </div>
+                """.formatted(fullName);
+
+        sendEmail(toEmail, subject, html);
+    }
+
     public void sendExpirationReminder(String toEmail, String fullName,
                                        String categoryName, int daysAhead, LocalDate expiryDate) {
         String subject = "Meeldetuletus: " + categoryName + " aegub " + daysAhead + " paeva parast";

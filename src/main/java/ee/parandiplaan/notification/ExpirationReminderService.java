@@ -43,6 +43,10 @@ public class ExpirationReminderService {
 
             for (VaultEntry entry : expiring) {
                 User user = entry.getUser();
+
+                // Check email preference
+                if (!user.isNotifyExpirationReminders()) continue;
+
                 String reminderType = "EXPIRATION_" + daysAhead + "D";
 
                 // Anti-spam: don't send same type for same user within 7 days

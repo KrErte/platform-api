@@ -41,6 +41,7 @@
                         <span class="vault-search-icon">&#128269;</span>
                     </div>
                     <button class="btn btn-outline btn-sm" onclick="exportPdf()">Ekspordi PDF</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportJson()">Ekspordi JSON</button>
                 </div>
             </div>
             <div class="vault-categories-grid" id="categories-grid">
@@ -750,6 +751,27 @@
                 URL.revokeObjectURL(url);
             } catch (e) {
                 console.error('PDF export failed:', e);
+                alert('Eksport ebaõnnestus');
+            }
+        }
+
+        // ===== JSON Export =====
+        async function exportJson() {
+            try {
+                const res = await fetch('/api/v1/vault/export/json', {
+                    headers: { 'Authorization': 'Bearer ' + token, 'X-Encryption-Key': vaultKey }
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) { alert('Eksport ebaõnnestus'); return; }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'parandiplaan-' + new Date().toISOString().split('T')[0] + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('JSON export failed:', e);
                 alert('Eksport ebaõnnestus');
             }
         }

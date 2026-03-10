@@ -40,8 +40,9 @@
                     <input type="password" id="password" name="password" placeholder="Sinu parool" required autocomplete="off">
                 </div>
                 <div id="totp-group" class="form-group" style="display: none;">
-                    <label for="totpCode">2FA kood</label>
-                    <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="6" inputmode="numeric" pattern="[0-9]{6}">
+                    <label for="totpCode" id="totp-label">2FA kood</label>
+                    <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="8" inputmode="numeric">
+                    <a href="#" id="backup-code-link" onclick="toggleBackupCodeMode(event)" style="font-size:0.8rem;color:var(--green-700);display:none;">Kasuta varukoodi</a>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Logi sisse</button>
             </form>
@@ -102,6 +103,7 @@
                     // Show 2FA field if needed
                     if (data.message && data.message.includes('2FA')) {
                         totpGroup.style.display = 'block';
+                        document.getElementById('backup-code-link').style.display = '';
                         document.getElementById('totpCode').focus();
                         throw new Error('Sisesta 2FA kood oma autentimisrakendusest');
                     }
@@ -129,6 +131,30 @@
             e.preventDefault();
             var section = document.getElementById('forgot-section');
             section.style.display = section.style.display === 'none' ? '' : 'none';
+        }
+
+        var backupMode = false;
+        function toggleBackupCodeMode(e) {
+            e.preventDefault();
+            backupMode = !backupMode;
+            var input = document.getElementById('totpCode');
+            var label = document.getElementById('totp-label');
+            var link = document.getElementById('backup-code-link');
+            if (backupMode) {
+                label.textContent = 'Varukood';
+                input.placeholder = '8-kohaline varukood';
+                input.maxLength = 8;
+                input.inputMode = 'text';
+                link.textContent = 'Kasuta 2FA koodi';
+            } else {
+                label.textContent = '2FA kood';
+                input.placeholder = '6-kohaline kood';
+                input.maxLength = 8;
+                input.inputMode = 'numeric';
+                link.textContent = 'Kasuta varukoodi';
+            }
+            input.value = '';
+            input.focus();
         }
 
         var forgotForm = document.getElementById('forgot-form');

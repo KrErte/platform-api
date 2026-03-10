@@ -46,6 +46,9 @@ public class User {
     @Column(name = "totp_enabled", nullable = false)
     private boolean totpEnabled = false;
 
+    @Column(name = "totp_backup_codes")
+    private String totpBackupCodes;
+
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
 
@@ -60,6 +63,15 @@ public class User {
 
     @Column(name = "onboarding_completed", nullable = false)
     private boolean onboardingCompleted = false;
+
+    @Column(name = "notify_expiration_reminders", nullable = false)
+    private boolean notifyExpirationReminders = true;
+
+    @Column(name = "notify_inactivity_warnings", nullable = false)
+    private boolean notifyInactivityWarnings = true;
+
+    @Column(name = "notify_security_alerts", nullable = false)
+    private boolean notifySecurityAlerts = true;
 
     @Column(name = "last_login_at")
     private Instant lastLoginAt;

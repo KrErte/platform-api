@@ -1,5 +1,8 @@
 package ee.parandiplaan.vault;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
 import com.lowagie.text.pdf.PdfPCell;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -40,6 +45,70 @@ public class VaultExportService {
     private static final Font VALUE_FONT = new Font(Font.HELVETICA, 10, Font.NORMAL, Color.BLACK);
     private static final Font FOOTER_FONT = new Font(Font.HELVETICA, 8, Font.ITALIC, Color.GRAY);
     private static final Font NOTES_FONT = new Font(Font.HELVETICA, 9, Font.ITALIC, new Color(0x55, 0x55, 0x55));
+
+    public byte[] exportToJson(User user, String encryptionKey) {
+        try {
+            List<VaultCategory> categories = categoryRepository.findAllByOrderBySortOrderAsc();
+            List<VaultEntry> allEntries = entryRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+
+            Map<UUID, List<VaultEntry>> entriesByCategory = new LinkedHashMap<>();
+            for (VaultEntry entry : allEntries) {
+                entriesByCategory
+                        .computeIfAbsent(entry.getCategory().getId(), k -> new ArrayList<>())
+                        .add(entry);
+            }
+
+            List<Map<String, Object>> categoryList = new ArrayList<>();
+            for (VaultCategory category : categories) {
+                List<VaultEntry> categoryEntries = entriesByCategory.get(category.getId());
+                if (categoryEntries == null || categoryEntries.isEmpty()) continue;
+
+                List<Map<String, Object>> entryList = new ArrayList<>();
+                for (VaultEntry entry : categoryEntries) {
+                    try {
+                        String decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey);
+                        String decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey);
+                        String decryptedNotes = null;
+                        if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
+                            decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey);
+                        }
+
+                        Map<String, Object> entryMap = new LinkedHashMap<>();
+                        entryMap.put("title", decryptedTitle);
+                        entryMap.put("fields", parseJsonData(decryptedData));
+                        entryMap.put("notes", decryptedNotes);
+                        entryMap.put("reminderDate", entry.getReminderDate() != null ? entry.getReminderDate().toString() : null);
+                        entryMap.put("isComplete", entry.isComplete());
+                        entryMap.put("createdAt", entry.getCreatedAt().toString());
+                        entryMap.put("updatedAt", entry.getUpdatedAt().toString());
+                        entryList.add(entryMap);
+                    } catch (Exception e) {
+                        log.warn("Failed to decrypt entry {} for JSON export: {}", entry.getId(), e.getMessage());
+                    }
+                }
+
+                Map<String, Object> catMap = new LinkedHashMap<>();
+                catMap.put("name", category.getNameEt());
+                catMap.put("slug", category.getSlug());
+                catMap.put("icon", category.getIcon());
+                catMap.put("entries", entryList);
+                categoryList.add(catMap);
+            }
+
+            Map<String, Object> export = new LinkedHashMap<>();
+            export.put("exportedAt", Instant.now().toString());
+            export.put("user", Map.of("fullName", user.getFullName(), "email", user.getEmail()));
+            export.put("categories", categoryList);
+
+            ObjectMapper jsonMapper = new ObjectMapper();
+            jsonMapper.registerModule(new JavaTimeModule());
+            jsonMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            return jsonMapper.writeValueAsString(export).getBytes(StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.error("JSON export failed for user {}: {}", user.getId(), e.getMessage(), e);
+            throw new RuntimeException("JSON eksport ebaõnnestus", e);
+        }
+    }
 
     public byte[] exportToPdf(User user, String encryptionKey) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

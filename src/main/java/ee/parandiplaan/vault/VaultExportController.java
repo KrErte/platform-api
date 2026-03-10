@@ -25,4 +25,15 @@ public class VaultExportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=parandiplaan.pdf")
                 .body(pdf);
     }
+
+    @GetMapping("/json")
+    public ResponseEntity<byte[]> exportJson(
+            @CurrentUser User user,
+            @RequestHeader("X-Encryption-Key") String encryptionKey) {
+        byte[] json = exportService.exportToJson(user, encryptionKey);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=parandiplaan.json")
+                .body(json);
+    }
 }

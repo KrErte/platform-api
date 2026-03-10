@@ -66,13 +66,17 @@ public class InactivityMonitorService {
 
             // WARNING_1: 14 days before deadline
             if (daysSinceActivity >= (inactivityDays - 14) && daysSinceActivity < (inactivityDays - 7)) {
-                sendWarningIfNotSent(user, "WARNING_1");
+                if (user.isNotifyInactivityWarnings()) {
+                    sendWarningIfNotSent(user, "WARNING_1");
+                }
             }
             // WARNING_2: 7 days before deadline
             else if (daysSinceActivity >= (inactivityDays - 7) && daysSinceActivity < inactivityDays) {
-                sendWarningIfNotSent(user, "WARNING_2");
+                if (user.isNotifyInactivityWarnings()) {
+                    sendWarningIfNotSent(user, "WARNING_2");
+                }
             }
-            // FINAL: deadline reached, wait 48h then auto-trigger handover
+            // FINAL: deadline reached, wait 48h then auto-trigger handover (always sent — security-critical)
             else if (daysSinceActivity >= inactivityDays) {
                 handleFinalStage(user, inactivityContacts);
             }

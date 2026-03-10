@@ -120,6 +120,15 @@
             </div>
 
             <div id="twofa-setup-section"></div>
+
+            <div id="backup-codes-section" style="display:none;">
+                <hr style="border:none;border-top:1px solid var(--green-200);margin:2rem 0;">
+                <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;">Varukoodid</h3>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">Varukoodid võimaldavad sisse logida, kui sul pole ligipääsu oma autentimisrakendusele.</p>
+                <div id="backup-codes-message"></div>
+                <div id="backup-codes-display"></div>
+                <button class="btn btn-primary btn-sm" id="generate-backup-btn" onclick="generateBackupCodes()">Genereeri varukoodid</button>
+            </div>
         </div>
 
         <!-- Subscription Section -->
@@ -128,6 +137,50 @@
             <div id="subscription-section">
                 <div class="skeleton skeleton-line" style="width:60%"></div>
                 <div class="skeleton skeleton-line short" style="width:40%"></div>
+            </div>
+        </div>
+
+        <!-- Email Preferences Section -->
+        <div class="settings-card">
+            <h2>E-posti teavitused</h2>
+            <div id="email-prefs-message"></div>
+            <div class="settings-grid" style="gap:1rem;">
+                <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
+                    <input type="checkbox" id="pref-expiration" onchange="saveEmailPrefs()">
+                    <span style="font-size:0.95rem;">Aegumise meeldetuletused</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
+                    <input type="checkbox" id="pref-inactivity" onchange="saveEmailPrefs()">
+                    <span style="font-size:0.95rem;">Inaktiivsushoiatused</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
+                    <input type="checkbox" id="pref-security" onchange="saveEmailPrefs()">
+                    <span style="font-size:0.95rem;">Turvateavitused</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Account Deletion Section -->
+        <div class="settings-card" style="border-color:#FCA5A5;">
+            <h2 style="color:#DC2626;">Konto kustutamine</h2>
+            <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">Konto kustutamisel eemaldatakse pöördumatult kõik sinu andmed, sh tresori kirjed, failid ja usalduskontaktid.</p>
+            <button class="btn btn-sm" style="background:#DC2626;color:white;border:none;" onclick="showDeleteModal()">Kustuta konto</button>
+        </div>
+
+        <!-- Delete Account Modal -->
+        <div id="delete-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content" style="max-width:420px;">
+                <h3 style="color:#DC2626;margin-bottom:1rem;">Konto kustutamine</h3>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">See toiming on pöördumatu. Kõik sinu andmed kustutatakse jäädavalt.</p>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1.5rem;">Kinnitamiseks sisesta oma parool:</p>
+                <div id="delete-message"></div>
+                <div class="form-group">
+                    <input type="password" id="delete-password" placeholder="Sinu parool" required>
+                </div>
+                <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
+                    <button class="btn btn-ghost btn-sm" onclick="hideDeleteModal()">Tühista</button>
+                    <button class="btn btn-sm" id="delete-confirm-btn" style="background:#DC2626;color:white;border:none;" onclick="confirmDeleteAccount()">Kustuta jäädavalt</button>
+                </div>
             </div>
         </div>
     </main>
@@ -186,6 +239,9 @@
 
                 // Update 2FA status
                 updateTwofaStatus(data.totpEnabled);
+
+                // Load email preferences
+                loadEmailPrefs(data);
             } catch (e) {
                 console.error('Profile load failed:', e);
             }
@@ -302,6 +358,8 @@
                 badge.textContent = 'Mitteaktiivne';
                 renderTwofaSetup();
             }
+
+            updateBackupCodesVisibility(enabled);
         }
 
         function renderTwofaSetup() {
@@ -401,6 +459,147 @@
                 showMessage('twofa-message', err.message, true);
             }
         }
+
+        // ===== Backup Codes =====
+        function updateBackupCodesVisibility(enabled) {
+            document.getElementById('backup-codes-section').style.display = enabled ? '' : 'none';
+        }
+
+        async function generateBackupCodes() {
+            var btn = document.getElementById('generate-backup-btn');
+            btn.disabled = true;
+            btn.textContent = 'Genereerimine...';
+
+            try {
+                var res = await fetch('/api/v1/auth/2fa/backup-codes', {
+                    method: 'POST',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    throw new Error(err.message || 'Varukoodide genereerimine ebaõnnestus');
+                }
+
+                var data = await res.json();
+                var display = document.getElementById('backup-codes-display');
+                var codesHtml = '<div style="background:var(--green-50);border:1px solid var(--green-200);border-radius:8px;padding:1rem;margin-bottom:1rem;">' +
+                    '<p style="font-size:0.85rem;color:#DC2626;font-weight:600;margin-bottom:0.75rem;">Salvesta need koodid turvalisse kohta. Neid näidatakse ainult üks kord.</p>' +
+                    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem;font-family:monospace;font-size:1rem;">';
+
+                for (var i = 0; i < data.codes.length; i++) {
+                    codesHtml += '<span style="background:white;padding:0.4rem 0.75rem;border-radius:4px;text-align:center;">' + data.codes[i] + '</span>';
+                }
+
+                codesHtml += '</div>' +
+                    '<button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="copyBackupCodes(this)" data-codes="' + data.codes.join('\\n') + '">Kopeeri</button>' +
+                    '</div>';
+
+                display.innerHTML = codesHtml;
+                showMessage('backup-codes-message', 'Uued varukoodid genereeritud!', false);
+            } catch (err) {
+                showMessage('backup-codes-message', err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Genereeri varukoodid';
+            }
+        }
+
+        function copyBackupCodes(btn) {
+            var codes = btn.getAttribute('data-codes');
+            navigator.clipboard.writeText(codes).then(function() {
+                btn.textContent = 'Kopeeritud!';
+                setTimeout(function() { btn.textContent = 'Kopeeri'; }, 2000);
+            });
+        }
+
+        // ===== Email Preferences =====
+        var savingPrefs = false;
+
+        function loadEmailPrefs(data) {
+            document.getElementById('pref-expiration').checked = data.notifyExpirationReminders;
+            document.getElementById('pref-inactivity').checked = data.notifyInactivityWarnings;
+            document.getElementById('pref-security').checked = data.notifySecurityAlerts;
+        }
+
+        async function saveEmailPrefs() {
+            if (savingPrefs) return;
+            savingPrefs = true;
+
+            try {
+                var body = {
+                    notifyExpirationReminders: document.getElementById('pref-expiration').checked,
+                    notifyInactivityWarnings: document.getElementById('pref-inactivity').checked,
+                    notifySecurityAlerts: document.getElementById('pref-security').checked
+                };
+
+                var res = await fetch('/api/v1/users/me/email-preferences', {
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) throw new Error('Salvestamine ebaõnnestus');
+
+                showMessage('email-prefs-message', 'Eelistused salvestatud!', false);
+            } catch (err) {
+                showMessage('email-prefs-message', err.message, true);
+            } finally {
+                savingPrefs = false;
+            }
+        }
+
+        // ===== Account Deletion =====
+        function showDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'flex';
+            document.getElementById('delete-password').value = '';
+            document.getElementById('delete-message').innerHTML = '';
+        }
+
+        function hideDeleteModal() {
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        async function confirmDeleteAccount() {
+            var password = document.getElementById('delete-password').value;
+            if (!password) {
+                showMessage('delete-message', 'Sisesta oma parool', true);
+                return;
+            }
+
+            var btn = document.getElementById('delete-confirm-btn');
+            btn.disabled = true;
+            btn.textContent = 'Kustutamine...';
+
+            try {
+                var res = await fetch('/api/v1/users/me', {
+                    method: 'DELETE',
+                    headers: headers,
+                    body: JSON.stringify({ password: password })
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    logout();
+                    return;
+                }
+
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    throw new Error(err.message || 'Konto kustutamine ebaõnnestus');
+                }
+
+                logout();
+            } catch (err) {
+                showMessage('delete-message', err.message, true);
+                btn.disabled = false;
+                btn.textContent = 'Kustuta jäädavalt';
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('delete-modal').addEventListener('click', function(e) {
+            if (e.target === this) hideDeleteModal();
+        });
 
         // ===== Subscription =====
         async function loadSubscription() {

@@ -79,4 +79,10 @@ public class AuthController {
         totpService.disable(user, body.get("code"));
         return ResponseEntity.ok(new MessageResponse("2FA deaktiveeritud!"));
     }
+
+    @PostMapping("/2fa/backup-codes")
+    public ResponseEntity<TotpService.BackupCodesResponse> generateBackupCodes(@CurrentUser User user) {
+        var codes = totpService.generateBackupCodes(user);
+        return ResponseEntity.ok(new TotpService.BackupCodesResponse(codes));
+    }
 }

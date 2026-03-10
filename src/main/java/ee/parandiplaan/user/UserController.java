@@ -1,6 +1,8 @@
 package ee.parandiplaan.user;
 
 import ee.parandiplaan.common.security.CurrentUser;
+import ee.parandiplaan.user.dto.DeleteAccountRequest;
+import ee.parandiplaan.user.dto.EmailPreferencesRequest;
 import ee.parandiplaan.user.dto.UpdateProfileRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(@CurrentUser User user) {
@@ -46,6 +49,25 @@ public class UserController {
         return ResponseEntity.ok(buildUserResponse(user));
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Map<String, String>> deleteAccount(
+            @CurrentUser User user,
+            @Valid @RequestBody DeleteAccountRequest request) {
+        userService.deleteAccount(user, request.password());
+        return ResponseEntity.ok(Map.of("message", "Konto kustutatud"));
+    }
+
+    @PutMapping("/me/email-preferences")
+    public ResponseEntity<Map<String, Object>> updateEmailPreferences(
+            @CurrentUser User user,
+            @RequestBody EmailPreferencesRequest request) {
+        user.setNotifyExpirationReminders(request.notifyExpirationReminders());
+        user.setNotifyInactivityWarnings(request.notifyInactivityWarnings());
+        user.setNotifySecurityAlerts(request.notifySecurityAlerts());
+        user = userRepository.save(user);
+        return ResponseEntity.ok(buildUserResponse(user));
+    }
+
     private Map<String, Object> buildUserResponse(User user) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", user.getId());
@@ -58,6 +80,9 @@ public class UserController {
         map.put("emailVerified", user.isEmailVerified());
         map.put("totpEnabled", user.isTotpEnabled());
         map.put("onboardingCompleted", user.isOnboardingCompleted());
+        map.put("notifyExpirationReminders", user.isNotifyExpirationReminders());
+        map.put("notifyInactivityWarnings", user.isNotifyInactivityWarnings());
+        map.put("notifySecurityAlerts", user.isNotifySecurityAlerts());
         map.put("createdAt", user.getCreatedAt().toString());
         return map;
     }
