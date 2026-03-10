@@ -37,14 +37,15 @@ public class VaultEntryService {
         } else {
             entries = entryRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
         }
-        return entries.stream().map(e -> toResponse(e, encryptionKey)).toList();
+        String salt = user.getEncryptionSalt();
+        return entries.stream().map(e -> toResponse(e, encryptionKey, salt)).toList();
     }
 
     @Transactional(readOnly = true)
     public VaultEntryResponse getEntry(User user, UUID entryId, String encryptionKey) {
         VaultEntry entry = entryRepository.findByIdAndUserId(entryId, user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
-        return toResponse(entry, encryptionKey);
+        return toResponse(entry, encryptionKey, user.getEncryptionSalt());
     }
 
     @Transactional
@@ -54,8 +55,9 @@ public class VaultEntryService {
         VaultCategory category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Kategooriat ei leitud"));
 
-        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(request.title(), encryptionKey);
-        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(request.data(), encryptionKey);
+        String salt = user.getEncryptionSalt();
+        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(request.title(), encryptionKey, salt);
+        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(request.data(), encryptionKey, salt);
 
         VaultEntry entry = new VaultEntry();
         entry.setUser(user);
@@ -66,7 +68,7 @@ public class VaultEntryService {
         entry.setEncryptionIv(dataEnc.iv());
 
         if (request.notes() != null && !request.notes().isBlank()) {
-            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(request.notes(), encryptionKey);
+            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(request.notes(), encryptionKey, salt);
             entry.setNotesEncrypted(notesEnc.ciphertext());
             entry.setNotesIv(notesEnc.iv());
         }
@@ -76,7 +78,7 @@ public class VaultEntryService {
         entry = entryRepository.save(entry);
         progressService.recalculate(user);
         auditService.log(user, "ENTRY_CREATED", category.getNameEt());
-        return toResponse(entry, encryptionKey);
+        return toResponse(entry, encryptionKey, salt);
     }
 
     @Transactional
@@ -84,8 +86,9 @@ public class VaultEntryService {
         VaultEntry entry = entryRepository.findByIdAndUserId(entryId, user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
 
-        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(request.title(), encryptionKey);
-        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(request.data(), encryptionKey);
+        String salt = user.getEncryptionSalt();
+        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(request.title(), encryptionKey, salt);
+        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(request.data(), encryptionKey, salt);
 
         entry.setTitle(titleEnc.ciphertext());
         entry.setTitleIv(titleEnc.iv());
@@ -93,7 +96,7 @@ public class VaultEntryService {
         entry.setEncryptionIv(dataEnc.iv());
 
         if (request.notes() != null && !request.notes().isBlank()) {
-            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(request.notes(), encryptionKey);
+            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(request.notes(), encryptionKey, salt);
             entry.setNotesEncrypted(notesEnc.ciphertext());
             entry.setNotesIv(notesEnc.iv());
         } else {
@@ -110,7 +113,7 @@ public class VaultEntryService {
         entry = entryRepository.save(entry);
         progressService.recalculate(user);
         auditService.log(user, "ENTRY_UPDATED", entry.getCategory().getNameEt());
-        return toResponse(entry, encryptionKey);
+        return toResponse(entry, encryptionKey, salt);
     }
 
     @Transactional
@@ -129,7 +132,7 @@ public class VaultEntryService {
                 .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
         entry.setLastReviewedAt(Instant.now());
         entry = entryRepository.save(entry);
-        return toResponse(entry, encryptionKey);
+        return toResponse(entry, encryptionKey, user.getEncryptionSalt());
     }
 
     @Transactional
@@ -153,11 +156,12 @@ public class VaultEntryService {
         VaultEntry source = entryRepository.findByIdAndUserId(entryId, user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
 
-        String decTitle = encryptionService.decrypt(source.getTitle(), source.getTitleIv(), encryptionKey);
-        String decData = encryptionService.decrypt(source.getEncryptedData(), source.getEncryptionIv(), encryptionKey);
+        String salt = user.getEncryptionSalt();
+        String decTitle = encryptionService.decrypt(source.getTitle(), source.getTitleIv(), encryptionKey, salt);
+        String decData = encryptionService.decrypt(source.getEncryptedData(), source.getEncryptionIv(), encryptionKey, salt);
 
-        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle + " (koopia)", encryptionKey);
-        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, encryptionKey);
+        EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle + " (koopia)", encryptionKey, salt);
+        EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, encryptionKey, salt);
 
         VaultEntry copy = new VaultEntry();
         copy.setUser(user);
@@ -168,8 +172,8 @@ public class VaultEntryService {
         copy.setEncryptionIv(dataEnc.iv());
 
         if (source.getNotesEncrypted() != null && source.getNotesIv() != null) {
-            String decNotes = encryptionService.decrypt(source.getNotesEncrypted(), source.getNotesIv(), encryptionKey);
-            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, encryptionKey);
+            String decNotes = encryptionService.decrypt(source.getNotesEncrypted(), source.getNotesIv(), encryptionKey, salt);
+            EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, encryptionKey, salt);
             copy.setNotesEncrypted(notesEnc.ciphertext());
             copy.setNotesIv(notesEnc.iv());
         }
@@ -177,15 +181,16 @@ public class VaultEntryService {
         copy.setReminderDate(source.getReminderDate());
         copy = entryRepository.save(copy);
         progressService.recalculate(user);
-        return toResponse(copy, encryptionKey);
+        return toResponse(copy, encryptionKey, salt);
     }
 
     @Transactional(readOnly = true)
     public List<VaultEntryResponse> searchEntries(User user, String query, String encryptionKey) {
         List<VaultEntry> entries = entryRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
         String lowerQuery = query.toLowerCase();
+        String salt = user.getEncryptionSalt();
         return entries.stream()
-                .map(e -> toResponse(e, encryptionKey))
+                .map(e -> toResponse(e, encryptionKey, salt))
                 .filter(r -> r.title().toLowerCase().contains(lowerQuery)
                         || (r.data() != null && r.data().toLowerCase().contains(lowerQuery))
                         || (r.notes() != null && r.notes().toLowerCase().contains(lowerQuery)))
@@ -219,13 +224,13 @@ public class VaultEntryService {
                 "Vault kasutamiseks on vajalik aktiivne tellimus. Vali Plus või Perekond plaan!");
     }
 
-    private VaultEntryResponse toResponse(VaultEntry entry, String encryptionKey) {
-        String decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey);
-        String decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey);
+    private VaultEntryResponse toResponse(VaultEntry entry, String encryptionKey, String salt) {
+        String decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey, salt);
+        String decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey, salt);
 
         String decryptedNotes = null;
         if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
-            decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey);
+            decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey, salt);
         }
 
         VaultCategory cat = entry.getCategory();

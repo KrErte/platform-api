@@ -56,6 +56,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName().trim());
         user.setEmailVerificationToken(UUID.randomUUID());
+        user.setEncryptionSalt(EncryptionService.generateSalt());
         user = userRepository.save(user);
 
         // Create trial subscription
@@ -219,16 +220,20 @@ public class AuthService {
             throw new IllegalArgumentException("Praegune parool on vale");
         }
 
+        String oldSalt = user.getEncryptionSalt();
+        // Generate new salt (migrates legacy NULL salt users to per-user salt)
+        String newSalt = EncryptionService.generateSalt();
+
         // Re-encrypt all vault entries
         List<VaultEntry> entries = vaultEntryRepository.findAllByUserId(user.getId());
         for (VaultEntry entry : entries) {
-            // Decrypt with old password
-            String decTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), currentPassword);
-            String decData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), currentPassword);
+            // Decrypt with old password + old salt
+            String decTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), currentPassword, oldSalt);
+            String decData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), currentPassword, oldSalt);
 
-            // Re-encrypt with new password
-            EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle, newPassword);
-            EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, newPassword);
+            // Re-encrypt with new password + new salt
+            EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle, newPassword, newSalt);
+            EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, newPassword, newSalt);
 
             entry.setTitle(titleEnc.ciphertext());
             entry.setTitleIv(titleEnc.iv());
@@ -237,8 +242,8 @@ public class AuthService {
 
             // Re-encrypt notes if present
             if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
-                String decNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), currentPassword);
-                EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, newPassword);
+                String decNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), currentPassword, oldSalt);
+                EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, newPassword, newSalt);
                 entry.setNotesEncrypted(notesEnc.ciphertext());
                 entry.setNotesIv(notesEnc.iv());
             }
@@ -250,8 +255,8 @@ public class AuthService {
         List<VaultAttachment> attachments = vaultAttachmentRepository.findAllByUserId(user.getId());
         for (VaultAttachment att : attachments) {
             // Re-encrypt file name
-            String decFileName = encryptionService.decrypt(att.getFileNameEncrypted(), att.getFileNameIv(), currentPassword);
-            EncryptionService.EncryptionResult fileNameEnc = encryptionService.encrypt(decFileName, newPassword);
+            String decFileName = encryptionService.decrypt(att.getFileNameEncrypted(), att.getFileNameIv(), currentPassword, oldSalt);
+            EncryptionService.EncryptionResult fileNameEnc = encryptionService.encrypt(decFileName, newPassword, newSalt);
             att.setFileNameEncrypted(fileNameEnc.ciphertext());
             att.setFileNameIv(fileNameEnc.iv());
 
@@ -265,11 +270,11 @@ public class AuthService {
                 byte[] cipherBytes = java.util.Arrays.copyOfRange(combined, 12, combined.length);
                 String ivBase64 = java.util.Base64.getEncoder().encodeToString(iv);
 
-                // Decrypt with old password
-                byte[] plainBytes = encryptionService.decryptBytes(cipherBytes, ivBase64, currentPassword);
+                // Decrypt with old password + old salt
+                byte[] plainBytes = encryptionService.decryptBytes(cipherBytes, ivBase64, currentPassword, oldSalt);
 
-                // Re-encrypt with new password
-                EncryptionService.EncryptionResultBytes reEnc = encryptionService.encryptBytes(plainBytes, newPassword);
+                // Re-encrypt with new password + new salt
+                EncryptionService.EncryptionResultBytes reEnc = encryptionService.encryptBytes(plainBytes, newPassword, newSalt);
                 byte[] newIv = java.util.Base64.getDecoder().decode(reEnc.iv());
                 byte[] newCombined = java.nio.ByteBuffer.allocate(12 + reEnc.cipherBytes().length)
                         .put(newIv)
@@ -284,8 +289,9 @@ public class AuthService {
             vaultAttachmentRepository.save(att);
         }
 
-        // Update password hash
+        // Update password hash and salt
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setEncryptionSalt(newSalt);
         userRepository.save(user);
 
         // Revoke all sessions and create fresh one

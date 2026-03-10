@@ -73,6 +73,9 @@ public class User {
     @Column(name = "notify_security_alerts", nullable = false)
     private boolean notifySecurityAlerts = true;
 
+    @Column(name = "encryption_salt", length = 64)
+    private String encryptionSalt;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 

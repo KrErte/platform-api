@@ -50,6 +50,7 @@ public class VaultExportService {
         try {
             List<VaultCategory> categories = categoryRepository.findAllByOrderBySortOrderAsc();
             List<VaultEntry> allEntries = entryRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+            String salt = user.getEncryptionSalt();
 
             Map<UUID, List<VaultEntry>> entriesByCategory = new LinkedHashMap<>();
             for (VaultEntry entry : allEntries) {
@@ -66,11 +67,11 @@ public class VaultExportService {
                 List<Map<String, Object>> entryList = new ArrayList<>();
                 for (VaultEntry entry : categoryEntries) {
                     try {
-                        String decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey);
-                        String decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey);
+                        String decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey, salt);
+                        String decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey, salt);
                         String decryptedNotes = null;
                         if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
-                            decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey);
+                            decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey, salt);
                         }
 
                         Map<String, Object> entryMap = new LinkedHashMap<>();
@@ -114,6 +115,7 @@ public class VaultExportService {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4, 40, 40, 50, 40);
             PdfWriter writer = PdfWriter.getInstance(document, baos);
+            String salt = user.getEncryptionSalt();
 
             // Footer with page numbers
             writer.setPageEvent(new PdfFooterEvent());
@@ -141,7 +143,7 @@ public class VaultExportService {
                 if (categoryEntries == null || categoryEntries.isEmpty()) continue;
 
                 document.newPage();
-                addCategorySection(document, category, categoryEntries, encryptionKey);
+                addCategorySection(document, category, categoryEntries, encryptionKey, salt);
             }
 
             document.close();
@@ -191,7 +193,7 @@ public class VaultExportService {
     }
 
     private void addCategorySection(Document document, VaultCategory category,
-                                     List<VaultEntry> entries, String encryptionKey) throws DocumentException {
+                                     List<VaultEntry> entries, String encryptionKey, String salt) throws DocumentException {
         // Category header
         Paragraph catHeader = new Paragraph(category.getIcon() + "  " + category.getNameEt(), CATEGORY_FONT);
         catHeader.setSpacingAfter(10);
@@ -205,22 +207,22 @@ public class VaultExportService {
 
         for (int i = 0; i < entries.size(); i++) {
             VaultEntry entry = entries.get(i);
-            addEntryBlock(document, entry, encryptionKey, i);
+            addEntryBlock(document, entry, encryptionKey, salt, i);
         }
     }
 
     private void addEntryBlock(Document document, VaultEntry entry,
-                                String encryptionKey, int index) throws DocumentException {
+                                String encryptionKey, String salt, int index) throws DocumentException {
         // Decrypt entry data
         String decryptedTitle;
         String decryptedData;
         String decryptedNotes = null;
 
         try {
-            decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey);
-            decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey);
+            decryptedTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), encryptionKey, salt);
+            decryptedData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), encryptionKey, salt);
             if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
-                decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey);
+                decryptedNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), encryptionKey, salt);
             }
         } catch (Exception e) {
             log.warn("Failed to decrypt entry {}: {}", entry.getId(), e.getMessage());

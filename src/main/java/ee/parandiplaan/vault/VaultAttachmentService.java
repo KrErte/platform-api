@@ -41,7 +41,8 @@ public class VaultAttachmentService {
             byte[] plainBytes = file.getBytes();
 
             // Encrypt file content (IV prepended to ciphertext)
-            EncryptionService.EncryptionResultBytes encResult = encryptionService.encryptBytes(plainBytes, encryptionKey);
+            String salt = user.getEncryptionSalt();
+            EncryptionService.EncryptionResultBytes encResult = encryptionService.encryptBytes(plainBytes, encryptionKey, salt);
             byte[] iv = java.util.Base64.getDecoder().decode(encResult.iv());
             byte[] combined = ByteBuffer.allocate(IV_LENGTH + encResult.cipherBytes().length)
                     .put(iv)
@@ -50,7 +51,7 @@ public class VaultAttachmentService {
 
             // Encrypt file name
             EncryptionService.EncryptionResult nameEnc = encryptionService.encrypt(
-                    file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown", encryptionKey);
+                    file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown", encryptionKey, salt);
 
             // Generate storage key
             String storageKey = user.getId() + "/" + entryId + "/" + UUID.randomUUID();
@@ -73,7 +74,7 @@ public class VaultAttachmentService {
             entry.setHasAttachments(true);
             entryRepository.save(entry);
 
-            return toResponse(attachment, encryptionKey);
+            return toResponse(attachment, encryptionKey, salt);
         } catch (IllegalArgumentException | IllegalStateException e) {
             throw e;
         } catch (Exception e) {
@@ -86,9 +87,10 @@ public class VaultAttachmentService {
         entryRepository.findByIdAndUserId(entryId, user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Kirjet ei leitud"));
 
+        String salt = user.getEncryptionSalt();
         return attachmentRepository.findByVaultEntryIdOrderByCreatedAtDesc(entryId)
                 .stream()
-                .map(a -> toResponse(a, encryptionKey))
+                .map(a -> toResponse(a, encryptionKey, salt))
                 .toList();
     }
 
@@ -109,11 +111,12 @@ public class VaultAttachmentService {
             String ivBase64 = java.util.Base64.getEncoder().encodeToString(iv);
 
             // Decrypt file content
-            byte[] plainBytes = encryptionService.decryptBytes(cipherBytes, ivBase64, encryptionKey);
+            String salt = user.getEncryptionSalt();
+            byte[] plainBytes = encryptionService.decryptBytes(cipherBytes, ivBase64, encryptionKey, salt);
 
             // Decrypt file name
             String fileName = encryptionService.decrypt(
-                    attachment.getFileNameEncrypted(), attachment.getFileNameIv(), encryptionKey);
+                    attachment.getFileNameEncrypted(), attachment.getFileNameIv(), encryptionKey, salt);
 
             return new DownloadResult(plainBytes, fileName, attachment.getMimeType());
         } catch (Exception e) {
@@ -176,9 +179,9 @@ public class VaultAttachmentService {
         }
     }
 
-    private AttachmentResponse toResponse(VaultAttachment attachment, String encryptionKey) {
+    private AttachmentResponse toResponse(VaultAttachment attachment, String encryptionKey, String salt) {
         String fileName = encryptionService.decrypt(
-                attachment.getFileNameEncrypted(), attachment.getFileNameIv(), encryptionKey);
+                attachment.getFileNameEncrypted(), attachment.getFileNameIv(), encryptionKey, salt);
         return new AttachmentResponse(
                 attachment.getId(),
                 attachment.getVaultEntry().getId(),
