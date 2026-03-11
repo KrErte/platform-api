@@ -6,6 +6,7 @@ import ee.parandiplaan.trust.TrustedContact;
 import ee.parandiplaan.trust.TrustedContactRepository;
 import ee.parandiplaan.user.User;
 import ee.parandiplaan.user.UserRepository;
+import ee.parandiplaan.vault.SharedVaultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ public class InactivityMonitorService {
     private final InactivityCheckRepository checkRepository;
     private final HandoverRequestRepository handoverRepository;
     private final EmailService emailService;
+    private final SharedVaultService sharedVaultService;
 
     @Value("${app.url:http://localhost:8080}")
     private String appUrl;
@@ -180,14 +182,21 @@ public class InactivityMonitorService {
             handover.setReason("Automaatne üleandmine inaktiivsuse tõttu");
             handover.setRespondedAt(Instant.now());
             handover.setRespondedBy("SYSTEM");
-            handoverRepository.save(handover);
+            handover = handoverRepository.save(handover);
 
-            // Notify the trusted contact
-            emailService.sendHandoverApprovedEmail(
-                    contact.getEmail(),
-                    contact.getFullName(),
-                    user.getFullName()
-            );
+            // Create shared vault access and notify contact
+            try {
+                String rawToken = sharedVaultService.createSharedAccess(handover);
+                if (rawToken != null) {
+                    sharedVaultService.sendSharedAccessEmail(contact, user.getFullName(), rawToken);
+                } else {
+                    emailService.sendHandoverApprovedEmail(contact.getEmail(), contact.getFullName(), user.getFullName());
+                }
+            } catch (IllegalStateException e) {
+                log.warn("Shared access failed for auto-handover user {} → contact {}: {}",
+                        user.getEmail(), contact.getEmail(), e.getMessage());
+                emailService.sendHandoverApprovedEmail(contact.getEmail(), contact.getFullName(), user.getFullName());
+            }
 
             log.info("Auto-triggered handover for user {} to contact {}", user.getEmail(), contact.getEmail());
         }

@@ -4,6 +4,7 @@ import ee.parandiplaan.auth.dto.*;
 import ee.parandiplaan.common.security.CurrentUser;
 import ee.parandiplaan.common.util.IpUtils;
 import ee.parandiplaan.user.User;
+import ee.parandiplaan.vault.VaultEscrowService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final TotpService totpService;
+    private final VaultEscrowService vaultEscrowService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
@@ -70,6 +72,20 @@ public class AuthController {
         String ip = IpUtils.getClientIp(httpRequest);
         String ua = httpRequest.getHeader("User-Agent");
         return ResponseEntity.ok(authService.changePassword(user, request.currentPassword(), request.newPassword(), ip, ua));
+    }
+
+    // --- Vault key escrow (for eID users who enter vault key separately) ---
+
+    @PostMapping("/escrow-vault-key")
+    public ResponseEntity<MessageResponse> escrowVaultKey(
+            @CurrentUser User user,
+            @RequestBody Map<String, String> body) {
+        String vaultKey = body.get("vaultKey");
+        if (vaultKey == null || vaultKey.isBlank()) {
+            throw new IllegalArgumentException("Tresorivõti on kohustuslik");
+        }
+        vaultEscrowService.escrowVaultKey(user, vaultKey);
+        return ResponseEntity.ok(new MessageResponse("Tresorivõti edukalt salvestatud"));
     }
 
     // --- 2FA endpoints ---

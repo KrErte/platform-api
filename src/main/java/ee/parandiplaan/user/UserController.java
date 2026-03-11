@@ -83,6 +83,8 @@ public class UserController {
         map.put("notifyExpirationReminders", user.isNotifyExpirationReminders());
         map.put("notifyInactivityWarnings", user.isNotifyInactivityWarnings());
         map.put("notifySecurityAlerts", user.isNotifySecurityAlerts());
+        map.put("vaultKeyEscrowed", user.getEncryptedVaultKey() != null);
+        map.put("vaultKeyEscrowedAt", user.getVaultKeyEscrowedAt() != null ? user.getVaultKeyEscrowedAt().toString() : null);
         map.put("createdAt", user.getCreatedAt().toString());
         return map;
     }

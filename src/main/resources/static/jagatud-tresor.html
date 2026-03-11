@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Jagatud tresor — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/dashboard.css">
+    <style>
+        .shared-vault-page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+        .shared-header { text-align: center; margin-bottom: 2rem; }
+        .shared-header h1 { color: var(--green-800); margin-bottom: 0.25rem; }
+        .shared-meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .shared-warning {
+            background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px;
+            padding: 0.75rem 1rem; margin: 1rem auto 2rem; max-width: 600px;
+            font-size: 0.9rem; color: #92400E; text-align: center;
+        }
+        .shared-expired {
+            text-align: center; padding: 4rem 1rem;
+        }
+        .shared-expired h2 { color: #DC2626; margin-bottom: 1rem; }
+        .category-group { margin-bottom: 2rem; }
+        .category-group-title {
+            font-size: 1.1rem; font-weight: 700; color: var(--green-800);
+            margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .category-icon { font-size: 1.3rem; }
+        .entry-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+        .entry-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 8px; padding: 1rem; cursor: pointer;
+            transition: box-shadow 0.15s;
+        }
+        .entry-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .entry-title { font-weight: 600; color: var(--text); }
+        .entry-status { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .entry-attachment-badge {
+            display: inline-block; font-size: 0.75rem; background: var(--green-50);
+            color: var(--green-700); padding: 0.15rem 0.5rem; border-radius: 4px; margin-top: 0.25rem;
+        }
+
+        /* Entry detail modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem;
+            max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+        }
+        .modal-card h2 { margin-bottom: 1rem; color: var(--green-800); font-size: 1.2rem; }
+        .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        .detail-section { margin-bottom: 1rem; }
+        .detail-label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .detail-value { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+        .detail-notes { background: var(--bg); padding: 0.75rem; border-radius: 6px; white-space: pre-wrap; }
+        .attachments-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+        .attachment-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg); padding: 0.5rem 0.75rem; border-radius: 6px;
+        }
+        .attachment-name { font-size: 0.9rem; }
+        .attachment-size { font-size: 0.8rem; color: var(--text-muted); }
+        .btn-download {
+            background: var(--green-600); color: white; border: none; padding: 0.35rem 0.75rem;
+            border-radius: 4px; font-size: 0.8rem; cursor: pointer;
+        }
+        .btn-download:hover { background: var(--green-700); }
+
+        .loading-center { text-align: center; padding: 4rem; color: var(--text-muted); }
+        .entry-count-badge {
+            background: var(--green-100); color: var(--green-800);
+            font-size: 0.8rem; padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="shared-vault-page" id="main-content">
+        <div class="loading-center" id="loading">Laadin jagatud tresori andmeid...</div>
+        <div id="shared-content" style="display:none"></div>
+    </main>
+
+    <!-- Entry detail modal -->
+    <div id="entry-modal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeEntryModal()">&times;</button>
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        var sharedToken = new URLSearchParams(window.location.search).get('token');
+        var entries = [];
+
+        if (!sharedToken) {
+            showError('Jagamislink puudub. Palun kasuta emailis saadud linki.');
+        } else {
+            loadSharedVault();
+        }
+
+        async function loadSharedVault() {
+            try {
+                // Load info first
+                var infoRes = await fetch('/api/v1/shared-vault/info?token=' + encodeURIComponent(sharedToken));
+                if (!infoRes.ok) {
+                    var err = await infoRes.json().catch(function() { return {}; });
+                    showExpired(err.message || 'Jagamislink on aegunud või vigane.');
+                    return;
+                }
+                var info = await infoRes.json();
+
+                // Load entries
+                var entriesRes = await fetch('/api/v1/shared-vault/entries?token=' + encodeURIComponent(sharedToken));
+                if (!entriesRes.ok) {
+                    showError('Kirjete laadimine ebaõnnestus.');
+                    return;
+                }
+                entries = await entriesRes.json();
+
+                renderSharedVault(info, entries);
+            } catch (e) {
+                console.error('Shared vault load failed:', e);
+                showError('Andmete laadimine ebaõnnestus. Proovi hiljem uuesti.');
+            }
+        }
+
+        function renderSharedVault(info, entries) {
+            document.getElementById('loading').style.display = 'none';
+            var content = document.getElementById('shared-content');
+            content.style.display = '';
+
+            var expiresDate = new Date(info.expiresAt).toLocaleDateString('et-EE');
+
+            var html = '<div class="shared-header">' +
+                '<h1>Jagatud tresor</h1>' +
+                '<p class="shared-meta">' + escapeHtml(info.ownerName) + ' andmed &mdash; jagatud isikule ' + escapeHtml(info.contactName) + '</p>' +
+                '<p class="shared-meta">Kehtib kuni: ' + expiresDate + ' &middot; ' + info.entryCount + ' kirjet</p>' +
+            '</div>' +
+            '<div class="shared-warning">&#9888;&#65039; See link sisaldab tundlikku informatsiooni. Ära jaga seda teistega.</div>';
+
+            if (entries.length === 0) {
+                html += '<p style="text-align:center;color:var(--text-muted);">Jagatud tresorikirjeid pole.</p>';
+                content.innerHTML = html;
+                return;
+            }
+
+            // Group by category
+            var groups = {};
+            entries.forEach(function(e) {
+                var key = e.categorySlug || 'other';
+                if (!groups[key]) {
+                    groups[key] = { icon: e.categoryIcon || '📁', slug: e.categorySlug, entries: [] };
+                }
+                groups[key].entries.push(e);
+            });
+
+            var categoryNames = {
+                'isikuandmed': 'Isikuandmed', 'finants': 'Finants', 'kinnisvara': 'Kinnisvara',
+                'kindlustus': 'Kindlustus', 'digitaalne': 'Digitaalne vara', 'tervis': 'Tervis',
+                'juriidiline': 'Juriidiline', 'soovid': 'Soovid ja juhised', 'muu': 'Muu'
+            };
+
+            Object.keys(groups).forEach(function(slug) {
+                var group = groups[slug];
+                var catName = categoryNames[slug] || slug;
+                html += '<div class="category-group">' +
+                    '<div class="category-group-title">' +
+                        '<span class="category-icon">' + group.icon + '</span> ' +
+                        catName +
+                        ' <span class="entry-count-badge">' + group.entries.length + '</span>' +
+                    '</div>' +
+                    '<div class="entry-cards">';
+
+                group.entries.forEach(function(entry) {
+                    var status = entry.isComplete ? 'Korrastatud' : 'Pooleli';
+                    html += '<div class="entry-card" onclick="openEntry(\'' + entry.id + '\')">' +
+                        '<div class="entry-title">' + escapeHtml(entry.title) + '</div>' +
+                        '<div class="entry-status">' + status + '</div>' +
+                        (entry.hasAttachments ? '<span class="entry-attachment-badge">&#128206; Manused</span>' : '') +
+                    '</div>';
+                });
+
+                html += '</div></div>';
+            });
+
+            content.innerHTML = html;
+        }
+
+        async function openEntry(entryId) {
+            var entry = entries.find(function(e) { return e.id === entryId; });
+            if (!entry) return;
+
+            document.getElementById('modal-title').textContent = entry.title;
+
+            var body = '';
+
+            // Data fields
+            if (entry.data) {
+                body += '<div class="detail-section">' +
+                    '<div class="detail-label">Andmed</div>' +
+                    '<div class="detail-value">' + escapeHtml(entry.data) + '</div>' +
+                '</div>';
+            }
+
+            // Notes
+            if (entry.notes) {
+                body += '<div class="detail-section">' +
+                    '<div class="detail-label">Märkmed</div>' +
+                    '<div class="detail-notes">' + escapeHtml(entry.notes) + '</div>' +
+                '</div>';
+            }
+
+            document.getElementById('modal-body').innerHTML = body + '<div id="attachments-container"></div>';
+            document.getElementById('entry-modal').style.display = 'flex';
+
+            // Load attachments if present
+            if (entry.hasAttachments) {
+                loadAttachments(entryId);
+            }
+        }
+
+        async function loadAttachments(entryId) {
+            var container = document.getElementById('attachments-container');
+            container.innerHTML = '<div class="detail-section"><div class="detail-label">Manused</div><p style="color:var(--text-muted);font-size:0.85rem;">Laadin...</p></div>';
+
+            try {
+                var res = await fetch('/api/v1/shared-vault/entries/' + entryId + '/attachments?token=' + encodeURIComponent(sharedToken));
+                if (!res.ok) {
+                    container.innerHTML = '<div class="detail-section"><div class="detail-label">Manused</div><p style="color:#DC2626;font-size:0.85rem;">Manuste laadimine ebaõnnestus.</p></div>';
+                    return;
+                }
+                var attachments = await res.json();
+
+                if (attachments.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                var html = '<div class="detail-section"><div class="detail-label">Manused</div><div class="attachments-list">';
+                attachments.forEach(function(att) {
+                    var sizeStr = formatFileSize(att.fileSizeBytes);
+                    html += '<div class="attachment-item">' +
+                        '<div><span class="attachment-name">' + escapeHtml(att.fileName) + '</span> <span class="attachment-size">(' + sizeStr + ')</span></div>' +
+                        '<button class="btn-download" onclick="downloadAttachment(\'' + att.id + '\', \'' + escapeHtml(att.fileName).replace(/'/g, "\\'") + '\')">Lae alla</button>' +
+                    '</div>';
+                });
+                html += '</div></div>';
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('Attachments load failed:', e);
+                container.innerHTML = '<div class="detail-section"><div class="detail-label">Manused</div><p style="color:#DC2626;font-size:0.85rem;">Manuste laadimine ebaõnnestus.</p></div>';
+            }
+        }
+
+        async function downloadAttachment(attachmentId, fileName) {
+            try {
+                var res = await fetch('/api/v1/shared-vault/attachments/' + attachmentId + '/download?token=' + encodeURIComponent(sharedToken));
+                if (!res.ok) {
+                    alert('Allalaadimine ebaõnnestus');
+                    return;
+                }
+                var blob = await res.blob();
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('Download failed:', e);
+                alert('Allalaadimine ebaõnnestus');
+            }
+        }
+
+        function closeEntryModal() {
+            document.getElementById('entry-modal').style.display = 'none';
+        }
+
+        document.getElementById('entry-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeEntryModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeEntryModal();
+        });
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            var content = document.getElementById('shared-content');
+            content.style.display = '';
+            content.innerHTML = '<div class="shared-expired"><h2>Viga</h2><p>' + escapeHtml(message) + '</p></div>';
+        }
+
+        function showExpired(message) {
+            document.getElementById('loading').style.display = 'none';
+            var content = document.getElementById('shared-content');
+            content.style.display = '';
+            content.innerHTML = '<div class="shared-expired"><h2>Link aegunud</h2><p>' + escapeHtml(message) + '</p></div>';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+    </script>
+</body>
+</html>

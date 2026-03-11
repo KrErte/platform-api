@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -42,6 +44,10 @@ public class TrustedContact {
 
     @Column(name = "inactivity_days")
     private Integer inactivityDays = 90;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "allowed_categories")
+    private UUID[] allowedCategories;
 
     @Column(name = "server_key_share")
     private String serverKeyShare;

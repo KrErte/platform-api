@@ -12,6 +12,7 @@ public record TrustedContactResponse(
         String accessLevel,
         String activationMode,
         Integer inactivityDays,
+        UUID[] allowedCategories,
         boolean inviteAccepted,
         Instant inviteAcceptedAt,
         UUID inviteToken,

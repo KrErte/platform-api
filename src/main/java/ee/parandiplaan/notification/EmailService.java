@@ -166,6 +166,28 @@ public class EmailService {
         sendEmail(toEmail, subject, html);
     }
 
+    public void sendSharedVaultEmail(String toEmail, String contactName, String ownerName, String sharedUrl) {
+        String subject = "Juurdepääs " + ownerName + " tresori andmetele — Pärandiplaan";
+        String html = """
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1B4332;">Tere, %s!</h2>
+                    <p><strong>%s</strong> on andnud sulle juurdepääsu oma Pärandiplaani tresori andmetele.</p>
+                    <p>Kliki alloleval nupul, et vaadata jagatud andmeid:</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="background: #2D6A4F; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            Ava jagatud tresor
+                        </a>
+                    </p>
+                    <p style="color: #DC2626; font-weight: bold; font-size: 14px;">⚠️ See link sisaldab tundlikku informatsiooni. Ära jaga seda teistega.</p>
+                    <p style="color: #666; font-size: 14px;">Link kehtib 30 päeva. Pärast seda pead taotlema uue juurdepääsu.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">Pärandiplaan — Sinu digitaalne pärand, turvaliselt korraldatud</p>
+                </div>
+                """.formatted(contactName, ownerName, sharedUrl);
+
+        sendEmail(toEmail, subject, html);
+    }
+
     public void sendAccountDeletedEmail(String toEmail, String fullName) {
         String subject = "Konto kustutatud — Pärandiplaan";
         String html = """

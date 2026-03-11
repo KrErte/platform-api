@@ -46,6 +46,12 @@
             <div class="contact-card skeleton" style="height:80px"></div>
         </div>
 
+        <!-- Active shared links section -->
+        <div class="handover-section" id="shared-links-section" style="display:none">
+            <h2>Aktiivsed jagamislingid</h2>
+            <div id="shared-links-container"></div>
+        </div>
+
         <!-- Handover requests section -->
         <div class="handover-section" id="handover-section" style="display:none">
             <h2>Üleandmistaotlused</h2>
@@ -94,6 +100,10 @@
                 </div>
                 <div id="limited-info" class="field-hint" style="display:none;margin-top:-0.25rem;margin-bottom:0.75rem;font-size:0.85rem;color:var(--text-muted);">
                     Piiratud juurdepääsuga kontakt näeb ainult kategooriaid, mille sa eraldi jagad.
+                </div>
+                <div id="categories-select-group" style="display:none;margin-bottom:0.75rem;">
+                    <label style="font-weight:600;font-size:0.9rem;margin-bottom:0.5rem;display:block;">Lubatud kategooriad</label>
+                    <div id="categories-checkboxes" style="display:flex;flex-wrap:wrap;gap:0.5rem;"></div>
                 </div>
                 <div class="toggle-group">
                     <label>Aktiveerimisrežiim</label>
@@ -176,6 +186,7 @@
         var selectedAccessLevel = 'FULL';
         var selectedActivationMode = 'MANUAL';
         var planLimit = null; // null = unlimited
+        var allCategories = [];
 
         // ===== Load Data =====
         async function loadContacts() {
@@ -327,6 +338,9 @@
             selectedActivationMode = 'MANUAL';
             updateToggleUI();
             document.getElementById('inactivity-config').style.display = 'none';
+            document.getElementById('limited-info').style.display = 'none';
+            document.getElementById('categories-select-group').style.display = 'none';
+            renderCategoryCheckboxes([]);
 
             document.getElementById('contact-modal').style.display = 'flex';
         }
@@ -355,6 +369,8 @@
             updateToggleUI();
 
             document.getElementById('limited-info').style.display = selectedAccessLevel === 'LIMITED' ? '' : 'none';
+            document.getElementById('categories-select-group').style.display = selectedAccessLevel === 'LIMITED' ? '' : 'none';
+            renderCategoryCheckboxes(c.allowedCategories || []);
 
             if (selectedActivationMode === 'INACTIVITY') {
                 document.getElementById('inactivity-config').style.display = '';
@@ -375,6 +391,7 @@
             selectedAccessLevel = level;
             updateToggleUI();
             document.getElementById('limited-info').style.display = level === 'LIMITED' ? '' : 'none';
+            document.getElementById('categories-select-group').style.display = level === 'LIMITED' ? '' : 'none';
         }
 
         function setActivationMode(mode) {
@@ -429,6 +446,13 @@
                 ? parseInt(document.getElementById('inactivity-days-input').value) || 90
                 : null;
 
+            // Collect allowed categories if LIMITED
+            var allowedCategories = null;
+            if (selectedAccessLevel === 'LIMITED') {
+                var checked = document.querySelectorAll('#categories-checkboxes input:checked');
+                allowedCategories = Array.from(checked).map(function(cb) { return cb.value; });
+            }
+
             try {
                 var url = '/api/v1/trusted-contacts';
                 var method = 'POST';
@@ -439,20 +463,21 @@
                     relationship: relationship || null,
                     accessLevel: selectedAccessLevel,
                     activationMode: selectedActivationMode,
-                    inactivityDays: inactivityDays
+                    inactivityDays: inactivityDays,
+                    allowedCategories: allowedCategories
                 };
 
                 if (editingContactId) {
                     url += '/' + editingContactId;
                     method = 'PUT';
-                    // Update request doesn't include email
                     body = {
                         fullName: fullName,
                         phone: phone || null,
                         relationship: relationship || null,
                         accessLevel: selectedAccessLevel,
                         activationMode: selectedActivationMode,
-                        inactivityDays: inactivityDays
+                        inactivityDays: inactivityDays,
+                        allowedCategories: allowedCategories
                     };
                 }
 
@@ -636,11 +661,101 @@
             }
         });
 
+        // ===== Categories =====
+        async function loadCategories() {
+            try {
+                var res = await fetch('/api/v1/vault/categories', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                allCategories = await res.json();
+            } catch (e) {
+                console.error('Categories load failed:', e);
+            }
+        }
+
+        function renderCategoryCheckboxes(selectedIds) {
+            var container = document.getElementById('categories-checkboxes');
+            if (allCategories.length === 0) {
+                container.innerHTML = '<span style="font-size:0.85rem;color:var(--text-muted);">Kategooriad laadimas...</span>';
+                return;
+            }
+            container.innerHTML = allCategories.map(function(cat) {
+                var checked = selectedIds && selectedIds.indexOf(cat.id) !== -1 ? ' checked' : '';
+                return '<label style="display:flex;align-items:center;gap:0.3rem;font-size:0.85rem;cursor:pointer;background:var(--warm-50);padding:0.3rem 0.6rem;border-radius:4px;border:1px solid var(--card-border);">' +
+                    '<input type="checkbox" value="' + cat.id + '"' + checked + '> ' +
+                    (cat.icon || '') + ' ' + cat.nameEt +
+                '</label>';
+            }).join('');
+        }
+
+        // ===== Shared Links =====
+        async function loadSharedLinks() {
+            try {
+                var res = await fetch('/api/v1/shared-vault/tokens', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                var tokens = await res.json();
+                renderSharedLinks(tokens);
+            } catch (e) {
+                console.error('Shared links load failed:', e);
+            }
+        }
+
+        function renderSharedLinks(tokens) {
+            var section = document.getElementById('shared-links-section');
+            var container = document.getElementById('shared-links-container');
+
+            if (tokens.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = '';
+            container.innerHTML = tokens.map(function(t) {
+                var expiresDate = new Date(t.expiresAt).toLocaleDateString('et-EE');
+                var lastAccess = t.lastAccessedAt ? new Date(t.lastAccessedAt).toLocaleDateString('et-EE') : 'Pole kasutatud';
+                return '<div class="handover-card" style="margin-bottom:0.5rem;">' +
+                    '<div class="handover-info">' +
+                        '<div class="handover-name">' + escapeHtml(t.contactName) + '</div>' +
+                        '<div style="font-size:0.8rem;color:var(--text-muted);">' +
+                            escapeHtml(t.contactEmail) + ' &middot; Kehtib kuni: ' + expiresDate +
+                            ' &middot; Kasutatud: ' + t.accessCount + 'x &middot; Viimane: ' + lastAccess +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="handover-actions">' +
+                        '<button class="btn-deny" onclick="revokeSharedLink(\'' + t.id + '\')">Tühista</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function revokeSharedLink(tokenId) {
+            if (!confirm('Kas oled kindel, et soovid selle jagamislingi tühistada?')) return;
+            try {
+                var res = await fetch('/api/v1/shared-vault/tokens/' + tokenId + '/revoke', {
+                    method: 'POST',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    alert(err.message || 'Tühistamine ebaõnnestus');
+                    return;
+                }
+                showToast('Jagamislink tühistatud!');
+                loadSharedLinks();
+            } catch (e) {
+                console.error('Revoke failed:', e);
+                alert('Tühistamine ebaõnnestus');
+            }
+        }
+
         // ===== Init =====
         async function init() {
-            await loadSubscription();
+            await Promise.all([loadSubscription(), loadCategories()]);
             loadContacts();
             loadPendingHandovers();
+            loadSharedLinks();
         }
 
         init();

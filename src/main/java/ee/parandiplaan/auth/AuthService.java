@@ -44,6 +44,7 @@ public class AuthService {
     private final StorageService storageService;
     private final AuditService auditService;
     private final SessionService sessionService;
+    private final VaultEscrowService vaultEscrowService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request, String ip, String userAgent) {
@@ -71,6 +72,9 @@ public class AuthService {
         UserProgress progress = new UserProgress();
         progress.setUser(user);
         userProgressRepository.save(progress);
+
+        // Escrow vault key for future shared access
+        vaultEscrowService.escrowVaultKey(user, request.password());
 
         log.info("New user registered: {}", user.getEmail());
 
@@ -105,6 +109,9 @@ public class AuthService {
 
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
+
+        // Re-escrow vault key on every login
+        vaultEscrowService.escrowVaultKey(user, request.password());
 
         log.info("User logged in: {}", user.getEmail());
         auditService.log(user, "LOGIN", "Kasutaja logis sisse", ip);
@@ -200,10 +207,12 @@ public class AuthService {
         // Delete all vault entries
         vaultEntryRepository.deleteAllByUserId(user.getId());
 
-        // Update password
+        // Update password and clear escrow (vault data is gone)
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setPasswordResetToken(null);
         user.setPasswordResetTokenExpiresAt(null);
+        user.setEncryptedVaultKey(null);
+        user.setVaultKeyEscrowedAt(null);
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
 
@@ -293,6 +302,9 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setEncryptionSalt(newSalt);
         userRepository.save(user);
+
+        // Re-escrow with new password
+        vaultEscrowService.escrowVaultKey(user, newPassword);
 
         // Revoke all sessions and create fresh one
         sessionService.revokeAllSessions(user.getId());

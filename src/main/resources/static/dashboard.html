@@ -94,6 +94,7 @@
                     <div class="skeleton skeleton-line"></div>
                     <div class="skeleton skeleton-line short"></div>
                 </div>
+                <div id="escrow-status" style="margin-top:0.75rem"></div>
             </div>
         </div>
     </main>
@@ -279,6 +280,14 @@
                 if (!data.onboardingCompleted) {
                     window.location.href = '/onboarding.html';
                 }
+
+                // Show escrow status
+                var escrowEl = document.getElementById('escrow-status');
+                if (data.vaultKeyEscrowed) {
+                    escrowEl.innerHTML = '<span style="display:inline-block;background:#D1FAE5;color:#065F46;font-size:0.8rem;padding:0.2rem 0.6rem;border-radius:4px;font-weight:600;">&#10003; Tresorivõti varundatud</span>';
+                } else {
+                    escrowEl.innerHTML = '<span style="display:inline-block;background:#FEE2E2;color:#991B1B;font-size:0.8rem;padding:0.2rem 0.6rem;border-radius:4px;font-weight:600;">&#10007; Tresorivõti varundamata</span>';
+                }
             } catch (e) {
                 console.error('Onboarding check failed:', e);
             }
@@ -358,7 +367,9 @@
             CONTACT_ADDED: 'Kontakt lisatud',
             CONTACT_REMOVED: 'Kontakt eemaldatud',
             HANDOVER_APPROVED: 'Üleandmine kinnitatud',
-            HANDOVER_DENIED: 'Üleandmine keelatud'
+            HANDOVER_DENIED: 'Üleandmine keelatud',
+            SHARED_ACCESS_CREATED: 'Jagatud ligipääs loodud',
+            SHARED_ACCESS_REVOKED: 'Jagatud ligipääs tühistatud'
         };
 
         async function loadRecentActivity() {

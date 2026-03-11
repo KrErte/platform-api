@@ -70,6 +70,10 @@ public class TrustedContactService {
             contact.setInactivityDays(request.inactivityDays());
         }
 
+        if (request.allowedCategories() != null) {
+            contact.setAllowedCategories(request.allowedCategories());
+        }
+
         contact = contactRepository.save(contact);
         progressService.recalculate(user);
         auditService.log(user, "CONTACT_ADDED", contact.getFullName());
@@ -109,6 +113,10 @@ public class TrustedContactService {
         }
         if (request.inactivityDays() != null) {
             contact.setInactivityDays(request.inactivityDays());
+        }
+
+        if (request.allowedCategories() != null) {
+            contact.setAllowedCategories(request.allowedCategories());
         }
 
         contact = contactRepository.save(contact);
@@ -219,6 +227,7 @@ public class TrustedContactService {
                 contact.getAccessLevel(),
                 contact.getActivationMode(),
                 contact.getInactivityDays(),
+                contact.getAllowedCategories(),
                 contact.isInviteAccepted(),
                 contact.getInviteAcceptedAt(),
                 contact.getInviteToken(),

@@ -6,7 +6,9 @@ import ee.parandiplaan.trust.dto.CreateHandoverRequest;
 import ee.parandiplaan.trust.dto.HandoverRequestResponse;
 import ee.parandiplaan.user.User;
 import ee.parandiplaan.user.UserRepository;
+import ee.parandiplaan.vault.SharedVaultService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HandoverRequestService {
 
     private final HandoverRequestRepository handoverRepository;
@@ -24,6 +27,7 @@ public class HandoverRequestService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final AuditService auditService;
+    private final SharedVaultService sharedVaultService;
 
     private static final int RESPONSE_DEADLINE_HOURS = 72;
 
@@ -113,17 +117,21 @@ public class HandoverRequestService {
         handover = handoverRepository.save(handover);
         auditService.log(user, "HANDOVER_APPROVED", handover.getTrustedContact().getFullName());
 
-        // TODO: Implement vault data sharing with trusted contact.
-        // This is a major feature requiring: re-encryption of vault entries with contact's key,
-        // scoped access control, and a secure delivery mechanism.
-
-        // Notify contact
+        // Create shared vault access and notify contact
         TrustedContact contact = handover.getTrustedContact();
-        emailService.sendHandoverApprovedEmail(
-                contact.getEmail(),
-                contact.getFullName(),
-                user.getFullName()
-        );
+        try {
+            String rawToken = sharedVaultService.createSharedAccess(handover);
+            if (rawToken != null) {
+                sharedVaultService.sendSharedAccessEmail(contact, user.getFullName(), rawToken);
+            } else {
+                // Active token already exists — just send approval notification
+                emailService.sendHandoverApprovedEmail(contact.getEmail(), contact.getFullName(), user.getFullName());
+            }
+        } catch (IllegalStateException e) {
+            log.warn("Shared access failed for handover {}: {}", handover.getId(), e.getMessage());
+            // Still notify contact about approval, even if vault sharing failed
+            emailService.sendHandoverApprovedEmail(contact.getEmail(), contact.getFullName(), user.getFullName());
+        }
 
         return toResponse(handover);
     }

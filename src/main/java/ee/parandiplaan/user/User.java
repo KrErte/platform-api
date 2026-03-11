@@ -79,6 +79,12 @@ public class User {
     @Column(name = "personal_code", length = 20, unique = true)
     private String personalCode;
 
+    @Column(name = "encrypted_vault_key")
+    private String encryptedVaultKey;
+
+    @Column(name = "vault_key_escrowed_at")
+    private Instant vaultKeyEscrowedAt;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 

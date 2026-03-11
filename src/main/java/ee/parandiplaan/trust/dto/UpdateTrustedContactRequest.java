@@ -2,6 +2,8 @@ package ee.parandiplaan.trust.dto;
 
 import jakarta.validation.constraints.Size;
 
+import java.util.UUID;
+
 public record UpdateTrustedContactRequest(
         @Size(max = 255)
         String fullName,
@@ -14,5 +16,7 @@ public record UpdateTrustedContactRequest(
 
         String activationMode,
 
-        Integer inactivityDays
+        Integer inactivityDays,
+
+        UUID[] allowedCategories
 ) {}

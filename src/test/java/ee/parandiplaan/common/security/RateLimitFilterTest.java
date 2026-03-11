@@ -18,7 +18,7 @@ class RateLimitFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new RateLimitFilter(5); // 5 requests per minute for testing
+        filter = new RateLimitFilter(5, 20); // 5 auth + 20 shared-vault requests per minute for testing
         filterChain = mock(FilterChain.class);
     }
 
