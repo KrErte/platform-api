@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Serveri viga — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+            padding: 2rem;
+        }
+        .error-code {
+            font-size: 6rem;
+            font-weight: 800;
+            color: var(--green-300);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--green-900);
+            margin-bottom: 0.75rem;
+        }
+        .error-desc {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 400px;
+        }
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+        </div>
+    </nav>
+    <main class="error-page">
+        <div class="error-code">500</div>
+        <div class="error-title">Serveri viga</div>
+        <p class="error-desc">Midagi läks valesti meie poolel. Palun proovi hiljem uuesti. Kui probleem püsib, võta meiega ühendust.</p>
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">Avalehele</a>
+            <a href="/dashboard.html" class="btn btn-outline">Töölauale</a>
+        </div>
+    </main>
+    <script src="/assets/i18n.js"></script>
+</body>
+</html>

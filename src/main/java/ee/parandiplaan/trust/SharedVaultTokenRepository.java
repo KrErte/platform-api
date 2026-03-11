@@ -1,5 +1,6 @@
 package ee.parandiplaan.trust;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -8,8 +9,10 @@ import java.util.UUID;
 
 public interface SharedVaultTokenRepository extends JpaRepository<SharedVaultToken, UUID> {
 
+    @EntityGraph(attributePaths = {"trustedContact", "user"})
     Optional<SharedVaultToken> findByTokenHash(String tokenHash);
 
+    @EntityGraph(attributePaths = {"trustedContact", "user"})
     List<SharedVaultToken> findByUserIdAndRevokedAtIsNullOrderByCreatedAtDesc(UUID userId);
 
     Optional<SharedVaultToken> findByHandoverRequestIdAndTrustedContactId(UUID handoverRequestId, UUID trustedContactId);

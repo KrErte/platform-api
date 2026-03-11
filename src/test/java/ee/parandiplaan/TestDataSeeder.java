@@ -1,10 +1,13 @@
 package ee.parandiplaan;
 
+import ee.parandiplaan.user.User;
+import ee.parandiplaan.user.UserRepository;
 import ee.parandiplaan.vault.VaultCategory;
 import ee.parandiplaan.vault.VaultCategoryRepository;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
 
@@ -37,6 +40,19 @@ public class TestDataSeeder {
             );
             categoryRepository.saveAll(categories);
         };
+    }
+
+    /**
+     * Creates an admin user for testing. Call from test methods that need admin access.
+     */
+    public static User createAdminUser(UserRepository userRepository) {
+        User admin = new User();
+        admin.setEmail("admin@test.ee");
+        admin.setPasswordHash(new BCryptPasswordEncoder().encode("AdminPass123"));
+        admin.setFullName("Admin User");
+        admin.setRole("ADMIN");
+        admin.setEmailVerified(true);
+        return userRepository.save(admin);
     }
 
     private static VaultCategory cat(String slug, String nameEt, String nameEn, String icon, int sortOrder) {

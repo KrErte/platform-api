@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class VaultExportController {
 
     private final VaultExportService exportService;
+    private final InheritancePlanPdfService inheritancePlanPdfService;
 
     @GetMapping("/pdf")
     public ResponseEntity<byte[]> exportPdf(
@@ -23,6 +24,17 @@ public class VaultExportController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=parandiplaan.pdf")
+                .body(pdf);
+    }
+
+    @GetMapping("/plan")
+    public ResponseEntity<byte[]> exportInheritancePlan(
+            @CurrentUser User user,
+            @RequestHeader("X-Encryption-Key") String encryptionKey) {
+        byte[] pdf = inheritancePlanPdfService.generateInheritancePlan(user, encryptionKey);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=parandiplaan-dokument.pdf")
                 .body(pdf);
     }
 

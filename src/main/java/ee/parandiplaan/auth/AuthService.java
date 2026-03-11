@@ -138,7 +138,7 @@ public class AuthService {
 
         // Generate new tokens with session context
         String newRefreshToken = jwtService.generateRefreshToken(userId);
-        String accessToken = jwtService.generateAccessToken(userId, user.getEmail(), session.getId());
+        String accessToken = jwtService.generateAccessToken(userId, user.getEmail(), session.getId(), user.getRole());
 
         // Rotate the refresh token hash
         sessionService.updateRefreshTokenHash(session.getId(), newRefreshToken);
@@ -149,7 +149,8 @@ public class AuthService {
                 user.getFullName(),
                 accessToken,
                 newRefreshToken,
-                user.isEmailVerified()
+                user.isEmailVerified(),
+                user.getRole()
         );
     }
 
@@ -316,7 +317,7 @@ public class AuthService {
     private AuthResponse buildAuthResponseWithSession(User user, String ip, String userAgent) {
         String refreshToken = jwtService.generateRefreshToken(user.getId());
         UserSession session = sessionService.createSession(user, refreshToken, ip, userAgent);
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), session.getId());
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), session.getId(), user.getRole());
 
         return new AuthResponse(
                 user.getId(),
@@ -324,7 +325,8 @@ public class AuthService {
                 user.getFullName(),
                 accessToken,
                 refreshToken,
-                user.isEmailVerified()
+                user.isEmailVerified(),
+                user.getRole()
         );
     }
 

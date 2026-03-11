@@ -23,7 +23,7 @@ class JwtServiceTest {
         String email = "test@example.com";
         UUID sessionId = UUID.randomUUID();
 
-        String token = jwtService.generateAccessToken(userId, email, sessionId);
+        String token = jwtService.generateAccessToken(userId, email, sessionId, "USER");
 
         assertNotNull(token);
         assertTrue(jwtService.isTokenValid(token));
@@ -49,7 +49,7 @@ class JwtServiceTest {
         UUID userId = UUID.randomUUID();
         String email = "test@example.com";
 
-        String token = jwtService.generateAccessToken(userId, email, null);
+        String token = jwtService.generateAccessToken(userId, email, null, "USER");
 
         assertTrue(jwtService.isTokenValid(token));
         assertNull(jwtService.getSessionIdFromToken(token));
@@ -61,7 +61,7 @@ class JwtServiceTest {
         JwtService shortLived = new JwtService(SECRET, 0L, 0L);
 
         UUID userId = UUID.randomUUID();
-        String token = shortLived.generateAccessToken(userId, "test@example.com", null);
+        String token = shortLived.generateAccessToken(userId, "test@example.com", null, "USER");
 
         // Token should be expired immediately
         assertFalse(shortLived.isTokenValid(token));
@@ -70,7 +70,7 @@ class JwtServiceTest {
     @Test
     void tamperedTokenIsInvalid() {
         UUID userId = UUID.randomUUID();
-        String token = jwtService.generateAccessToken(userId, "test@example.com", null);
+        String token = jwtService.generateAccessToken(userId, "test@example.com", null, "USER");
 
         // Tamper with the token
         String tampered = token.substring(0, token.length() - 5) + "XXXXX";
@@ -88,7 +88,7 @@ class JwtServiceTest {
     @Test
     void differentSecretCannotValidateToken() {
         UUID userId = UUID.randomUUID();
-        String token = jwtService.generateAccessToken(userId, "test@example.com", null);
+        String token = jwtService.generateAccessToken(userId, "test@example.com", null, "USER");
 
         JwtService otherService = new JwtService(
                 "AnotherSecretKeyThatIsAtLeast256BitsLongForHmacSHA256AlgorithmXX", 900_000L, 7L);

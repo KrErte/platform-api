@@ -6,6 +6,8 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Seaded — Pärandiplaan</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1B4332">
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="stylesheet" href="/assets/auth.css">
     <link rel="stylesheet" href="/assets/settings.css">
@@ -170,6 +172,10 @@
                     <input type="checkbox" id="pref-security" onchange="saveEmailPrefs()">
                     <span style="font-size:0.95rem;">Turvateavitused</span>
                 </label>
+                <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
+                    <input type="checkbox" id="pref-sms" onchange="saveEmailPrefs()">
+                    <span style="font-size:0.95rem;">SMS-teavitused (telefon peab olema lisatud)</span>
+                </label>
             </div>
         </div>
 
@@ -290,6 +296,11 @@
                 var data = await res.json();
                 localStorage.setItem('userName', data.fullName);
                 document.getElementById('nav-name').textContent = data.fullName;
+                // Sync language with i18n
+                var selectedLang = document.getElementById('profile-language').value;
+                if (window.i18n && window.i18n.lang !== selectedLang) {
+                    window.i18n.setLang(selectedLang);
+                }
                 showMessage('profile-message', 'Profiil uuendatud!', false);
             } catch (err) {
                 showMessage('profile-message', err.message, true);
@@ -533,6 +544,9 @@
             document.getElementById('pref-expiration').checked = data.notifyExpirationReminders;
             document.getElementById('pref-inactivity').checked = data.notifyInactivityWarnings;
             document.getElementById('pref-security').checked = data.notifySecurityAlerts;
+            if (document.getElementById('pref-sms')) {
+                document.getElementById('pref-sms').checked = data.notifySms || false;
+            }
         }
 
         async function saveEmailPrefs() {
@@ -543,7 +557,8 @@
                 var body = {
                     notifyExpirationReminders: document.getElementById('pref-expiration').checked,
                     notifyInactivityWarnings: document.getElementById('pref-inactivity').checked,
-                    notifySecurityAlerts: document.getElementById('pref-security').checked
+                    notifySecurityAlerts: document.getElementById('pref-security').checked,
+                    notifySms: document.getElementById('pref-sms') ? document.getElementById('pref-sms').checked : false
                 };
 
                 var res = await fetch('/api/v1/users/me/email-preferences', {
@@ -783,5 +798,6 @@
         loadSessions();
     </script>
     <script src="/assets/session-guard.js"></script>
+    <script src="/assets/i18n.js"></script>
 </body>
 </html>

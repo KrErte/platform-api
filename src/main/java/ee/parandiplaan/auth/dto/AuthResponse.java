@@ -8,5 +8,6 @@ public record AuthResponse(
         String fullName,
         String accessToken,
         String refreshToken,
-        boolean emailVerified
+        boolean emailVerified,
+        String role
 ) {}

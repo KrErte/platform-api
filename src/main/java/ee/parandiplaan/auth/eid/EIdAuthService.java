@@ -263,11 +263,11 @@ public class EIdAuthService {
 
         String refreshToken = jwtService.generateRefreshToken(user.getId());
         UserSession session = sessionService.createSession(user, refreshToken, ip, userAgent);
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), session.getId());
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), session.getId(), user.getRole());
 
         return new AuthResponse(
                 user.getId(), user.getEmail(), user.getFullName(),
-                accessToken, refreshToken, user.isEmailVerified()
+                accessToken, refreshToken, user.isEmailVerified(), user.getRole()
         );
     }
 

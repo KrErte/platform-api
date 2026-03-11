@@ -85,6 +85,12 @@ public class User {
     @Column(name = "vault_key_escrowed_at")
     private Instant vaultKeyEscrowedAt;
 
+    @Column(nullable = false, length = 20)
+    private String role = "USER";
+
+    @Column(name = "notify_sms", nullable = false)
+    private boolean notifySms = false;
+
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 
@@ -93,6 +99,10 @@ public class User {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    public boolean isAdmin() {
+        return "ADMIN".equals(role);
+    }
 
     @PrePersist
     protected void onCreate() {

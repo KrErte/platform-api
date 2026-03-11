@@ -19,6 +19,7 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final UserService userService;
+    private final GdprExportService gdprExportService;
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(@CurrentUser User user) {
@@ -64,8 +65,14 @@ public class UserController {
         user.setNotifyExpirationReminders(request.notifyExpirationReminders());
         user.setNotifyInactivityWarnings(request.notifyInactivityWarnings());
         user.setNotifySecurityAlerts(request.notifySecurityAlerts());
+        user.setNotifySms(request.notifySms());
         user = userRepository.save(user);
         return ResponseEntity.ok(buildUserResponse(user));
+    }
+
+    @GetMapping("/me/export")
+    public ResponseEntity<Map<String, Object>> exportMyData(@CurrentUser User user) {
+        return ResponseEntity.ok(gdprExportService.exportAllUserData(user));
     }
 
     private Map<String, Object> buildUserResponse(User user) {
@@ -83,6 +90,7 @@ public class UserController {
         map.put("notifyExpirationReminders", user.isNotifyExpirationReminders());
         map.put("notifyInactivityWarnings", user.isNotifyInactivityWarnings());
         map.put("notifySecurityAlerts", user.isNotifySecurityAlerts());
+        map.put("notifySms", user.isNotifySms());
         map.put("vaultKeyEscrowed", user.getEncryptedVaultKey() != null);
         map.put("vaultKeyEscrowedAt", user.getVaultKeyEscrowedAt() != null ? user.getVaultKeyEscrowedAt().toString() : null);
         map.put("createdAt", user.getCreatedAt().toString());

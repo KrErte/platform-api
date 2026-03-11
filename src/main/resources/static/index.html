@@ -16,7 +16,32 @@
     <meta name="twitter:description" content="Koonda kogu oluline eluinfo ühte turvalisse kohta. AES-256 krüpteerimine, usaldusisikud, automaatne üleandmine.">
     <title>Pärandiplaan — Su elu, korrastatud</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1B4332">
     <link rel="stylesheet" href="/assets/style.css">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Pärandiplaan",
+        "url": "https://parandiplaan.ee",
+        "description": "Pärandiplaan aitab sul koondada kogu olulise eluinfo ühte turvalisse kohta ja tagab, et su lähedased saavad sellele ligipääsu siis, kui seda vaja on.",
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR",
+            "description": "14-päevane tasuta prooviperiood"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Pärandiplaan OÜ",
+            "url": "https://parandiplaan.ee"
+        },
+        "inLanguage": ["et", "en"]
+    }
+    </script>
 </head>
 <body>
     <a href="#main-content" class="skip-nav">Liigu põhisisu juurde</a>
@@ -336,6 +361,12 @@
                 }
             });
         });
+    </script>
+    <script src="/assets/i18n.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        }
     </script>
 </body>
 </html>

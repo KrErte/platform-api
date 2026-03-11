@@ -29,6 +29,7 @@ public class InactivityMonitorService {
     private final InactivityCheckRepository checkRepository;
     private final HandoverRequestRepository handoverRepository;
     private final EmailService emailService;
+    private final SmsService smsService;
     private final SharedVaultService sharedVaultService;
 
     @Value("${app.url:http://localhost:8080}")
@@ -134,6 +135,14 @@ public class InactivityMonitorService {
             sendWarning2Email(user, stillHereUrl);
         }
 
+        // Send SMS if user has phone and SMS enabled
+        if (user.isNotifySms() && user.getPhone() != null && !user.getPhone().isBlank()) {
+            String smsMsg = "WARNING_1".equals(checkType)
+                    ? "Pärandiplaan: Kas kõik on korras? Logi sisse või kinnita: " + stillHereUrl
+                    : "Pärandiplaan: Tähtis! Sinu usaldusisikud saavad peagi ligipääsu. Kinnita: " + stillHereUrl;
+            smsService.sendSms(user.getPhone(), smsMsg);
+        }
+
         log.info("Inactivity {} sent to user: {}", checkType, user.getEmail());
     }
 
@@ -157,6 +166,12 @@ public class InactivityMonitorService {
 
         String stillHereUrl = appUrl + "/api/v1/handover-requests/still-here/" + check.getResponseToken();
         sendFinalEmail(user, stillHereUrl);
+
+        // Urgent SMS for final warning
+        if (user.getPhone() != null && !user.getPhone().isBlank()) {
+            smsService.sendSms(user.getPhone(),
+                    "TÄHTIS — Pärandiplaan: 48h pärast toimub automaatne üleandmine! Kinnita: " + stillHereUrl);
+        }
 
         log.info("Inactivity FINAL warning sent to user: {}", user.getEmail());
     }

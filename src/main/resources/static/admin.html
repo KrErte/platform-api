@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1B4332">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body>
+    <div class="grain"></div>
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/dashboard.html" class="logo">
+                    <span class="logo-icon">🌿</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+                <div class="nav-user">
+                    <span class="nav-user-name" id="nav-name"></span>
+                    <a href="/dashboard.html" class="btn-logout" style="text-decoration:none;">Töölauale</a>
+                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="admin-page">
+        <div class="admin-header">
+            <h1>Administraatori paneel</h1>
+            <p>Platvormi ülevaade ja kasutajate haldamine</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card"><div class="stat-label">Kasutajad</div><div class="stat-value" id="stat-users">—</div></div>
+            <div class="stat-card"><div class="stat-label">Tresori kirjed</div><div class="stat-value" id="stat-entries">—</div></div>
+            <div class="stat-card"><div class="stat-label">Usaldusisikud</div><div class="stat-value" id="stat-contacts">—</div></div>
+            <div class="stat-card"><div class="stat-label">Administraatorid</div><div class="stat-value" id="stat-admins">—</div></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-row">
+            <div class="chart-card">
+                <h3>Tellimused plaani järgi</h3>
+                <div class="chart-bar-list" id="chart-plans"></div>
+            </div>
+            <div class="chart-card">
+                <h3>Registreerimised kuude kaupa</h3>
+                <div class="chart-bar-list" id="chart-regs"></div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="admin-tab active" onclick="switchTab('users')">Kasutajad</button>
+            <button class="admin-tab" onclick="switchTab('audit')">Tegevuslogi</button>
+        </div>
+
+        <!-- Users Tab -->
+        <div class="tab-content active" id="tab-users">
+            <div class="search-bar">
+                <input type="text" id="user-search" placeholder="Otsi e-posti v&otilde;i nime järgi..." onkeyup="debounceSearch()">
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Nimi</th>
+                        <th>E-post</th>
+                        <th>Roll</th>
+                        <th>Plaan</th>
+                        <th>Kirjed</th>
+                        <th>Liitunud</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+            </table>
+            <div class="pagination" id="users-pagination"></div>
+        </div>
+
+        <!-- Audit Tab -->
+        <div class="tab-content" id="tab-audit">
+            <div id="audit-list"></div>
+            <div class="pagination" id="audit-pagination"></div>
+        </div>
+    </main>
+
+    <script src="/assets/session-guard.js"></script>
+    <script>
+        const token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/login.html'; }
+        const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+        // Check admin role from token
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.role !== 'ADMIN') {
+                window.location.href = '/dashboard.html';
+            }
+            document.getElementById('nav-name').textContent = localStorage.getItem('userName') || payload.email;
+        } catch(e) { window.location.href = '/login.html'; }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.removeItem('vaultKey');
+            window.location.href = '/login.html';
+        }
+
+        // Stats
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/v1/admin/stats', { headers });
+                if (res.status === 403) { window.location.href = '/dashboard.html'; return; }
+                if (!res.ok) return;
+                const s = await res.json();
+                document.getElementById('stat-users').textContent = s.totalUsers;
+                document.getElementById('stat-entries').textContent = s.totalVaultEntries;
+                document.getElementById('stat-contacts').textContent = s.totalTrustedContacts;
+                document.getElementById('stat-admins').textContent = s.adminUsers;
+
+                // Plans chart
+                const plans = s.subscriptionsByPlan || {};
+                const maxPlan = Math.max(1, ...Object.values(plans));
+                document.getElementById('chart-plans').innerHTML = Object.entries(plans).map(function(e) {
+                    var pct = Math.round((e[1] / maxPlan) * 100);
+                    return '<div class="chart-bar-row"><span class="chart-bar-label">' + e[0] + '</span>' +
+                        '<div class="chart-bar"><div class="chart-bar-fill" style="width:' + pct + '%"></div></div>' +
+                        '<span class="chart-bar-value">' + e[1] + '</span></div>';
+                }).join('');
+
+                // Registrations chart
+                var regs = Object.entries(s.registrationsByMonth || {}).slice(0, 6);
+                var maxReg = Math.max(1, ...regs.map(function(r) { return r[1]; }));
+                document.getElementById('chart-regs').innerHTML = regs.map(function(e) {
+                    var pct = Math.round((e[1] / maxReg) * 100);
+                    return '<div class="chart-bar-row"><span class="chart-bar-label">' + e[0] + '</span>' +
+                        '<div class="chart-bar"><div class="chart-bar-fill" style="width:' + pct + '%"></div></div>' +
+                        '<span class="chart-bar-value">' + e[1] + '</span></div>';
+                }).join('');
+            } catch(e) { console.error('Stats load failed:', e); }
+        }
+
+        // Users
+        var usersPage = 0;
+        var searchTimeout = null;
+
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() { usersPage = 0; loadUsers(); }, 300);
+        }
+
+        async function loadUsers() {
+            try {
+                var search = document.getElementById('user-search').value;
+                var url = '/api/v1/admin/users?page=' + usersPage + '&size=20';
+                if (search) url += '&search=' + encodeURIComponent(search);
+                var res = await fetch(url, { headers });
+                if (!res.ok) return;
+                var data = await res.json();
+                var tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = data.content.map(function(u) {
+                    var roleCls = u.role === 'ADMIN' ? 'admin' : 'user';
+                    var planCls = (u.subscriptionPlan || 'trial').toLowerCase();
+                    var date = u.createdAt ? new Date(u.createdAt).toLocaleDateString('et-EE') : '—';
+                    return '<tr>' +
+                        '<td><strong>' + escHtml(u.fullName) + '</strong></td>' +
+                        '<td>' + escHtml(u.email) + '</td>' +
+                        '<td><span class="role-badge ' + roleCls + '">' + u.role + '</span></td>' +
+                        '<td><span class="plan-badge ' + planCls + '">' + u.subscriptionPlan + '</span></td>' +
+                        '<td>' + u.vaultEntryCount + '</td>' +
+                        '<td>' + date + '</td>' +
+                        '<td><button class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.5rem" onclick="toggleRole(\'' + u.id + '\',\'' + u.role + '\')">Muuda rolli</button></td>' +
+                    '</tr>';
+                }).join('');
+
+                renderPagination('users-pagination', data.totalPages, usersPage, function(p) { usersPage = p; loadUsers(); });
+            } catch(e) { console.error('Users load failed:', e); }
+        }
+
+        async function toggleRole(id, currentRole) {
+            var newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
+            if (!confirm('Muuda kasutaja roll: ' + newRole + '?')) return;
+            try {
+                await fetch('/api/v1/admin/users/' + id + '/role', {
+                    method: 'PUT', headers: headers,
+                    body: JSON.stringify({ role: newRole })
+                });
+                loadUsers();
+                loadStats();
+            } catch(e) { alert('Viga rolli muutmisel'); }
+        }
+
+        // Audit logs
+        var auditPage = 0;
+
+        async function loadAudit() {
+            try {
+                var res = await fetch('/api/v1/admin/audit-logs?page=' + auditPage + '&size=20', { headers });
+                if (!res.ok) return;
+                var data = await res.json();
+                var list = document.getElementById('audit-list');
+                list.innerHTML = data.content.map(function(a) {
+                    var time = a.createdAt ? new Date(a.createdAt).toLocaleString('et-EE') : '';
+                    return '<div class="audit-entry">' +
+                        '<span class="audit-action">' + escHtml(a.action) + '</span>' +
+                        '<span class="audit-detail">' + escHtml(a.detail || '') + '</span>' +
+                        '<span class="audit-time">' + time + '</span>' +
+                    '</div>';
+                }).join('');
+
+                renderPagination('audit-pagination', data.totalPages, auditPage, function(p) { auditPage = p; loadAudit(); });
+            } catch(e) { console.error('Audit load failed:', e); }
+        }
+
+        // Tabs
+        function switchTab(name) {
+            document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            event.target.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+            if (name === 'audit') loadAudit();
+        }
+
+        // Pagination
+        function renderPagination(containerId, totalPages, currentPage, onPageClick) {
+            var el = document.getElementById(containerId);
+            if (totalPages <= 1) { el.innerHTML = ''; return; }
+            var html = '<button ' + (currentPage === 0 ? 'disabled' : '') + ' onclick="void(0)">&#8592;</button>';
+            html += '<span>Leht ' + (currentPage + 1) + ' / ' + totalPages + '</span>';
+            html += '<button ' + (currentPage >= totalPages - 1 ? 'disabled' : '') + ' onclick="void(0)">&#8594;</button>';
+            el.innerHTML = html;
+            var btns = el.querySelectorAll('button');
+            btns[0].onclick = function() { if (currentPage > 0) onPageClick(currentPage - 1); };
+            btns[1].onclick = function() { if (currentPage < totalPages - 1) onPageClick(currentPage + 1); };
+        }
+
+        function escHtml(s) {
+            var d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+        }
+
+        // Init
+        loadStats();
+        loadUsers();
+    </script>
+    <script src="/assets/i18n.js"></script>
+</body>
+</html>

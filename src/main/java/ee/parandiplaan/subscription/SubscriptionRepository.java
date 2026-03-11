@@ -12,4 +12,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     Optional<Subscription> findByLemonsqueezySubscriptionId(String lemonsqueezySubscriptionId);
 
     Optional<Subscription> findByLemonsqueezyCustomerId(String lemonsqueezyCustomerId);
+
+    long countByPlan(String plan);
+
+    long countByStatus(String status);
 }
