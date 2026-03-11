@@ -14,26 +14,40 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    private final int maxRequests;
-    private final int sharedVaultMaxRequests;
     private static final long WINDOW_MS = 60_000; // 1 minute
+    private static final Set<String> WRITE_METHODS = Set.of("POST", "PUT", "DELETE", "PATCH");
 
-    private final ConcurrentHashMap<String, Deque<Long>> requestCounts = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Deque<Long>> sharedVaultCounts = new ConcurrentHashMap<>();
+    private final List<RateLimitRule> rules;
+    private final ConcurrentHashMap<String, Deque<Long>> buckets = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RateLimitFilter(
-            @Value("${app.rate-limit.auth-requests-per-minute:10}") int maxRequests,
-            @Value("${app.rate-limit.shared-vault-requests-per-minute:20}") int sharedVaultMaxRequests) {
-        this.maxRequests = maxRequests;
-        this.sharedVaultMaxRequests = sharedVaultMaxRequests;
+            @Value("${app.rate-limit.auth-requests-per-minute:10}") int authLimit,
+            @Value("${app.rate-limit.shared-vault-requests-per-minute:20}") int sharedVaultLimit,
+            @Value("${app.rate-limit.vault-requests-per-minute:30}") int vaultLimit,
+            @Value("${app.rate-limit.admin-requests-per-minute:30}") int adminLimit,
+            @Value("${app.rate-limit.users-requests-per-minute:20}") int usersLimit,
+            @Value("${app.rate-limit.contacts-requests-per-minute:15}") int contactsLimit,
+            @Value("${app.rate-limit.handover-requests-per-minute:10}") int handoverLimit) {
+        // Order matters: more specific prefixes first
+        this.rules = List.of(
+                new RateLimitRule("/api/v1/auth/", authLimit, false),
+                new RateLimitRule("/api/v1/shared-vault/", sharedVaultLimit, false),
+                new RateLimitRule("/api/v1/vault/", vaultLimit, true),
+                new RateLimitRule("/api/v1/admin/", adminLimit, false),
+                new RateLimitRule("/api/v1/users/", usersLimit, false),
+                new RateLimitRule("/api/v1/trusted-contacts/", contactsLimit, true),
+                new RateLimitRule("/api/v1/handover-requests/", handoverLimit, false)
+        );
     }
 
     @Override
@@ -41,30 +55,36 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                      HttpServletResponse response,
                                      FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
-        boolean isAuth = path.startsWith("/api/v1/auth/");
-        boolean isSharedVault = path.startsWith("/api/v1/shared-vault/");
+        RateLimitRule matched = null;
+        for (RateLimitRule rule : rules) {
+            if (path.startsWith(rule.prefix)) {
+                if (!rule.writesOnly || WRITE_METHODS.contains(method)) {
+                    matched = rule;
+                }
+                break;
+            }
+        }
 
-        if (!isAuth && !isSharedVault) {
+        if (matched == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String ip = extractClientIp(request);
+        String bucketKey = matched.prefix + ":" + ip;
         long now = System.currentTimeMillis();
         long windowStart = now - WINDOW_MS;
 
-        int limit = isSharedVault ? sharedVaultMaxRequests : maxRequests;
-        ConcurrentHashMap<String, Deque<Long>> counts = isSharedVault ? sharedVaultCounts : requestCounts;
-
-        Deque<Long> timestamps = counts.computeIfAbsent(ip, k -> new ConcurrentLinkedDeque<>());
+        Deque<Long> timestamps = buckets.computeIfAbsent(bucketKey, k -> new ConcurrentLinkedDeque<>());
 
         // Remove expired entries
         while (!timestamps.isEmpty() && timestamps.peekFirst() < windowStart) {
             timestamps.pollFirst();
         }
 
-        if (timestamps.size() >= limit) {
+        if (timestamps.size() >= matched.limit) {
             long oldestInWindow = timestamps.peekFirst();
             long retryAfterSeconds = Math.max(1, (oldestInWindow + WINDOW_MS - now) / 1000 + 1);
 
@@ -93,12 +113,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Scheduled(fixedRate = 300_000) // every 5 minutes
     public void cleanup() {
         long windowStart = System.currentTimeMillis() - WINDOW_MS;
-        cleanupMap(requestCounts, windowStart);
-        cleanupMap(sharedVaultCounts, windowStart);
-    }
-
-    private void cleanupMap(ConcurrentHashMap<String, Deque<Long>> map, long windowStart) {
-        map.entrySet().removeIf(entry -> {
+        buckets.entrySet().removeIf(entry -> {
             Deque<Long> timestamps = entry.getValue();
             while (!timestamps.isEmpty() && timestamps.peekFirst() < windowStart) {
                 timestamps.pollFirst();
@@ -106,4 +121,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return timestamps.isEmpty();
         });
     }
+
+    private record RateLimitRule(String prefix, int limit, boolean writesOnly) {}
 }

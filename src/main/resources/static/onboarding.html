@@ -26,38 +26,38 @@
     <main class="onboarding">
         <!-- Stepper -->
         <div class="stepper">
-            <div class="stepper-step active" data-step="1"><span>1</span><small>Tervitus</small></div>
+            <div class="stepper-step active" data-step="1"><span>1</span><small data-i18n="onboarding.stepGreeting">Tervitus</small></div>
             <div class="stepper-line"></div>
-            <div class="stepper-step" data-step="2"><span>2</span><small>Pangandus</small></div>
+            <div class="stepper-step" data-step="2"><span>2</span><small data-i18n="onboarding.stepBanking">Pangandus</small></div>
             <div class="stepper-line"></div>
-            <div class="stepper-step" data-step="3"><span>3</span><small>Digitaalne ID</small></div>
+            <div class="stepper-step" data-step="3"><span>3</span><small data-i18n="onboarding.stepDigitalId">Digitaalne ID</small></div>
             <div class="stepper-line"></div>
-            <div class="stepper-step" data-step="4"><span>4</span><small>Usalduskontakt</small></div>
+            <div class="stepper-step" data-step="4"><span>4</span><small data-i18n="onboarding.stepContact">Usalduskontakt</small></div>
             <div class="stepper-line"></div>
-            <div class="stepper-step" data-step="5"><span>5</span><small>Valmis!</small></div>
+            <div class="stepper-step" data-step="5"><span>5</span><small data-i18n="onboarding.stepDone">Valmis!</small></div>
         </div>
 
         <!-- Step 1: Welcome -->
         <div class="step-card" id="step-1">
             <div class="step-icon">🌿</div>
-            <h1>Tere tulemast Pärandiplaani!</h1>
-            <p class="step-description">
+            <h1 data-i18n="onboarding.welcome">Tere tulemast Pärandiplaani!</h1>
+            <p class="step-description" data-i18n="onboarding.welcomeDesc">
                 Pärandiplaan aitab sul korrastada kogu olulise info — pangakontod, kindlustused,
                 digitaalsed kontod ja palju muud — nii et sinu lähedased on kaitstud, kui sind enam pole.
             </p>
-            <p class="step-description">
+            <p class="step-description" data-i18n="onboarding.welcomeDesc2">
                 Seadistame sinu plaani mõne minutiga. Saad igal sammul ka vahele jätta.
             </p>
             <div class="step-actions">
-                <button class="btn btn-primary" onclick="goToStep(2)">Alustame!</button>
+                <button class="btn btn-primary" onclick="goToStep(2)" data-i18n="onboarding.letsStart">Alustame!</button>
             </div>
         </div>
 
         <!-- Step 2: Banking -->
         <div class="step-card" id="step-2" style="display:none">
             <div class="step-icon">🏦</div>
-            <h1>Lisa pangakonto</h1>
-            <p class="step-description">Alustame kõige tavalisemaga — sinu pangakontoga.</p>
+            <h1 data-i18n="onboarding.addBankTitle">Lisa pangakonto</h1>
+            <p class="step-description" data-i18n="onboarding.addBankDesc">Alustame kõige tavalisemaga — sinu pangakontoga.</p>
             <div id="step2-error" class="onboarding-error" style="display:none"></div>
             <form id="banking-form" class="onboarding-form">
                 <div class="form-group">
@@ -83,8 +83,8 @@
                     </select>
                 </div>
                 <div class="step-actions">
-                    <button type="button" class="btn btn-ghost" onclick="goToStep(3)">Jäta vahele</button>
-                    <button type="submit" class="btn btn-primary" id="bank-submit">Salvesta ja jätka</button>
+                    <button type="button" class="btn btn-ghost" onclick="goToStep(3)" data-i18n="onboarding.skip">Jäta vahele</button>
+                    <button type="submit" class="btn btn-primary" id="bank-submit" data-i18n="onboarding.saveAndContinue">Salvesta ja jätka</button>
                 </div>
             </form>
         </div>
@@ -92,8 +92,8 @@
         <!-- Step 3: Digital Identity -->
         <div class="step-card" id="step-3" style="display:none">
             <div class="step-icon">🪪</div>
-            <h1>Digitaalne identiteet</h1>
-            <p class="step-description">Smart-ID ja Mobile-ID PINid on oluline info, mis peaks olema turvaliselt salvestatud.</p>
+            <h1 data-i18n="onboarding.addDigitalIdTitle">Digitaalne identiteet</h1>
+            <p class="step-description" data-i18n="onboarding.addDigitalIdDesc">Smart-ID ja Mobile-ID PINid on oluline info, mis peaks olema turvaliselt salvestatud.</p>
             <div id="step3-error" class="onboarding-error" style="display:none"></div>
             <form id="digital-id-form" class="onboarding-form">
                 <div class="form-group">
@@ -125,8 +125,8 @@
                     <input type="text" id="did-puk" placeholder="PUK">
                 </div>
                 <div class="step-actions">
-                    <button type="button" class="btn btn-ghost" onclick="goToStep(4)">Jäta vahele</button>
-                    <button type="submit" class="btn btn-primary" id="did-submit">Salvesta ja jätka</button>
+                    <button type="button" class="btn btn-ghost" onclick="goToStep(4)" data-i18n="onboarding.skip">Jäta vahele</button>
+                    <button type="submit" class="btn btn-primary" id="did-submit" data-i18n="onboarding.saveAndContinue">Salvesta ja jätka</button>
                 </div>
             </form>
         </div>
@@ -134,24 +134,24 @@
         <!-- Step 4: Trusted Contact -->
         <div class="step-card" id="step-4" style="display:none">
             <div class="step-icon">🤝</div>
-            <h1>Lisa usalduskontakt</h1>
-            <p class="step-description">
+            <h1 data-i18n="onboarding.addContactTitle">Lisa usalduskontakt</h1>
+            <p class="step-description" data-i18n="onboarding.addContactDesc">
                 Usalduskontakt on isik, kellele antakse vajadusel ligipääs sinu andmetele.
                 See on sinu plaani üks olulisemaid osi.
             </p>
             <div id="step4-error" class="onboarding-error" style="display:none"></div>
             <form id="contact-form" class="onboarding-form">
                 <div class="form-group">
-                    <label for="contact-name">Nimi</label>
+                    <label for="contact-name" data-i18n="contacts.name">Nimi</label>
                     <input type="text" id="contact-name" placeholder="Eesnimi Perenimi" required>
                 </div>
                 <div class="form-group">
-                    <label for="contact-email">E-posti aadress</label>
+                    <label for="contact-email" data-i18n="auth.email">E-posti aadress</label>
                     <input type="email" id="contact-email" placeholder="nimi@example.com" required>
                 </div>
                 <div class="step-actions">
-                    <button type="button" class="btn btn-ghost" onclick="goToStep(5)">Jäta vahele</button>
-                    <button type="submit" class="btn btn-primary" id="contact-submit">Salvesta ja jätka</button>
+                    <button type="button" class="btn btn-ghost" onclick="goToStep(5)" data-i18n="onboarding.skip">Jäta vahele</button>
+                    <button type="submit" class="btn btn-primary" id="contact-submit" data-i18n="onboarding.saveAndContinue">Salvesta ja jätka</button>
                 </div>
             </form>
         </div>
@@ -159,16 +159,16 @@
         <!-- Step 5: Done! -->
         <div class="step-card" id="step-5" style="display:none">
             <div class="step-icon">🎉</div>
-            <h1>Suurepärane!</h1>
-            <p class="step-description">Sinu Pärandiplaan on alustatud.</p>
+            <h1 data-i18n="onboarding.doneTitle">Suurepärane!</h1>
+            <p class="step-description" data-i18n="onboarding.doneDesc">Sinu Pärandiplaan on alustatud.</p>
             <div class="summary" id="onboarding-summary">
                 <!-- Filled by JS -->
             </div>
-            <p class="step-description">
+            <p class="step-description" data-i18n="onboarding.doneHint">
                 Sa saad alati oma töölaual lisada uusi kirjeid, kategooriaid täita ja seadeid muuta.
             </p>
             <div class="step-actions">
-                <button class="btn btn-primary btn-lg" onclick="completeOnboarding()">Ava töölaud</button>
+                <button class="btn btn-primary btn-lg" onclick="completeOnboarding()" data-i18n="onboarding.openDashboard">Ava töölaud</button>
             </div>
         </div>
     </main>

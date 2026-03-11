@@ -21,41 +21,41 @@
                 <span class="logo-text">Pärandiplaan</span>
             </a>
             <div class="nav-links">
-                <a href="/login.html" class="btn btn-sm">Logi sisse</a>
+                <a href="/login.html" class="btn btn-sm" data-i18n="nav.login">Logi sisse</a>
             </div>
         </div>
     </nav>
 
     <main class="auth-page" id="register-content">
         <div class="auth-card">
-            <h1>Alusta prooviperioodi</h1>
-            <p class="auth-subtitle">14 päeva tasuta. Krediitkaardi pole vaja.</p>
+            <h1 data-i18n="auth.registerSubtitle">Alusta prooviperioodi</h1>
+            <p class="auth-subtitle" data-i18n="auth.registerNote">14 päeva tasuta. Krediitkaardi pole vaja.</p>
 
             <div id="error-message" class="auth-error" style="display: none;"></div>
             <div id="success-message" class="auth-success" style="display: none;"></div>
 
             <form id="register-form">
                 <div class="form-group">
-                    <label for="fullName">Täisnimi</label>
-                    <input type="text" id="fullName" name="fullName" placeholder="Nimi Perekonnanimi" required>
+                    <label for="fullName" data-i18n="auth.fullName">Täisnimi</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Nimi Perekonnanimi" required data-i18n="auth.fullNamePlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <div class="form-group">
-                    <label for="email">E-posti aadress</label>
-                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required>
+                    <label for="email" data-i18n="auth.email">E-posti aadress</label>
+                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required data-i18n="auth.emailPlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <div class="form-group">
-                    <label for="password">Parool</label>
-                    <input type="password" id="password" name="password" placeholder="Vähemalt 8 tähemärki" required minlength="8">
+                    <label for="password" data-i18n="auth.password">Parool</label>
+                    <input type="password" id="password" name="password" placeholder="Vähemalt 8 tähemärki" required minlength="8" data-i18n="auth.passwordPlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <div class="form-group">
-                    <label for="confirmPassword">Kinnita parool</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Sisesta parool uuesti" required minlength="8">
+                    <label for="confirmPassword" data-i18n="auth.confirmPassword">Kinnita parool</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Sisesta parool uuesti" required minlength="8" data-i18n="auth.confirmPasswordPlaceholder" data-i18n-attr="placeholder">
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Loo konto</button>
+                <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn" data-i18n="auth.registerBtn">Loo konto</button>
             </form>
 
             <p class="auth-footer">
-                Juba on konto? <a href="/login.html">Logi sisse</a>
+                <span data-i18n="auth.hasAccount">Juba on konto?</span> <a href="/login.html" data-i18n="auth.hasAccountLink">Logi sisse</a>
             </p>
             <p class="auth-terms">
                 Konto loomisega nõustud meie <a href="/tingimused.html">kasutustingimuste</a> ja <a href="/privaatsuspoliitika.html">privaatsuspoliitikaga</a>.

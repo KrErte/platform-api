@@ -24,8 +24,8 @@
                 </a>
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
-                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -45,21 +45,21 @@
                 </svg>
                 <div class="dash-progress-text">
                     <span class="pct" id="progress-pct">0</span><span class="pct-sign">%</span>
-                    <span class="pct-label">korrastatud</span>
+                    <span class="pct-label" data-i18n="dashboard.progressLabel">korrastatud</span>
                 </div>
             </div>
         </section>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
-            <a href="/vault.html" class="quick-action-btn"><span class="qa-icon">+</span> Lisa kirje</a>
-            <a href="/usaldusisikud.html" class="quick-action-btn"><span class="qa-icon">&#128100;</span> Lisa kontakt</a>
-            <button class="quick-action-btn" onclick="exportPdf()"><span class="qa-icon">&#128196;</span> Ekspordi PDF</button>
-            <a href="/activity.html" class="quick-action-btn"><span class="qa-icon">&#128337;</span> Tegevuslogi</a>
+            <a href="/vault.html" class="quick-action-btn" data-i18n="dashboard.addEntry"><span class="qa-icon">+</span> Lisa kirje</a>
+            <a href="/usaldusisikud.html" class="quick-action-btn" data-i18n="dashboard.addContact"><span class="qa-icon">&#128100;</span> Lisa kontakt</a>
+            <button class="quick-action-btn" onclick="exportPdf()" data-i18n="dashboard.exportPdf"><span class="qa-icon">&#128196;</span> Ekspordi PDF</button>
+            <a href="/activity.html" class="quick-action-btn" data-i18n="dashboard.activityLog"><span class="qa-icon">&#128337;</span> Tegevuslogi</a>
         </div>
 
         <!-- Vault Categories with progress bars -->
-        <h2 class="dash-section-title">Tresori kategooriad</h2>
+        <h2 class="dash-section-title" data-i18n="dashboard.categories">Tresori kategooriad</h2>
         <div class="vault-grid" id="vault-grid">
             <div class="vault-card skeleton" style="height:140px"></div>
             <div class="vault-card skeleton" style="height:140px"></div>
@@ -70,28 +70,28 @@
 
         <!-- Suggestions -->
         <div id="suggestions-section" style="display:none">
-            <h2 class="dash-section-title">Soovitused</h2>
+            <h2 class="dash-section-title" data-i18n="dashboard.suggestions">Soovitused</h2>
             <div class="suggestions-list" id="suggestions-list"></div>
         </div>
 
         <!-- Activity + Contacts + Subscription -->
         <div class="dash-columns-3">
             <div class="dash-card">
-                <h2 class="dash-section-title">Viimane tegevus <a href="/activity.html" style="font-size:0.8rem;font-weight:600;color:var(--green-700);text-decoration:none;margin-left:0.5rem">Vaata k&otilde;iki →</a></h2>
+                <h2 class="dash-section-title"><span data-i18n="dashboard.recentActivity">Viimane tegevus</span> <a href="/activity.html" style="font-size:0.8rem;font-weight:600;color:var(--green-700);text-decoration:none;margin-left:0.5rem" data-i18n="dashboard.viewAll">Vaata k&otilde;iki →</a></h2>
                 <div id="recent-activity">
                     <div class="skeleton skeleton-line"></div>
                     <div class="skeleton skeleton-line short"></div>
                 </div>
             </div>
             <div class="dash-card">
-                <h2 class="dash-section-title">Usalduskontaktid <a href="/usaldusisikud.html" style="font-size:0.8rem;font-weight:600;color:var(--green-700);text-decoration:none;margin-left:0.5rem">Halda →</a></h2>
+                <h2 class="dash-section-title"><span data-i18n="dashboard.trustedContacts">Usalduskontaktid</span> <a href="/usaldusisikud.html" style="font-size:0.8rem;font-weight:600;color:var(--green-700);text-decoration:none;margin-left:0.5rem" data-i18n="dashboard.manage">Halda →</a></h2>
                 <ul class="contacts-list" id="contacts-list">
                     <li class="skeleton skeleton-line"></li>
                     <li class="skeleton skeleton-line short"></li>
                 </ul>
             </div>
             <div class="dash-card">
-                <h2 class="dash-section-title">Tellimus</h2>
+                <h2 class="dash-section-title" data-i18n="dashboard.subscription">Tellimus</h2>
                 <div id="subscription-info">
                     <div class="skeleton skeleton-line"></div>
                     <div class="skeleton skeleton-line short"></div>

@@ -25,36 +25,36 @@
                 </a>
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
-                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
     </header>
 
     <main class="settings-page" id="main-content">
-        <h1>Seaded</h1>
+        <h1 data-i18n="settings.title">Seaded</h1>
 
         <!-- Profile Section -->
         <div class="settings-card">
-            <h2>Profiil</h2>
+            <h2 data-i18n="settings.profile">Profiil</h2>
             <div id="profile-message"></div>
             <form id="profile-form">
                 <div class="settings-grid">
                     <div class="form-group">
-                        <label for="profile-name">Täisnimi</label>
+                        <label for="profile-name" data-i18n="auth.fullName">Täisnimi</label>
                         <input type="text" id="profile-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="profile-phone">Telefon</label>
+                        <label for="profile-phone" data-i18n="settings.phone">Telefon</label>
                         <input type="text" id="profile-phone" placeholder="+372 ...">
                     </div>
                     <div class="form-group">
-                        <label for="profile-dob">Sünnikuupäev</label>
+                        <label for="profile-dob" data-i18n="settings.dateOfBirth">Sünnikuupäev</label>
                         <input type="date" id="profile-dob">
                     </div>
                     <div class="form-group">
-                        <label for="profile-country">Riik</label>
+                        <label for="profile-country" data-i18n="settings.country">Riik</label>
                         <select id="profile-country">
                             <option value="EST">Eesti</option>
                             <option value="LVA">Läti</option>
@@ -68,7 +68,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="profile-language">Keel</label>
+                        <label for="profile-language" data-i18n="settings.language">Keel</label>
                         <select id="profile-language">
                             <option value="et">Eesti</option>
                             <option value="en">English</option>
@@ -76,45 +76,45 @@
                     </div>
                 </div>
                 <div class="settings-actions">
-                    <button type="submit" class="btn btn-primary btn-sm" id="profile-save-btn">Salvesta</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="profile-save-btn" data-i18n="common.save">Salvesta</button>
                 </div>
             </form>
         </div>
 
         <!-- Security Section -->
         <div class="settings-card">
-            <h2>Turvalisus</h2>
+            <h2 data-i18n="settings.security">Turvalisus</h2>
 
             <!-- Change Password -->
-            <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;">Parooli muutmine</h3>
-            <div class="settings-warning">
+            <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;" data-i18n="settings.changePassword">Parooli muutmine</h3>
+            <div class="settings-warning" data-i18n="settings.passwordWarning">
                 Parooli muutmisel krüpteeritakse kõik tresori andmed uuesti uue parooliga. See võib hetke aega võtta.
             </div>
             <div id="password-message"></div>
             <form id="password-form">
                 <div class="settings-grid">
                     <div class="form-group">
-                        <label for="current-password">Praegune parool</label>
+                        <label for="current-password" data-i18n="settings.currentPassword">Praegune parool</label>
                         <input type="password" id="current-password" required>
                     </div>
                     <div class="form-group">
-                        <label for="new-password">Uus parool</label>
+                        <label for="new-password" data-i18n="settings.newPassword">Uus parool</label>
                         <input type="password" id="new-password" minlength="8" required>
                     </div>
                     <div class="form-group">
-                        <label for="confirm-password">Kinnita uus parool</label>
+                        <label for="confirm-password" data-i18n="settings.confirmNewPassword">Kinnita uus parool</label>
                         <input type="password" id="confirm-password" minlength="8" required>
                     </div>
                 </div>
                 <div class="settings-actions">
-                    <button type="submit" class="btn btn-primary btn-sm" id="password-save-btn">Muuda parool</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="password-save-btn" data-i18n="settings.changePasswordBtn">Muuda parool</button>
                 </div>
             </form>
 
             <hr style="border:none;border-top:1px solid var(--green-200);margin:2rem 0;">
 
             <!-- 2FA -->
-            <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;">Kaheastmeline autentimine (2FA)</h3>
+            <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;" data-i18n="settings.twofa">Kaheastmeline autentimine (2FA)</h3>
             <div id="twofa-message"></div>
             <div class="twofa-status">
                 <span>Staatus:</span>
@@ -125,30 +125,30 @@
 
             <div id="backup-codes-section" style="display:none;">
                 <hr style="border:none;border-top:1px solid var(--green-200);margin:2rem 0;">
-                <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;">Varukoodid</h3>
-                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">Varukoodid võimaldavad sisse logida, kui sul pole ligipääsu oma autentimisrakendusele.</p>
+                <h3 style="font-size:1rem;font-weight:600;color:var(--green-900);margin-bottom:1rem;" data-i18n="settings.backupCodes">Varukoodid</h3>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;" data-i18n="settings.backupCodesDesc">Varukoodid võimaldavad sisse logida, kui sul pole ligipääsu oma autentimisrakendusele.</p>
                 <div id="backup-codes-message"></div>
                 <div id="backup-codes-display"></div>
-                <button class="btn btn-primary btn-sm" id="generate-backup-btn" onclick="generateBackupCodes()">Genereeri varukoodid</button>
+                <button class="btn btn-primary btn-sm" id="generate-backup-btn" onclick="generateBackupCodes()" data-i18n="settings.generateBackupCodes">Genereeri varukoodid</button>
             </div>
         </div>
 
         <!-- Active Sessions Section -->
         <div class="settings-card">
-            <h2>Aktiivsed sessioonid</h2>
+            <h2 data-i18n="settings.sessions">Aktiivsed sessioonid</h2>
             <div id="sessions-message"></div>
             <div id="sessions-list">
                 <div class="skeleton skeleton-line" style="width:60%"></div>
                 <div class="skeleton skeleton-line short" style="width:40%"></div>
             </div>
             <div class="settings-actions" id="sessions-actions" style="display:none;">
-                <button class="btn btn-ghost btn-sm" onclick="revokeAllSessions()">Tühista kõik teised</button>
+                <button class="btn btn-ghost btn-sm" onclick="revokeAllSessions()" data-i18n="settings.revokeAll">Tühista kõik teised</button>
             </div>
         </div>
 
         <!-- Subscription Section -->
         <div class="settings-card">
-            <h2>Tellimus</h2>
+            <h2 data-i18n="settings.subscription">Tellimus</h2>
             <div id="subscription-section">
                 <div class="skeleton skeleton-line" style="width:60%"></div>
                 <div class="skeleton skeleton-line short" style="width:40%"></div>
@@ -157,48 +157,48 @@
 
         <!-- Email Preferences Section -->
         <div class="settings-card">
-            <h2>E-posti teavitused</h2>
+            <h2 data-i18n="settings.emailNotifications">E-posti teavitused</h2>
             <div id="email-prefs-message"></div>
             <div class="settings-grid" style="gap:1rem;">
                 <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
                     <input type="checkbox" id="pref-expiration" onchange="saveEmailPrefs()">
-                    <span style="font-size:0.95rem;">Aegumise meeldetuletused</span>
+                    <span style="font-size:0.95rem;" data-i18n="settings.expirationReminders">Aegumise meeldetuletused</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
                     <input type="checkbox" id="pref-inactivity" onchange="saveEmailPrefs()">
-                    <span style="font-size:0.95rem;">Inaktiivsushoiatused</span>
+                    <span style="font-size:0.95rem;" data-i18n="settings.inactivityWarnings">Inaktiivsushoiatused</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
                     <input type="checkbox" id="pref-security" onchange="saveEmailPrefs()">
-                    <span style="font-size:0.95rem;">Turvateavitused</span>
+                    <span style="font-size:0.95rem;" data-i18n="settings.securityAlerts">Turvateavitused</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;">
                     <input type="checkbox" id="pref-sms" onchange="saveEmailPrefs()">
-                    <span style="font-size:0.95rem;">SMS-teavitused (telefon peab olema lisatud)</span>
+                    <span style="font-size:0.95rem;" data-i18n="settings.smsNotifications">SMS-teavitused (telefon peab olema lisatud)</span>
                 </label>
             </div>
         </div>
 
         <!-- Account Deletion Section -->
         <div class="settings-card" style="border-color:#FCA5A5;">
-            <h2 style="color:#DC2626;">Konto kustutamine</h2>
-            <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">Konto kustutamisel eemaldatakse pöördumatult kõik sinu andmed, sh tresori kirjed, failid ja usalduskontaktid.</p>
-            <button class="btn btn-sm" style="background:#DC2626;color:white;border:none;" onclick="showDeleteModal()">Kustuta konto</button>
+            <h2 style="color:#DC2626;" data-i18n="settings.deleteAccount">Konto kustutamine</h2>
+            <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;" data-i18n="settings.deleteWarning">Konto kustutamisel eemaldatakse pöördumatult kõik sinu andmed, sh tresori kirjed, failid ja usalduskontaktid.</p>
+            <button class="btn btn-sm" style="background:#DC2626;color:white;border:none;" onclick="showDeleteModal()" data-i18n="settings.deleteBtn">Kustuta konto</button>
         </div>
 
         <!-- Delete Account Modal -->
         <div id="delete-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content" style="max-width:420px;">
-                <h3 style="color:#DC2626;margin-bottom:1rem;">Konto kustutamine</h3>
-                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">See toiming on pöördumatu. Kõik sinu andmed kustutatakse jäädavalt.</p>
-                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1.5rem;">Kinnitamiseks sisesta oma parool:</p>
+                <h3 style="color:#DC2626;margin-bottom:1rem;" data-i18n="settings.deleteConfirmTitle">Konto kustutamine</h3>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;" data-i18n="settings.deleteConfirmText">See toiming on pöördumatu. Kõik sinu andmed kustutatakse jäädavalt.</p>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1.5rem;" data-i18n="settings.deleteConfirmPassword">Kinnitamiseks sisesta oma parool:</p>
                 <div id="delete-message"></div>
                 <div class="form-group">
                     <input type="password" id="delete-password" placeholder="Sinu parool" required>
                 </div>
                 <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
-                    <button class="btn btn-ghost btn-sm" onclick="hideDeleteModal()">Tühista</button>
-                    <button class="btn btn-sm" id="delete-confirm-btn" style="background:#DC2626;color:white;border:none;" onclick="confirmDeleteAccount()">Kustuta jäädavalt</button>
+                    <button class="btn btn-ghost btn-sm" onclick="hideDeleteModal()" data-i18n="common.cancel">Tühista</button>
+                    <button class="btn btn-sm" id="delete-confirm-btn" style="background:#DC2626;color:white;border:none;" onclick="confirmDeleteAccount()" data-i18n="settings.deletePermanently">Kustuta jäädavalt</button>
                 </div>
             </div>
         </div>

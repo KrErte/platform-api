@@ -193,8 +193,20 @@
 .chart-bar-value { width: 30px; font-weight: 600; color: var(--green-900); }
 
 @media (max-width: 768px) {
+    .admin-page { padding: 0 0.75rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .chart-row { grid-template-columns: 1fr; }
-    .admin-table { font-size: 0.75rem; }
+    .admin-tabs { gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .admin-tab { white-space: nowrap; padding: 0.6rem 1rem; font-size: 0.8rem; }
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.75rem; padding: 0 0.75rem; }
+    .admin-table { font-size: 0.75rem; min-width: 600px; }
     .admin-table th, .admin-table td { padding: 0.5rem 0.4rem; }
+    .search-bar { flex-direction: column; }
+    .pagination { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat-card { padding: 1rem; }
+    .stat-card .stat-value { font-size: 1.5rem; }
 }

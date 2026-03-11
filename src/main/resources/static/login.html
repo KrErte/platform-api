@@ -36,43 +36,43 @@
                 <span class="logo-text">Pärandiplaan</span>
             </a>
             <div class="nav-links">
-                <a href="/register.html" class="btn btn-sm btn-primary">Proovi tasuta</a>
+                <a href="/register.html" class="btn btn-sm btn-primary" data-i18n="nav.tryFree">Proovi tasuta</a>
             </div>
         </div>
     </nav>
 
     <main class="auth-page" id="login-content">
         <div class="auth-card">
-            <h1>Tere tulemast tagasi</h1>
-            <p class="auth-subtitle">Logi sisse oma Pärandiplaani</p>
+            <h1 data-i18n="auth.loginWelcome">Tere tulemast tagasi</h1>
+            <p class="auth-subtitle" data-i18n="auth.loginSubtitle">Logi sisse oma Pärandiplaani</p>
 
             <div id="error-message" class="auth-error" style="display: none;"></div>
             <div id="success-message" class="auth-success" style="display: none;"></div>
 
             <!-- Auth method tabs -->
             <div class="auth-tabs" role="tablist">
-                <button class="auth-tab active" role="tab" data-tab="email" aria-selected="true">E-post</button>
-                <button class="auth-tab" role="tab" data-tab="smart-id" aria-selected="false">Smart-ID</button>
-                <button class="auth-tab" role="tab" data-tab="mobile-id" aria-selected="false">Mobiil-ID</button>
+                <button class="auth-tab active" role="tab" data-tab="email" aria-selected="true" data-i18n="auth.tabEmail">E-post</button>
+                <button class="auth-tab" role="tab" data-tab="smart-id" aria-selected="false" data-i18n="auth.tabSmartId">Smart-ID</button>
+                <button class="auth-tab" role="tab" data-tab="mobile-id" aria-selected="false" data-i18n="auth.tabMobileId">Mobiil-ID</button>
             </div>
 
             <!-- Email/Password panel -->
             <div id="panel-email" class="auth-panel active" role="tabpanel">
                 <form id="login-form">
                     <div class="form-group">
-                        <label for="email">E-posti aadress</label>
+                        <label for="email" data-i18n="auth.email">E-posti aadress</label>
                         <input type="email" id="email" name="email" placeholder="sinu@email.ee" required>
                     </div>
                     <div class="form-group">
-                        <label for="password">Parool</label>
+                        <label for="password" data-i18n="auth.password">Parool</label>
                         <input type="password" id="password" name="password" placeholder="Sinu parool" required autocomplete="off">
                     </div>
                     <div id="totp-group" class="form-group" style="display: none;">
-                        <label for="totpCode" id="totp-label">2FA kood</label>
+                        <label for="totpCode" id="totp-label" data-i18n="auth.totpCode">2FA kood</label>
                         <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="8" inputmode="numeric">
                         <a href="#" id="backup-code-link" onclick="toggleBackupCodeMode(event)" style="font-size:0.8rem;color:var(--green-700);display:none;">Kasuta varukoodi</a>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn">Logi sisse</button>
+                    <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn" data-i18n="auth.loginBtn">Logi sisse</button>
                 </form>
             </div>
 
@@ -81,10 +81,10 @@
                 <div id="sid-form-section">
                     <form id="sid-form">
                         <div class="form-group">
-                            <label for="sid-personal-code">Isikukood</label>
+                            <label for="sid-personal-code" data-i18n="auth.personalCode">Isikukood</label>
                             <input type="text" id="sid-personal-code" placeholder="38001085718" required maxlength="11" inputmode="numeric" pattern="[0-9]{11}">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg btn-full" id="sid-btn">Logi sisse Smart-ID-ga</button>
+                        <button type="submit" class="btn btn-primary btn-lg btn-full" id="sid-btn" data-i18n="auth.loginSmartId">Logi sisse Smart-ID-ga</button>
                     </form>
                 </div>
                 <div id="sid-verify-section" class="eid-verification" style="display:none;">
@@ -99,14 +99,14 @@
                 <div id="mid-form-section">
                     <form id="mid-form">
                         <div class="form-group">
-                            <label for="mid-personal-code">Isikukood</label>
+                            <label for="mid-personal-code" data-i18n="auth.personalCode">Isikukood</label>
                             <input type="text" id="mid-personal-code" placeholder="38001085718" required maxlength="11" inputmode="numeric" pattern="[0-9]{11}">
                         </div>
                         <div class="form-group">
-                            <label for="mid-phone">Telefoninumber</label>
+                            <label for="mid-phone" data-i18n="auth.phoneNumber">Telefoninumber</label>
                             <input type="tel" id="mid-phone" placeholder="+37256789012" required pattern="\+372[0-9]{7,8}">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg btn-full" id="mid-btn">Logi sisse Mobiil-ID-ga</button>
+                        <button type="submit" class="btn btn-primary btn-lg btn-full" id="mid-btn" data-i18n="auth.loginMobileId">Logi sisse Mobiil-ID-ga</button>
                     </form>
                 </div>
                 <div id="mid-verify-section" class="eid-verification" style="display:none;">
@@ -123,16 +123,16 @@
                 </div>
                 <form id="vault-key-form">
                     <div class="form-group">
-                        <label for="vault-key">Tresorivõti (parool)</label>
+                        <label for="vault-key" data-i18n="auth.vaultKeyLabel">Tresorivõti (parool)</label>
                         <input type="password" id="vault-key" placeholder="Sinu tresorivõti" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg btn-full">Ava tresor</button>
+                    <button type="submit" class="btn btn-primary btn-lg btn-full" data-i18n="auth.vaultKeyOpen">Ava tresor</button>
                 </form>
                 <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.75rem; text-align:center;">Kui logid esimest korda eID-ga, loo endale tresorivõti.</p>
             </div>
 
             <p class="auth-footer" style="margin-bottom:0.5rem;">
-                <a href="#" onclick="showForgotPassword(event)" style="font-size:0.85rem;">Unustasid parooli?</a>
+                <a href="#" onclick="showForgotPassword(event)" style="font-size:0.85rem;" data-i18n="auth.forgotPassword">Unustasid parooli?</a>
             </p>
             <p class="auth-footer">
                 Pole veel kontot? <a href="/register.html">Proovi 14 päeva tasuta</a>
@@ -140,15 +140,15 @@
 
             <!-- Forgot Password Section -->
             <div id="forgot-section" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--green-200);">
-                <h2 style="font-size:1.15rem; font-weight:700; color:var(--green-900); margin-bottom:0.5rem;">Parooli taastamine</h2>
+                <h2 style="font-size:1.15rem; font-weight:700; color:var(--green-900); margin-bottom:0.5rem;" data-i18n="auth.forgotTitle">Parooli taastamine</h2>
                 <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">Sisesta oma e-posti aadress ja saadame sulle lähtestamislingi.</p>
                 <div id="forgot-message" style="display:none;"></div>
                 <form id="forgot-form">
                     <div class="form-group">
-                        <label for="forgot-email">E-posti aadress</label>
+                        <label for="forgot-email" data-i18n="auth.email">E-posti aadress</label>
                         <input type="email" id="forgot-email" placeholder="sinu@email.ee" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-full" id="forgot-btn">Saada lähtestamislink</button>
+                    <button type="submit" class="btn btn-primary btn-full" id="forgot-btn" data-i18n="auth.forgotBtn">Saada lähtestamislink</button>
                 </form>
             </div>
         </div>

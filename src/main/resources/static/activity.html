@@ -39,20 +39,20 @@
                 </a>
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
-                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
     </header>
 
     <main class="activity-page" id="main-content">
-        <h1>Tegevuslogi</h1>
+        <h1 data-i18n="activity.title">Tegevuslogi</h1>
         <div id="activity-container">
             <div class="skeleton skeleton-line" style="width:80%"></div>
             <div class="skeleton skeleton-line" style="width:60%"></div>
         </div>
-        <button id="load-more-btn" class="btn btn-outline btn-sm load-more" style="display:none" onclick="loadMore()">Laadi rohkem</button>
+        <button id="load-more-btn" class="btn btn-outline btn-sm load-more" style="display:none" onclick="loadMore()" data-i18n="activity.loadMore">Laadi rohkem</button>
     </main>
 
     <script>

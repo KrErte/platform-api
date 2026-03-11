@@ -22,8 +22,8 @@
                 </a>
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
-                    <a href="/dashboard.html" class="btn-logout" style="text-decoration:none;">Töölauale</a>
-                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                    <a href="/dashboard.html" class="btn-logout" style="text-decoration:none;" data-i18n="nav.backToDashboard">Töölauale</a>
+                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -31,55 +31,57 @@
 
     <main class="admin-page">
         <div class="admin-header">
-            <h1>Administraatori paneel</h1>
-            <p>Platvormi ülevaade ja kasutajate haldamine</p>
+            <h1 data-i18n="admin.title">Administraatori paneel</h1>
+            <p data-i18n="admin.subtitle">Platvormi ülevaade ja kasutajate haldamine</p>
         </div>
 
         <!-- Stats Cards -->
         <div class="stats-grid" id="stats-grid">
-            <div class="stat-card"><div class="stat-label">Kasutajad</div><div class="stat-value" id="stat-users">—</div></div>
-            <div class="stat-card"><div class="stat-label">Tresori kirjed</div><div class="stat-value" id="stat-entries">—</div></div>
-            <div class="stat-card"><div class="stat-label">Usaldusisikud</div><div class="stat-value" id="stat-contacts">—</div></div>
-            <div class="stat-card"><div class="stat-label">Administraatorid</div><div class="stat-value" id="stat-admins">—</div></div>
+            <div class="stat-card"><div class="stat-label" data-i18n="admin.stats.users">Kasutajad</div><div class="stat-value" id="stat-users">—</div></div>
+            <div class="stat-card"><div class="stat-label" data-i18n="admin.stats.entries">Tresori kirjed</div><div class="stat-value" id="stat-entries">—</div></div>
+            <div class="stat-card"><div class="stat-label" data-i18n="admin.stats.contacts">Usaldusisikud</div><div class="stat-value" id="stat-contacts">—</div></div>
+            <div class="stat-card"><div class="stat-label" data-i18n="admin.stats.admins">Administraatorid</div><div class="stat-value" id="stat-admins">—</div></div>
         </div>
 
         <!-- Charts -->
         <div class="chart-row">
             <div class="chart-card">
-                <h3>Tellimused plaani järgi</h3>
+                <h3 data-i18n="admin.plansByPlan">Tellimused plaani järgi</h3>
                 <div class="chart-bar-list" id="chart-plans"></div>
             </div>
             <div class="chart-card">
-                <h3>Registreerimised kuude kaupa</h3>
+                <h3 data-i18n="admin.registrations">Registreerimised kuude kaupa</h3>
                 <div class="chart-bar-list" id="chart-regs"></div>
             </div>
         </div>
 
         <!-- Tabs -->
         <div class="admin-tabs">
-            <button class="admin-tab active" onclick="switchTab('users')">Kasutajad</button>
-            <button class="admin-tab" onclick="switchTab('audit')">Tegevuslogi</button>
+            <button class="admin-tab active" onclick="switchTab('users')" data-i18n="admin.users">Kasutajad</button>
+            <button class="admin-tab" onclick="switchTab('audit')" data-i18n="admin.auditLog">Tegevuslogi</button>
         </div>
 
         <!-- Users Tab -->
         <div class="tab-content active" id="tab-users">
             <div class="search-bar">
-                <input type="text" id="user-search" placeholder="Otsi e-posti v&otilde;i nime järgi..." onkeyup="debounceSearch()">
+                <input type="text" id="user-search" placeholder="Otsi e-posti v&otilde;i nime järgi..." onkeyup="debounceSearch()" data-i18n="admin.searchUsers" data-i18n-attr="placeholder">
             </div>
+            <div class="table-wrapper">
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Nimi</th>
-                        <th>E-post</th>
-                        <th>Roll</th>
-                        <th>Plaan</th>
-                        <th>Kirjed</th>
-                        <th>Liitunud</th>
+                        <th data-i18n="admin.thName">Nimi</th>
+                        <th data-i18n="admin.thEmail">E-post</th>
+                        <th data-i18n="admin.thRole">Roll</th>
+                        <th data-i18n="admin.thPlan">Plaan</th>
+                        <th data-i18n="admin.thEntries">Kirjed</th>
+                        <th data-i18n="admin.thJoined">Liitunud</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody id="users-tbody"></tbody>
             </table>
+            </div>
             <div class="pagination" id="users-pagination"></div>
         </div>
 

@@ -25,8 +25,8 @@
                 </a>
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
-                    <a href="/settings.html" class="nav-settings-link" title="Seaded">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()">Logi välja</button>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -36,14 +36,14 @@
         <!-- View 1: Categories Grid -->
         <div id="view-categories">
             <div class="vault-page-header">
-                <h1>Tresor</h1>
+                <h1 data-i18n="vault.title">Tresor</h1>
                 <div class="vault-header-actions">
                     <div class="vault-search-wrapper">
-                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." aria-label="Otsi tresori kirjeid" oninput="handleSearch(this.value)">
+                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." aria-label="Otsi tresori kirjeid" oninput="handleSearch(this.value)" data-i18n="vault.searchPlaceholder" data-i18n-attr="placeholder">
                         <span class="vault-search-icon">&#128269;</span>
                     </div>
-                    <button class="btn btn-outline btn-sm" onclick="exportPdf()">Ekspordi PDF</button>
-                    <button class="btn btn-outline btn-sm" onclick="exportJson()">Ekspordi JSON</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportPdf()" data-i18n="vault.exportPdf">Ekspordi PDF</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportJson()" data-i18n="vault.exportJson">Ekspordi JSON</button>
                 </div>
             </div>
             <div class="vault-categories-grid" id="categories-grid">
@@ -76,14 +76,14 @@
                 </div>
                 <div class="vault-detail-actions">
                     <select id="sort-select" class="sort-dropdown" aria-label="Sorteeri kirjeid" onchange="sortEntries(this.value)">
-                        <option value="newest">Uuemad enne</option>
-                        <option value="oldest">Vanemad enne</option>
-                        <option value="az">A-Z</option>
-                        <option value="za">Z-A</option>
-                        <option value="incomplete">Pooleli enne</option>
-                        <option value="complete">Valmis enne</option>
+                        <option value="newest" data-i18n="vault.sortNewest">Uuemad enne</option>
+                        <option value="oldest" data-i18n="vault.sortOldest">Vanemad enne</option>
+                        <option value="az" data-i18n="vault.sortAZ">A-Z</option>
+                        <option value="za" data-i18n="vault.sortZA">Z-A</option>
+                        <option value="incomplete" data-i18n="vault.sortIncomplete">Pooleli enne</option>
+                        <option value="complete" data-i18n="vault.sortComplete">Valmis enne</option>
                     </select>
-                    <button class="btn btn-primary btn-sm" onclick="openEntryModal()">+ Lisa kirje</button>
+                    <button class="btn btn-primary btn-sm" onclick="openEntryModal()" data-i18n="vault.addEntry">+ Lisa kirje</button>
                 </div>
             </div>
             <div id="entries-container"></div>
@@ -93,35 +93,35 @@
     <!-- Modal: Entry Form -->
     <div id="entry-modal" class="modal-overlay" style="display:none">
         <div class="modal-card">
-            <h2 id="entry-modal-title">Lisa kirje</h2>
+            <h2 id="entry-modal-title" data-i18n="vault.addEntry">Lisa kirje</h2>
             <div id="entry-error" class="vault-error" style="display:none"></div>
             <form id="entry-form">
                 <div class="form-group">
-                    <label for="entry-title-input">Pealkiri</label>
+                    <label for="entry-title-input" data-i18n="vault.entryTitle">Pealkiri</label>
                     <input type="text" id="entry-title-input" placeholder="Kirje pealkiri" required>
                 </div>
                 <div id="dynamic-fields"></div>
                 <div class="form-group">
-                    <label for="entry-notes">Märkused</label>
+                    <label for="entry-notes" data-i18n="vault.notes">Märkused</label>
                     <textarea id="entry-notes" placeholder="Valikulised märkused..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="entry-reminder">Meeldetuletus</label>
+                    <label for="entry-reminder" data-i18n="vault.reminderDate">Meeldetuletus</label>
                     <input type="date" id="entry-reminder">
-                    <span class="field-hint">Saadame meeldetuletuse 30, 14 ja 7 päeva enne</span>
+                    <span class="field-hint" data-i18n="vault.reminderHint">Saadame meeldetuletuse 30, 14 ja 7 päeva enne</span>
                 </div>
                 <!-- Attachments (only in edit mode) -->
                 <div id="attachments-section" class="attachments-section" style="display:none">
-                    <h3>Manused</h3>
+                    <h3 data-i18n="vault.attachments">Manused</h3>
                     <div class="attachment-list" id="attachment-list"></div>
                     <div class="upload-area">
                         <input type="file" id="attachment-file" aria-label="Vali manus üleslaadimiseks">
-                        <button type="button" class="btn btn-sm btn-outline" onclick="uploadAttachment()">Laadi üles</button>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="uploadAttachment()" data-i18n="vault.upload">Laadi üles</button>
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="closeEntryModal()">Tühista</button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="entry-submit-btn">Salvesta</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="closeEntryModal()" data-i18n="common.cancel">Tühista</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="entry-submit-btn" data-i18n="common.save">Salvesta</button>
                 </div>
             </form>
         </div>
@@ -130,11 +130,11 @@
     <!-- Modal: Delete Confirmation -->
     <div id="delete-modal" class="modal-overlay" style="display:none">
         <div class="modal-card">
-            <h2>Kustuta kirje</h2>
-            <p class="modal-confirm-text">Kas oled kindel, et soovid selle kirje kustutada? Seda toimingut ei saa tagasi võtta.</p>
+            <h2 data-i18n="vault.deleteEntry">Kustuta kirje</h2>
+            <p class="modal-confirm-text" data-i18n="vault.deleteConfirm">Kas oled kindel, et soovid selle kirje kustutada? Seda toimingut ei saa tagasi võtta.</p>
             <div class="modal-actions">
-                <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()">Tühista</button>
-                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()">Kustuta</button>
+                <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()" data-i18n="common.cancel">Tühista</button>
+                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()" data-i18n="common.delete">Kustuta</button>
             </div>
         </div>
     </div>

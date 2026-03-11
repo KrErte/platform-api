@@ -18,7 +18,7 @@ class RateLimitFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new RateLimitFilter(5, 20); // 5 auth + 20 shared-vault requests per minute for testing
+        filter = new RateLimitFilter(5, 20, 30, 30, 20, 15, 10);
         filterChain = mock(FilterChain.class);
     }
 
@@ -91,6 +91,7 @@ class RateLimitFilterTest {
     void xForwardedForHeaderIsUsed() throws Exception {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn("/api/v1/auth/register");
+        when(request.getMethod()).thenReturn("POST");
         when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.1, 10.0.0.1");
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
@@ -166,8 +167,13 @@ class RateLimitFilterTest {
     }
 
     private HttpServletRequest createMockRequest(String uri, String remoteAddr) {
+        return createMockRequest(uri, remoteAddr, "GET");
+    }
+
+    private HttpServletRequest createMockRequest(String uri, String remoteAddr, String method) {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(uri);
+        when(request.getMethod()).thenReturn(method);
         when(request.getHeader("X-Forwarded-For")).thenReturn(null);
         when(request.getRemoteAddr()).thenReturn(remoteAddr);
         return request;
