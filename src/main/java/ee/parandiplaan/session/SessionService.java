@@ -98,12 +98,12 @@ public class SessionService {
 
     @Transactional
     public void revokeAllExceptCurrent(UUID userId, UUID currentSessionId) {
-        sessionRepository.revokeAllExcept(userId, currentSessionId);
+        sessionRepository.revokeAllExcept(userId, currentSessionId, Instant.now());
     }
 
     @Transactional
     public void revokeAllSessions(UUID userId) {
-        sessionRepository.revokeAll(userId);
+        sessionRepository.revokeAll(userId, Instant.now());
     }
 
     private void sendNewIpAlert(User user, String ip, String deviceLabel) {
