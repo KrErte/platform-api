@@ -115,6 +115,56 @@ class RateLimitFilterTest {
         verify(directResponse, never()).setStatus(429);
     }
 
+    @Test
+    void sharedVaultWithinLimitPassesThrough() throws Exception {
+        HttpServletRequest request = createMockRequest("/api/v1/shared-vault/entries", "172.16.0.1");
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        for (int i = 0; i < 20; i++) {
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        verify(filterChain, times(20)).doFilter(request, response);
+        verify(response, never()).setStatus(429);
+    }
+
+    @Test
+    void sharedVaultExceedingLimitGet429() throws Exception {
+        HttpServletRequest request = createMockRequest("/api/v1/shared-vault/info", "172.16.0.2");
+
+        // First 20 should pass
+        for (int i = 0; i < 20; i++) {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // 21st should be blocked
+        HttpServletResponse blockedResponse = mock(HttpServletResponse.class);
+        StringWriter sw = new StringWriter();
+        when(blockedResponse.getWriter()).thenReturn(new PrintWriter(sw));
+
+        filter.doFilterInternal(request, blockedResponse, filterChain);
+        verify(blockedResponse).setStatus(429);
+    }
+
+    @Test
+    void sharedVaultAndAuthHaveSeparateCounters() throws Exception {
+        String ip = "172.16.0.3";
+        HttpServletRequest authRequest = createMockRequest("/api/v1/auth/login", ip);
+        HttpServletRequest sharedRequest = createMockRequest("/api/v1/shared-vault/entries", ip);
+
+        // Fill up auth limit (5)
+        for (int i = 0; i < 5; i++) {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            filter.doFilterInternal(authRequest, response, filterChain);
+        }
+
+        // Shared-vault should still work from same IP
+        HttpServletResponse sharedResponse = mock(HttpServletResponse.class);
+        filter.doFilterInternal(sharedRequest, sharedResponse, filterChain);
+        verify(sharedResponse, never()).setStatus(429);
+    }
+
     private HttpServletRequest createMockRequest(String uri, String remoteAddr) {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn(uri);

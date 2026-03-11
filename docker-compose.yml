@@ -72,6 +72,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
       MINIO_BUCKET: ${MINIO_BUCKET:-parandiplaan-vault}
+      VAULT_ESCROW_MASTER_KEY: ${VAULT_ESCROW_MASTER_KEY:-DevEscrowKeyThatIsAtLeast32BytesLong!!}
     depends_on:
       postgres:
         condition: service_healthy
