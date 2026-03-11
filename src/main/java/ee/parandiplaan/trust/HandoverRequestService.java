@@ -36,6 +36,10 @@ public class HandoverRequestService {
         TrustedContact contact = contactRepository.findById(request.trustedContactId())
                 .orElseThrow(() -> new IllegalArgumentException("Usalduskontakti ei leitud"));
 
+        if (!contact.getInviteToken().equals(request.inviteToken())) {
+            throw new IllegalArgumentException("Vigane kutse token");
+        }
+
         if (!contact.isInviteAccepted()) {
             throw new IllegalStateException("Kutse pole veel vastu võetud");
         }
@@ -108,6 +112,10 @@ public class HandoverRequestService {
         handover.setRespondedBy("USER");
         handover = handoverRepository.save(handover);
         auditService.log(user, "HANDOVER_APPROVED", handover.getTrustedContact().getFullName());
+
+        // TODO: Implement vault data sharing with trusted contact.
+        // This is a major feature requiring: re-encryption of vault entries with contact's key,
+        // scoped access control, and a secure delivery mechanism.
 
         // Notify contact
         TrustedContact contact = handover.getTrustedContact();

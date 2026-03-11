@@ -192,13 +192,13 @@
                 });
                 const data = await response.json();
                 if (!response.ok) {
-                    if (data.message && data.message.includes('2FA')) {
+                    if (data.error && data.error.includes('2FA')) {
                         totpGroup.style.display = 'block';
                         document.getElementById('backup-code-link').style.display = '';
                         document.getElementById('totpCode').focus();
                         throw new Error('Sisesta 2FA kood oma autentimisrakendusest');
                     }
-                    throw new Error(data.message || 'Sisselogimine ebaõnnestus');
+                    throw new Error(data.error || 'Sisselogimine ebaõnnestus');
                 }
                 storeAuthAndRedirect(data, password);
             } catch (err) {
@@ -222,7 +222,7 @@
                     body: JSON.stringify({ personalCode: personalCode, country: 'EE' })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Smart-ID viga');
+                if (!res.ok) throw new Error(data.error || 'Smart-ID viga');
                 document.getElementById('sid-form-section').style.display = 'none';
                 document.getElementById('sid-verify-section').style.display = '';
                 document.getElementById('sid-vc-code').textContent = data.verificationCode;
@@ -247,7 +247,7 @@
                     body: JSON.stringify({ personalCode, phoneNumber })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Mobiil-ID viga');
+                if (!res.ok) throw new Error(data.error || 'Mobiil-ID viga');
                 document.getElementById('mid-form-section').style.display = 'none';
                 document.getElementById('mid-verify-section').style.display = '';
                 document.getElementById('mid-vc-code').textContent = data.verificationCode;

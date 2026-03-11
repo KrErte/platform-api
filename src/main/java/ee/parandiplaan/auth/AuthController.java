@@ -23,8 +23,10 @@ public class AuthController {
     private final TotpService totpService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
+        String ip = IpUtils.getClientIp(httpRequest);
+        String ua = httpRequest.getHeader("User-Agent");
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request, ip, ua));
     }
 
     @PostMapping("/login")
@@ -54,8 +56,10 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        return ResponseEntity.ok(authService.resetPassword(request.token(), request.newPassword()));
+    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request, HttpServletRequest httpRequest) {
+        String ip = IpUtils.getClientIp(httpRequest);
+        String ua = httpRequest.getHeader("User-Agent");
+        return ResponseEntity.ok(authService.resetPassword(request.token(), request.newPassword(), ip, ua));
     }
 
     @PostMapping("/change-password")

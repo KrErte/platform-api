@@ -124,7 +124,7 @@ public class InactivityMonitorService {
         check.setCheckType(checkType);
         check = checkRepository.save(check);
 
-        String stillHereUrl = appUrl + "/api/v1/handover/still-here/" + check.getResponseToken();
+        String stillHereUrl = appUrl + "/api/v1/handover-requests/still-here/" + check.getResponseToken();
 
         if ("WARNING_1".equals(checkType)) {
             sendWarning1Email(user, stillHereUrl);
@@ -153,7 +153,7 @@ public class InactivityMonitorService {
         check.setCheckType("FINAL");
         check = checkRepository.save(check);
 
-        String stillHereUrl = appUrl + "/api/v1/handover/still-here/" + check.getResponseToken();
+        String stillHereUrl = appUrl + "/api/v1/handover-requests/still-here/" + check.getResponseToken();
         sendFinalEmail(user, stillHereUrl);
 
         log.info("Inactivity FINAL warning sent to user: {}", user.getEmail());

@@ -47,6 +47,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("type", "refresh")
+                .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshExpirationMs))
                 .signWith(key)

@@ -114,7 +114,7 @@ class AuthIntegrationTest {
         String email = uniqueEmail();
         register(email, "Password123", "Test User");
 
-        // Login to create a session (register doesn't create one)
+        // Login to create a separate session
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(

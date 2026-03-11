@@ -316,8 +316,8 @@
             }).then(function(data) {
                 if (data && data.checkoutUrl) {
                     window.location.href = data.checkoutUrl;
-                } else if (data && data.message) {
-                    alert(data.message);
+                } else if (data && data.error) {
+                    alert(data.error);
                 } else {
                     window.location.href = '/register.html?plan=' + plan;
                 }

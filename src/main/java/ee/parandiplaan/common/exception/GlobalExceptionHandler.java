@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {
         if (ex.getMessage() != null && ex.getMessage().contains("Decryption failed")) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Vale krüpteerimisvõti. Logi uuesti sisse.", "message", "Vale krüpteerimisvõti. Logi uuesti sisse."));
+                    .body(Map.of("error", "Vale krüpteerimisvõti. Logi uuesti sisse."));
         }
         log.error("Unexpected error", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

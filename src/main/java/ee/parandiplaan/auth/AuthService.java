@@ -46,7 +46,7 @@ public class AuthService {
     private final SessionService sessionService;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request, String ip, String userAgent) {
         if (userRepository.existsByEmail(request.email().toLowerCase())) {
             throw new IllegalArgumentException("See e-posti aadress on juba kasutusel");
         }
@@ -81,7 +81,7 @@ public class AuthService {
                 user.getEmailVerificationToken().toString()
         );
 
-        return buildAuthResponseNoSession(user);
+        return buildAuthResponseWithSession(user, ip, userAgent);
     }
 
     @Transactional
@@ -177,7 +177,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse resetPassword(UUID token, String newPassword) {
+    public AuthResponse resetPassword(UUID token, String newPassword, String ip, String userAgent) {
         User user = userRepository.findByPasswordResetToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Kehtetu või aegunud lähtestamislink"));
 
@@ -211,7 +211,7 @@ public class AuthService {
         sessionService.revokeAllSessions(user.getId());
 
         log.info("Password reset completed for: {} (vault data cleared)", user.getEmail());
-        return buildAuthResponseNoSession(user);
+        return buildAuthResponseWithSession(user, ip, userAgent);
     }
 
     @Transactional
@@ -316,17 +316,4 @@ public class AuthService {
         );
     }
 
-    private AuthResponse buildAuthResponseNoSession(User user) {
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), null);
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
-
-        return new AuthResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFullName(),
-                accessToken,
-                refreshToken,
-                user.isEmailVerified()
-        );
-    }
 }
