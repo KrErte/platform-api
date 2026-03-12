@@ -1,6 +1,7 @@
 package ee.parandiplaan.user;
 
 import ee.parandiplaan.common.security.CurrentUser;
+import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.user.dto.DeleteAccountRequest;
 import ee.parandiplaan.user.dto.EmailPreferencesRequest;
 import ee.parandiplaan.user.dto.UpdateProfileRequest;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -20,6 +22,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserService userService;
     private final GdprExportService gdprExportService;
+    private final EmailService emailService;
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(@CurrentUser User user) {
@@ -70,6 +73,34 @@ public class UserController {
         return ResponseEntity.ok(buildUserResponse(user));
     }
 
+    @PutMapping("/me/email")
+    public ResponseEntity<Map<String, Object>> updateEmail(
+            @CurrentUser User user,
+            @RequestBody Map<String, String> body) {
+        String newEmail = body.get("email");
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new IllegalArgumentException("E-posti aadress on kohustuslik");
+        }
+        newEmail = newEmail.toLowerCase().trim();
+
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new IllegalArgumentException("See e-posti aadress on juba kasutusel");
+        }
+
+        user.setEmail(newEmail);
+        user.setEmailVerified(false);
+        user.setEmailVerificationToken(UUID.randomUUID());
+        user = userRepository.save(user);
+
+        emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getFullName(),
+                user.getEmailVerificationToken().toString()
+        );
+
+        return ResponseEntity.ok(buildUserResponse(user));
+    }
+
     @GetMapping("/me/export")
     public ResponseEntity<Map<String, Object>> exportMyData(@CurrentUser User user) {
         return ResponseEntity.ok(gdprExportService.exportAllUserData(user));
@@ -93,6 +124,8 @@ public class UserController {
         map.put("notifySms", user.isNotifySms());
         map.put("vaultKeyEscrowed", user.getEncryptedVaultKey() != null);
         map.put("vaultKeyEscrowedAt", user.getVaultKeyEscrowedAt() != null ? user.getVaultKeyEscrowedAt().toString() : null);
+        map.put("isEidUser", user.getPersonalCode() != null);
+        map.put("needsEmail", user.getEmail() != null && user.getEmail().endsWith("@eid.parandiplaan.ee"));
         map.put("createdAt", user.getCreatedAt().toString());
         return map;
     }

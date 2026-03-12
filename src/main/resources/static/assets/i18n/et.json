@@ -325,6 +325,17 @@
     "privacyTitle": "Privaatsuspoliitika",
     "termsTitle": "Kasutustingimused"
   },
+  "invite": {
+    "title": "Usalduskontakti kutse",
+    "loading": "Kutse kontrollimine...",
+    "acceptedTitle": "Kutse vastu võetud!",
+    "acceptedDesc": "Oled nüüd registreeritud usalduskontaktina. Kui omanik annab sulle ligipääsu tresori andmetele, saad sellekohase teate e-postile.",
+    "acceptedHint": "Kui sul on juba Pärandiplaani konto, näed jagatud andmeid oma töölaual. Kui ei, siis saad tulevikus lingi otse e-postile.",
+    "errorTitle": "Kutse viga",
+    "invalidTitle": "Vigane link",
+    "invalidDesc": "See kutselink on vigane või puudulik. Palun kontrolli, et kopeerisid kogu lingi.",
+    "goHome": "Avalehele"
+  },
   "offline": {
     "title": "Ühendus puudub",
     "desc": "Sul puudub hetkel internetiühendus. Palun proovi hiljem uuesti."

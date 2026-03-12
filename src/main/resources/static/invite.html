@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Kutse — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1B4332">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/auth.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">Pärandiplaan</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="auth-page">
+        <div class="auth-card">
+            <div id="loading-section">
+                <h1 data-i18n="invite.title">Usalduskontakti kutse</h1>
+                <p class="auth-subtitle" data-i18n="invite.loading">Kutse kontrollimine...</p>
+                <div style="text-align:center;padding:2rem 0;">
+                    <div style="display:inline-block;width:32px;height:32px;border:3px solid var(--green-200);border-top-color:var(--green-600);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                </div>
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            </div>
+
+            <div id="success-section" style="display:none;">
+                <div style="text-align:center;margin-bottom:1.5rem;">
+                    <div style="font-size:3rem;margin-bottom:0.5rem;">&#10003;</div>
+                    <h1 style="color:var(--green-900);" data-i18n="invite.acceptedTitle">Kutse vastu võetud!</h1>
+                </div>
+                <p style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;" data-i18n="invite.acceptedDesc">
+                    Oled nüüd registreeritud usalduskontaktina. Kui omanik annab sulle ligipääsu tresori andmetele, saad sellekohase teate e-postile.
+                </p>
+                <p style="text-align:center;color:var(--text-secondary);font-size:0.9rem;margin-bottom:2rem;" data-i18n="invite.acceptedHint">
+                    Kui sul on juba Pärandiplaani konto, näed jagatud andmeid oma töölaual. Kui ei, siis saad tulevikus lingi otse e-postile.
+                </p>
+                <div style="text-align:center;">
+                    <a href="/" class="btn btn-primary" data-i18n="invite.goHome">Avalehele</a>
+                </div>
+            </div>
+
+            <div id="error-section" style="display:none;">
+                <div style="text-align:center;margin-bottom:1.5rem;">
+                    <div style="font-size:3rem;margin-bottom:0.5rem;">&#10007;</div>
+                    <h1 style="color:#DC2626;" data-i18n="invite.errorTitle">Kutse viga</h1>
+                </div>
+                <p id="error-text" style="text-align:center;color:var(--text-secondary);margin-bottom:2rem;"></p>
+                <div style="text-align:center;">
+                    <a href="/" class="btn btn-primary" data-i18n="invite.goHome">Avalehele</a>
+                </div>
+            </div>
+
+            <div id="no-token-section" style="display:none;">
+                <h1 data-i18n="invite.invalidTitle">Vigane link</h1>
+                <p style="text-align:center;color:var(--text-secondary);margin-bottom:2rem;" data-i18n="invite.invalidDesc">
+                    See kutselink on vigane või puudulik. Palun kontrolli, et kopeerisid kogu lingi.
+                </p>
+                <div style="text-align:center;">
+                    <a href="/" class="btn btn-primary" data-i18n="invite.goHome">Avalehele</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        (async function() {
+            // Try to get token from URL path (/invite/{token}) or query param (?token=)
+            var token = null;
+            var pathMatch = window.location.pathname.match(/\/invite\/([0-9a-f-]{36})/i);
+            if (pathMatch) {
+                token = pathMatch[1];
+            } else {
+                var params = new URLSearchParams(window.location.search);
+                token = params.get('token');
+            }
+
+            var loadingEl = document.getElementById('loading-section');
+            var successEl = document.getElementById('success-section');
+            var errorEl = document.getElementById('error-section');
+            var noTokenEl = document.getElementById('no-token-section');
+
+            if (!token) {
+                loadingEl.style.display = 'none';
+                noTokenEl.style.display = '';
+                return;
+            }
+
+            try {
+                var res = await fetch('/api/v1/trusted-contacts/accept-invite/' + encodeURIComponent(token), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                loadingEl.style.display = 'none';
+
+                if (res.ok) {
+                    successEl.style.display = '';
+                } else {
+                    var data = await res.json().catch(function() { return {}; });
+                    errorEl.style.display = '';
+                    document.getElementById('error-text').textContent =
+                        data.message || data.error || 'Kutse vastuvõtmine ebaõnnestus. Link võib olla aegunud või juba kasutatud.';
+                }
+            } catch (err) {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = '';
+                document.getElementById('error-text').textContent = 'Ühenduse viga. Palun proovi hiljem uuesti.';
+            }
+        })();
+    </script>
+    <script src="/assets/i18n.js"></script>
+</body>
+</html>

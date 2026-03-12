@@ -325,6 +325,17 @@
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms of Service"
   },
+  "invite": {
+    "title": "Trusted contact invitation",
+    "loading": "Checking invitation...",
+    "acceptedTitle": "Invitation accepted!",
+    "acceptedDesc": "You are now registered as a trusted contact. When the owner grants you access to their vault data, you will receive a notification by email.",
+    "acceptedHint": "If you already have a Pärandiplaan account, you'll see shared data on your dashboard. Otherwise, you'll receive a link directly by email.",
+    "errorTitle": "Invitation error",
+    "invalidTitle": "Invalid link",
+    "invalidDesc": "This invitation link is invalid or incomplete. Please check that you copied the entire link.",
+    "goHome": "Go to homepage"
+  },
   "offline": {
     "title": "No connection",
     "desc": "You are currently offline. Please try again later."

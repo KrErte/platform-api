@@ -194,6 +194,110 @@ public class AuthService {
             throw new IllegalArgumentException("Lähtestamislink on aegunud. Palun taotlege uus.");
         }
 
+        // Try to recover vault key from escrow for re-encryption
+        if (vaultEscrowService.hasEscrowedKey(user)) {
+            try {
+                String oldPassword = vaultEscrowService.recoverVaultKey(user);
+                reEncryptVaultData(user, oldPassword, newPassword);
+                log.info("Password reset with vault re-encryption for: {}", user.getEmail());
+            } catch (Exception e) {
+                log.error("Vault re-encryption failed during password reset for {}, clearing vault data: {}",
+                        user.getEmail(), e.getMessage());
+                clearVaultData(user);
+            }
+        } else {
+            // No escrowed key — vault data must be deleted
+            clearVaultData(user);
+            log.info("Password reset completed for: {} (vault data cleared — no escrow key)", user.getEmail());
+        }
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiresAt(null);
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        // Re-escrow with new password
+        vaultEscrowService.escrowVaultKey(user, newPassword);
+
+        // Revoke all existing sessions
+        sessionService.revokeAllSessions(user.getId());
+
+        return buildAuthResponseWithSession(user, ip, userAgent);
+    }
+
+    private void reEncryptVaultData(User user, String oldPassword, String newPassword) {
+        String oldSalt = user.getEncryptionSalt();
+        String newSalt = EncryptionService.generateSalt();
+
+        // Re-encrypt all vault entries
+        List<VaultEntry> entries = vaultEntryRepository.findAllByUserId(user.getId());
+        for (VaultEntry entry : entries) {
+            String decTitle = encryptionService.decrypt(entry.getTitle(), entry.getTitleIv(), oldPassword, oldSalt);
+            String decData = encryptionService.decrypt(entry.getEncryptedData(), entry.getEncryptionIv(), oldPassword, oldSalt);
+
+            EncryptionService.EncryptionResult titleEnc = encryptionService.encrypt(decTitle, newPassword, newSalt);
+            EncryptionService.EncryptionResult dataEnc = encryptionService.encrypt(decData, newPassword, newSalt);
+
+            entry.setTitle(titleEnc.ciphertext());
+            entry.setTitleIv(titleEnc.iv());
+            entry.setEncryptedData(dataEnc.ciphertext());
+            entry.setEncryptionIv(dataEnc.iv());
+
+            if (entry.getNotesEncrypted() != null && entry.getNotesIv() != null) {
+                String decNotes = encryptionService.decrypt(entry.getNotesEncrypted(), entry.getNotesIv(), oldPassword, oldSalt);
+                EncryptionService.EncryptionResult notesEnc = encryptionService.encrypt(decNotes, newPassword, newSalt);
+                entry.setNotesEncrypted(notesEnc.ciphertext());
+                entry.setNotesIv(notesEnc.iv());
+            }
+
+            vaultEntryRepository.save(entry);
+        }
+
+        // Re-encrypt all attachments
+        List<VaultAttachment> attachments = vaultAttachmentRepository.findAllByUserId(user.getId());
+        for (VaultAttachment att : attachments) {
+            // Re-encrypt file name
+            String decFileName = encryptionService.decrypt(att.getFileNameEncrypted(), att.getFileNameIv(), oldPassword, oldSalt);
+            EncryptionService.EncryptionResult fileNameEnc = encryptionService.encrypt(decFileName, newPassword, newSalt);
+            att.setFileNameEncrypted(fileNameEnc.ciphertext());
+            att.setFileNameIv(fileNameEnc.iv());
+
+            // Re-encrypt file content in MinIO
+            try {
+                var inputStream = storageService.download(att.getStorageKey());
+                byte[] combined = inputStream.readAllBytes();
+                inputStream.close();
+
+                byte[] iv = java.util.Arrays.copyOfRange(combined, 0, 12);
+                byte[] cipherBytes = java.util.Arrays.copyOfRange(combined, 12, combined.length);
+                String ivBase64 = java.util.Base64.getEncoder().encodeToString(iv);
+
+                byte[] plainBytes = encryptionService.decryptBytes(cipherBytes, ivBase64, oldPassword, oldSalt);
+                EncryptionService.EncryptionResultBytes reEnc = encryptionService.encryptBytes(plainBytes, newPassword, newSalt);
+                byte[] newIv = java.util.Base64.getDecoder().decode(reEnc.iv());
+                byte[] newCombined = java.nio.ByteBuffer.allocate(12 + reEnc.cipherBytes().length)
+                        .put(newIv)
+                        .put(reEnc.cipherBytes())
+                        .array();
+
+                storageService.upload(att.getStorageKey(), newCombined, "application/octet-stream");
+            } catch (Exception e) {
+                log.error("Failed to re-encrypt attachment during password reset: {}", att.getId(), e);
+            }
+
+            vaultAttachmentRepository.save(att);
+        }
+
+        // Update encryption salt
+        user.setEncryptionSalt(newSalt);
+
+        log.info("Vault re-encrypted for user {} ({} entries, {} attachments)",
+                user.getEmail(), entries.size(), attachments.size());
+    }
+
+    private void clearVaultData(User user) {
         // Delete all vault attachments (MinIO files + DB records)
         List<VaultAttachment> attachments = vaultAttachmentRepository.findAllByUserId(user.getId());
         for (VaultAttachment att : attachments) {
@@ -208,20 +312,9 @@ public class AuthService {
         // Delete all vault entries
         vaultEntryRepository.deleteAllByUserId(user.getId());
 
-        // Update password and clear escrow (vault data is gone)
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setPasswordResetToken(null);
-        user.setPasswordResetTokenExpiresAt(null);
+        // Clear escrow
         user.setEncryptedVaultKey(null);
         user.setVaultKeyEscrowedAt(null);
-        user.setLastLoginAt(Instant.now());
-        userRepository.save(user);
-
-        // Revoke all existing sessions
-        sessionService.revokeAllSessions(user.getId());
-
-        log.info("Password reset completed for: {} (vault data cleared)", user.getEmail());
-        return buildAuthResponseWithSession(user, ip, userAgent);
     }
 
     @Transactional

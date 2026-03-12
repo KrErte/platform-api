@@ -35,6 +35,22 @@
     <main class="settings-page" id="main-content">
         <h1 data-i18n="settings.title">Seaded</h1>
 
+        <!-- eID Email Banner -->
+        <div id="eid-email-banner" class="settings-card" style="display:none;border-color:#FDE68A;background:#FFFBEB;">
+            <h2 style="color:#92400E;">Lisa oma e-posti aadress</h2>
+            <p style="font-size:0.9rem;color:#78350F;margin-bottom:1rem;">
+                Logisid sisse eID-ga, aga sul pole veel e-posti aadressi lisatud. Ilma selleta ei saa me saata sulle olulisi teavitusi (inaktiivsushoiatused, meeldetuletused, usaldusisikute kutsed).
+            </p>
+            <div id="eid-email-message"></div>
+            <form id="eid-email-form" style="display:flex;gap:0.75rem;align-items:end;flex-wrap:wrap;">
+                <div class="form-group" style="flex:1;min-width:200px;margin:0;">
+                    <label for="eid-email-input">E-posti aadress</label>
+                    <input type="email" id="eid-email-input" placeholder="sinu@email.ee" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" id="eid-email-btn">Salvesta ja saada kinnitus</button>
+            </form>
+        </div>
+
         <!-- Profile Section -->
         <div class="settings-card">
             <h2 data-i18n="settings.profile">Profiil</h2>
@@ -259,12 +275,62 @@
                 // Update 2FA status
                 updateTwofaStatus(data.totpEnabled);
 
+                // Show eID email banner if needed
+                if (data.needsEmail) {
+                    document.getElementById('eid-email-banner').style.display = '';
+                }
+
+                // Hide password change section for eID users without password
+                if (data.isEidUser && data.needsEmail) {
+                    var pwSection = document.querySelector('#password-form');
+                    if (pwSection) {
+                        pwSection.closest('.settings-card') || null;
+                    }
+                }
+
                 // Load email preferences
                 loadEmailPrefs(data);
             } catch (e) {
                 console.error('Profile load failed:', e);
             }
         }
+
+        // ===== eID Email Update =====
+        document.getElementById('eid-email-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var emailInput = document.getElementById('eid-email-input');
+            var btn = document.getElementById('eid-email-btn');
+            var newEmail = emailInput.value.trim();
+            if (!newEmail) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Salvestamine...';
+
+            try {
+                var res = await fetch('/api/v1/users/me/email', {
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify({ email: newEmail })
+                });
+                if (handleAuthError(res)) return;
+
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    throw new Error(err.message || 'E-posti salvestamine ebaõnnestus');
+                }
+
+                var data = await res.json();
+                localStorage.setItem('userEmail', data.email);
+                showMessage('eid-email-message', 'E-posti aadress salvestatud! Kontrolli oma postkasti ja kinnita aadress.', false);
+                document.getElementById('eid-email-banner').style.borderColor = 'var(--green-300)';
+                document.getElementById('eid-email-banner').style.background = 'var(--green-50)';
+            } catch (err) {
+                showMessage('eid-email-message', err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Salvesta ja saada kinnitus';
+            }
+        });
 
         document.getElementById('profile-form').addEventListener('submit', async function(e) {
             e.preventDefault();
