@@ -50,7 +50,7 @@
     "trustGdpr": "GDPR-konformne",
     "trust2fa": "2FA tugi",
     "feature1Title": "Kogu oma info",
-    "feature1Desc": "Lisa oma pangakontod, kindlustused, lepingud, paroolid ja muud olulised andmed turvalisse tresori. Kõik on krüpteeritud.",
+    "feature1Desc": "Lisa oma pangakontod, kindlustused, lepingud, paroolid ja muud olulised andmed turvalisse tresorisse. Kõik on krüpteeritud.",
     "feature2Title": "Määra usaldusisikud",
     "feature2Desc": "Vali inimesed, kes saavad ligipääsu su infole siis, kui sa seda enam ise hallata ei saa. Sina otsustad, kes mida näeb.",
     "feature3Title": "Ela rahulikult",
