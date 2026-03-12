@@ -14,7 +14,8 @@
     "tryFree": "Proovi tasuta",
     "howItWorks": "Kuidas töötab",
     "categories": "Kategooriad",
-    "pricing": "Hinnad"
+    "pricing": "Hinnad",
+    "capsules": "Ajakapslid"
   },
   "common": {
     "save": "Salvesta",
@@ -335,6 +336,32 @@
     "invalidTitle": "Vigane link",
     "invalidDesc": "See kutselink on vigane või puudulik. Palun kontrolli, et kopeerisid kogu lingi.",
     "goHome": "Avalehele"
+  },
+  "capsule": {
+    "title": "Ajakapslid",
+    "subtitle": "Loo krüpteeritud sõnumeid oma usalduskontaktidele, mis edastatakse tulevikus.",
+    "create": "Loo ajakapsel",
+    "edit": "Muuda ajakapslit",
+    "cancel": "Tühista ajakapsel",
+    "cancelConfirm": "Kas oled kindel, et soovid selle ajakapsli tühistada?",
+    "triggerHandover": "Üleandmisel",
+    "triggerDate": "Kindlal kuupäeval",
+    "triggerDateLabel": "Edastamise kuupäev",
+    "recipientLabel": "Saaja",
+    "titleLabel": "Pealkiri",
+    "messageLabel": "Sõnum",
+    "statusPending": "Ootel",
+    "statusDelivered": "Edastatud",
+    "statusCancelled": "Tühistatud",
+    "empty": "Sul pole veel ühtegi ajakapslit loodud.",
+    "createFirst": "Loo esimene ajakapsel",
+    "triggerLabel": "Edastamise tingimus",
+    "triggerHandoverDesc": "Edastatakse, kui üleandmistaotlus kinnitatakse",
+    "triggerDateDesc": "Edastatakse valitud kuupäeval",
+    "deliveredAt": "Edastatud",
+    "createdAt": "Loodud",
+    "sharedTitle": "Ajakapslid sinule",
+    "sharedSubtitle": "Need sõnumid on jäetud sulle."
   },
   "offline": {
     "title": "Ühendus puudub",

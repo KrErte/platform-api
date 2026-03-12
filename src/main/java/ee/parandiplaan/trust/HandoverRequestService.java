@@ -1,6 +1,7 @@
 package ee.parandiplaan.trust;
 
 import ee.parandiplaan.audit.AuditService;
+import ee.parandiplaan.capsule.TimeCapsuleService;
 import ee.parandiplaan.notification.EmailService;
 import ee.parandiplaan.trust.dto.CreateHandoverRequest;
 import ee.parandiplaan.trust.dto.HandoverRequestResponse;
@@ -28,6 +29,7 @@ public class HandoverRequestService {
     private final EmailService emailService;
     private final AuditService auditService;
     private final SharedVaultService sharedVaultService;
+    private final TimeCapsuleService timeCapsuleService;
 
     private static final int RESPONSE_DEADLINE_HOURS = 72;
 
@@ -131,6 +133,13 @@ public class HandoverRequestService {
             log.warn("Shared access failed for handover {}: {}", handover.getId(), e.getMessage());
             // Still notify contact about approval, even if vault sharing failed
             emailService.sendHandoverApprovedEmail(contact.getEmail(), contact.getFullName(), user.getFullName());
+        }
+
+        // Deliver any HANDOVER-triggered time capsules
+        try {
+            timeCapsuleService.deliverHandoverCapsules(user.getId());
+        } catch (Exception e) {
+            log.warn("Time capsule delivery failed for handover {}: {}", handover.getId(), e.getMessage());
         }
 
         return toResponse(handover);

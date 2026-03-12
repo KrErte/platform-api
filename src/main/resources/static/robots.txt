@@ -10,6 +10,7 @@ Disallow: /onboarding.html
 Disallow: /admin.html
 Disallow: /jagatud-tresor.html
 Disallow: /invite.html
+Disallow: /ajakapsel.html
 Disallow: /reset-password.html
 Disallow: /actuator/
 

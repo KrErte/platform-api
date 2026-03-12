@@ -227,6 +227,27 @@ public class EmailService {
         sendEmail(toEmail, subject, html);
     }
 
+    public void sendTimeCapsuleEmail(String toEmail, String recipientName, String senderName) {
+        String subject = "Sulle on saabunud ajakapsel — " + senderName;
+        String html = """
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1B4332;">Ajakapsel saabunud!</h2>
+                    <p>Tere, %s!</p>
+                    <p><strong>%s</strong> on jätnud sulle isikliku sõnumi Pärandiplaani ajakapsli kaudu.</p>
+                    <p>Sõnumi nägemiseks ava oma jagatud tresori link, mis saadeti sulle varem e-postile.</p>
+                    <p style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="background: #2D6A4F; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            Ava Pärandiplaan
+                        </a>
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">Pärandiplaan — Sinu digitaalne pärand, turvaliselt korraldatud</p>
+                </div>
+                """.formatted(recipientName, senderName, appUrl);
+
+        sendEmail(toEmail, subject, html);
+    }
+
     public void sendEmail(String to, String subject, String html) {
         if (!enabled) {
             log.info("EMAIL (dry-run) to={}, subject={}", to, subject);

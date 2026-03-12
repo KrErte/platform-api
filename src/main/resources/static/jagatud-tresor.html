@@ -159,8 +159,6 @@
 
             if (entries.length === 0) {
                 html += '<p style="text-align:center;color:var(--text-muted);">Jagatud tresorikirjeid pole.</p>';
-                content.innerHTML = html;
-                return;
             }
 
             // Group by category
@@ -203,6 +201,63 @@
             });
 
             content.innerHTML = html;
+
+            // Load time capsules
+            loadCapsules(content);
+        }
+
+        async function loadCapsules(container) {
+            try {
+                var res = await fetch('/api/v1/shared-vault/capsules?token=' + encodeURIComponent(sharedToken));
+                if (!res.ok) return;
+                var capsules = await res.json();
+                if (capsules.length === 0) return;
+
+                var html = '<div style="margin-top:2rem;padding-top:2rem;border-top:2px solid var(--card-border);">' +
+                    '<div class="shared-header" style="margin-bottom:1.5rem;">' +
+                        '<h2 style="color:var(--green-800);font-size:1.3rem;">&#128140; Ajakapslid sinule</h2>' +
+                        '<p class="shared-meta">Need isiklikud sõnumid on jäetud sulle.</p>' +
+                    '</div>' +
+                    '<div class="entry-cards">';
+
+                capsules.forEach(function(c) {
+                    var date = c.deliveredAt ? new Date(c.deliveredAt).toLocaleDateString('et-EE') : '';
+                    html += '<div class="entry-card" onclick="openCapsule(\'' + c.id + '\')" style="border-left:3px solid var(--green-600);">' +
+                        '<div class="entry-title">&#128140; ' + escapeHtml(c.encryptedTitle) + '</div>' +
+                        '<div class="entry-status">Edastatud ' + date + '</div>' +
+                    '</div>';
+                });
+
+                html += '</div></div>';
+                container.insertAdjacentHTML('beforeend', html);
+                window._capsules = capsules;
+            } catch (e) {
+                console.error('Capsules load failed:', e);
+            }
+        }
+
+        function openCapsule(capsuleId) {
+            var capsule = (window._capsules || []).find(function(c) { return c.id === capsuleId; });
+            if (!capsule) return;
+
+            document.getElementById('modal-title').textContent = capsule.encryptedTitle;
+
+            var date = capsule.deliveredAt ? new Date(capsule.deliveredAt).toLocaleDateString('et-EE') : '';
+            var body = '<div class="detail-section">' +
+                '<div class="detail-label">Sõnum</div>' +
+                '<div class="detail-notes">' + escapeHtml(capsule.encryptedMessage) + '</div>' +
+            '</div>' +
+            '<div class="detail-section">' +
+                '<div class="detail-label">Saatja</div>' +
+                '<div class="detail-value">' + escapeHtml(capsule.recipientName || '') + '</div>' +
+            '</div>' +
+            '<div class="detail-section">' +
+                '<div class="detail-label">Edastatud</div>' +
+                '<div class="detail-value">' + date + '</div>' +
+            '</div>';
+
+            document.getElementById('modal-body').innerHTML = body;
+            document.getElementById('entry-modal').style.display = 'flex';
         }
 
         async function openEntry(entryId) {

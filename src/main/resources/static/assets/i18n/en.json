@@ -14,7 +14,8 @@
     "tryFree": "Try free",
     "howItWorks": "How it works",
     "categories": "Categories",
-    "pricing": "Pricing"
+    "pricing": "Pricing",
+    "capsules": "Time Capsules"
   },
   "common": {
     "save": "Save",
@@ -335,6 +336,32 @@
     "invalidTitle": "Invalid link",
     "invalidDesc": "This invitation link is invalid or incomplete. Please check that you copied the entire link.",
     "goHome": "Go to homepage"
+  },
+  "capsule": {
+    "title": "Time Capsules",
+    "subtitle": "Create encrypted messages for your trusted contacts, delivered in the future.",
+    "create": "Create time capsule",
+    "edit": "Edit time capsule",
+    "cancel": "Cancel time capsule",
+    "cancelConfirm": "Are you sure you want to cancel this time capsule?",
+    "triggerHandover": "On handover",
+    "triggerDate": "On specific date",
+    "triggerDateLabel": "Delivery date",
+    "recipientLabel": "Recipient",
+    "titleLabel": "Title",
+    "messageLabel": "Message",
+    "statusPending": "Pending",
+    "statusDelivered": "Delivered",
+    "statusCancelled": "Cancelled",
+    "empty": "You haven't created any time capsules yet.",
+    "createFirst": "Create your first time capsule",
+    "triggerLabel": "Delivery trigger",
+    "triggerHandoverDesc": "Delivered when a handover request is approved",
+    "triggerDateDesc": "Delivered on the selected date",
+    "deliveredAt": "Delivered",
+    "createdAt": "Created",
+    "sharedTitle": "Time capsules for you",
+    "sharedSubtitle": "These messages were left for you."
   },
   "offline": {
     "title": "No connection",

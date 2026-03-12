@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ajakapslid — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1B4332">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/dashboard.css">
+    <style>
+        .capsule-page { max-width: 900px; margin: 0 auto; padding: 6rem 1rem 3rem; }
+
+        .capsule-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+        }
+        .capsule-header h1 { color: var(--green-800); font-size: 1.6rem; font-weight: 800; margin: 0; }
+        .capsule-header p { color: var(--text-muted); font-size: 0.9rem; margin: 0.25rem 0 0; }
+
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .btn-primary { background: var(--green-600); color: white; }
+        .btn-primary:hover { background: var(--green-700); }
+        .btn-secondary { background: var(--green-50); color: var(--green-800); border: 1px solid var(--green-200); }
+        .btn-secondary:hover { background: var(--green-100); }
+        .btn-danger { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+        .btn-danger:hover { background: #FECACA; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+
+        .capsule-empty {
+            text-align: center; padding: 4rem 2rem;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 12px;
+        }
+        .capsule-empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .capsule-empty h3 { color: var(--green-800); margin-bottom: 0.5rem; }
+        .capsule-empty p { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .capsule-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+        .capsule-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 10px; padding: 1.25rem;
+            transition: box-shadow 0.15s;
+        }
+        .capsule-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .capsule-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+        .capsule-card-info { flex: 1; }
+        .capsule-card-title { font-weight: 700; color: var(--text); font-size: 1rem; margin-bottom: 0.25rem; }
+        .capsule-card-meta { font-size: 0.85rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 0.4rem; }
+        .capsule-card-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+        .badge {
+            display: inline-block; font-size: 0.75rem; font-weight: 600;
+            padding: 0.2rem 0.6rem; border-radius: 20px;
+        }
+        .badge-pending { background: #FEF3C7; color: #92400E; }
+        .badge-delivered { background: #D1FAE5; color: #065F46; }
+        .badge-cancelled { background: #F3F4F6; color: #6B7280; }
+        .badge-handover { background: #EDE9FE; color: #5B21B6; }
+        .badge-date { background: #DBEAFE; color: #1E40AF; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.75rem;
+            max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;
+        }
+        .modal-card h2 { margin-bottom: 1.25rem; color: var(--green-800); font-size: 1.2rem; }
+        .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.9rem; color: var(--text); margin-bottom: 0.3rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--green-200);
+            border-radius: 6px; font-size: 0.9rem; font-family: inherit;
+            background: white; color: var(--text);
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(45,106,79,0.1);
+        }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .form-group .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        .form-error { color: #DC2626; background: #FEE2E2; padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.9rem; margin-bottom: 1rem; display: none; }
+
+        .trigger-options { display: flex; gap: 0.75rem; margin-bottom: 0.5rem; }
+        .trigger-option {
+            flex: 1; padding: 0.75rem; border: 2px solid var(--green-200);
+            border-radius: 8px; cursor: pointer; text-align: center;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .trigger-option:hover { border-color: var(--green-400); }
+        .trigger-option.active { border-color: var(--green-600); background: var(--green-50); }
+        .trigger-option-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .trigger-option-label { font-weight: 600; font-size: 0.85rem; color: var(--text); }
+        .trigger-option-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+        .form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--green-700); text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; }
+        .back-link:hover { color: var(--green-800); }
+
+        @media (max-width: 640px) {
+            .capsule-page { padding: 5rem 0.75rem 2rem; }
+            .capsule-header { flex-direction: column; align-items: flex-start; }
+            .capsule-card-top { flex-direction: column; }
+            .capsule-card-actions { align-self: flex-end; }
+            .trigger-options { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-nav">Otse sisu juurde</a>
+    <div class="grain"></div>
+
+    <header>
+        <nav>
+            <div class="nav-inner">
+                <a href="/dashboard.html" class="logo">
+                    <span class="logo-icon">&#127807;</span>
+                    <span class="logo-text">Pärandiplaan</span>
+                </a>
+                <div class="nav-user">
+                    <span class="nav-user-name" id="nav-name"></span>
+                    <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
+                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="capsule-page" id="main-content">
+        <a href="/dashboard.html" class="back-link" data-i18n="nav.backToDashboard">&larr; Töölauale</a>
+
+        <div class="capsule-header">
+            <div>
+                <h1 data-i18n="capsule.title">&#128140; Ajakapslid</h1>
+                <p data-i18n="capsule.subtitle">Loo krüpteeritud sõnumeid oma usalduskontaktidele, mis edastatakse tulevikus.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateModal()" data-i18n="capsule.create">+ Loo ajakapsel</button>
+        </div>
+
+        <div id="capsule-container">
+            <div class="capsule-card" style="height:80px;background:var(--green-50);border:none;"></div>
+        </div>
+    </main>
+
+    <!-- Create/Edit Modal -->
+    <div id="capsule-modal" class="modal-overlay" style="display:none">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2 id="modal-title" data-i18n="capsule.create">Loo ajakapsel</h2>
+            <div id="form-error" class="form-error"></div>
+            <form id="capsule-form" onsubmit="return saveCapsule(event)">
+                <div class="form-group">
+                    <label for="recipient-select" data-i18n="capsule.recipientLabel">Saaja</label>
+                    <select id="recipient-select" required>
+                        <option value="">Vali usalduskontakt...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="capsule.triggerLabel">Edastamise tingimus</label>
+                    <div class="trigger-options">
+                        <div class="trigger-option active" onclick="setTrigger('HANDOVER')" id="trigger-handover">
+                            <div class="trigger-option-icon">&#128591;</div>
+                            <div class="trigger-option-label" data-i18n="capsule.triggerHandover">Üleandmisel</div>
+                            <div class="trigger-option-desc" data-i18n="capsule.triggerHandoverDesc">Edastatakse kinnitamisel</div>
+                        </div>
+                        <div class="trigger-option" onclick="setTrigger('DATE')" id="trigger-date">
+                            <div class="trigger-option-icon">&#128197;</div>
+                            <div class="trigger-option-label" data-i18n="capsule.triggerDate">Kindlal kuupäeval</div>
+                            <div class="trigger-option-desc" data-i18n="capsule.triggerDateDesc">Edastatakse kuupäeval</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="date-group" style="display:none">
+                    <label for="trigger-date-input" data-i18n="capsule.triggerDateLabel">Edastamise kuupäev</label>
+                    <input type="date" id="trigger-date-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="capsule-title" data-i18n="capsule.titleLabel">Pealkiri</label>
+                    <input type="text" id="capsule-title" placeholder="Nt. Sõnum minu pojale" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="capsule-message" data-i18n="capsule.messageLabel">Sõnum</label>
+                    <textarea id="capsule-message" placeholder="Kirjuta oma isiklik sõnum..." required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="common.cancel">Tühista</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn" data-i18n="common.save">Salvesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auth guard
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/login.html'; }
+
+        var userName = localStorage.getItem('userName') || '';
+        var headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+        var contacts = [];
+        var capsules = [];
+        var editingId = null;
+        var selectedTrigger = 'HANDOVER';
+
+        document.getElementById('nav-name').textContent = userName;
+
+        // Set minimum date to tomorrow
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('trigger-date-input').min = tomorrow.toISOString().split('T')[0];
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            sessionStorage.removeItem('vaultKey');
+            window.location.href = '/login.html';
+        }
+
+        function handleAuthError(res) {
+            if (res.status === 401 || res.status === 403) { logout(); return true; }
+            return false;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // Load contacts
+        async function loadContacts() {
+            try {
+                var res = await fetch('/api/v1/trusted-contacts', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                contacts = await res.json();
+
+                var select = document.getElementById('recipient-select');
+                select.innerHTML = '<option value="">Vali usalduskontakt...</option>';
+                contacts.forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.fullName + ' (' + c.email + ')';
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Contacts load failed:', e);
+            }
+        }
+
+        // Load capsules
+        async function loadCapsules() {
+            try {
+                var res = await fetch('/api/v1/capsules', { headers: headers });
+                if (handleAuthError(res)) return;
+                if (!res.ok) return;
+                capsules = await res.json();
+                renderCapsules();
+            } catch (e) {
+                console.error('Capsules load failed:', e);
+            }
+        }
+
+        function renderCapsules() {
+            var container = document.getElementById('capsule-container');
+
+            if (capsules.length === 0) {
+                container.innerHTML = '<div class="capsule-empty">' +
+                    '<div class="capsule-empty-icon">&#128140;</div>' +
+                    '<h3 data-i18n="capsule.empty">Sul pole veel ühtegi ajakapslit loodud.</h3>' +
+                    '<p>Loo isiklik sõnum oma usalduskontaktile, mis edastatakse tulevikus.</p>' +
+                    '<button class="btn btn-primary" onclick="openCreateModal()" data-i18n="capsule.createFirst">Loo esimene ajakapsel</button>' +
+                '</div>';
+                return;
+            }
+
+            var html = '<div class="capsule-list">';
+
+            capsules.forEach(function(c) {
+                var statusClass = c.status === 'PENDING' ? 'badge-pending' :
+                                  c.status === 'DELIVERED' ? 'badge-delivered' : 'badge-cancelled';
+                var statusText = c.status === 'PENDING' ? 'Ootel' :
+                                 c.status === 'DELIVERED' ? 'Edastatud' : 'Tühistatud';
+
+                var triggerClass = c.triggerType === 'HANDOVER' ? 'badge-handover' : 'badge-date';
+                var triggerText = c.triggerType === 'HANDOVER' ? 'Üleandmisel' : 'Kuupäeval';
+
+                var metaHtml = '<span class="badge ' + triggerClass + '">' + triggerText + '</span>' +
+                    '<span class="badge ' + statusClass + '">' + statusText + '</span>';
+
+                if (c.triggerDate) {
+                    metaHtml += '<span>&#128197; ' + new Date(c.triggerDate + 'T00:00').toLocaleDateString('et-EE') + '</span>';
+                }
+                if (c.deliveredAt) {
+                    metaHtml += '<span>&#9989; ' + new Date(c.deliveredAt).toLocaleDateString('et-EE') + '</span>';
+                }
+
+                var created = new Date(c.createdAt).toLocaleDateString('et-EE');
+                metaHtml += '<span>&#128100; ' + escapeHtml(c.recipientName) + '</span>';
+
+                var actionsHtml = '';
+                if (c.status === 'PENDING') {
+                    actionsHtml = '<button class="btn btn-secondary btn-sm" onclick="openEditModal(\'' + c.id + '\')" data-i18n="common.edit">Muuda</button>' +
+                        '<button class="btn btn-danger btn-sm" onclick="cancelCapsule(\'' + c.id + '\')" data-i18n="capsule.cancel">Tühista</button>';
+                }
+
+                html += '<div class="capsule-card">' +
+                    '<div class="capsule-card-top">' +
+                        '<div class="capsule-card-info">' +
+                            '<div class="capsule-card-title">&#128140; ' + escapeHtml(c.encryptedTitle) + '</div>' +
+                            '<div class="capsule-card-meta">' + metaHtml + '</div>' +
+                        '</div>' +
+                        (actionsHtml ? '<div class="capsule-card-actions">' + actionsHtml + '</div>' : '') +
+                    '</div>' +
+                '</div>';
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Trigger selection
+        function setTrigger(type) {
+            selectedTrigger = type;
+            document.getElementById('trigger-handover').classList.toggle('active', type === 'HANDOVER');
+            document.getElementById('trigger-date').classList.toggle('active', type === 'DATE');
+            document.getElementById('date-group').style.display = type === 'DATE' ? '' : 'none';
+            if (type === 'DATE') {
+                document.getElementById('trigger-date-input').required = true;
+            } else {
+                document.getElementById('trigger-date-input').required = false;
+            }
+        }
+
+        // Modal
+        function openCreateModal() {
+            editingId = null;
+            document.getElementById('modal-title').textContent = 'Loo ajakapsel';
+            document.getElementById('capsule-form').reset();
+            setTrigger('HANDOVER');
+            hideError();
+            document.getElementById('capsule-modal').style.display = 'flex';
+        }
+
+        function openEditModal(id) {
+            var capsule = capsules.find(function(c) { return c.id === id; });
+            if (!capsule) return;
+
+            editingId = id;
+            document.getElementById('modal-title').textContent = 'Muuda ajakapslit';
+            document.getElementById('recipient-select').value = capsule.recipientContactId;
+            document.getElementById('capsule-title').value = capsule.encryptedTitle;
+            document.getElementById('capsule-message').value = capsule.encryptedMessage;
+            setTrigger(capsule.triggerType);
+            if (capsule.triggerDate) {
+                document.getElementById('trigger-date-input').value = capsule.triggerDate;
+            }
+            hideError();
+            document.getElementById('capsule-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('capsule-modal').style.display = 'none';
+            editingId = null;
+        }
+
+        function showError(msg) {
+            var el = document.getElementById('form-error');
+            el.textContent = msg;
+            el.style.display = '';
+        }
+
+        function hideError() {
+            document.getElementById('form-error').style.display = 'none';
+        }
+
+        async function saveCapsule(e) {
+            e.preventDefault();
+            hideError();
+
+            var recipientContactId = document.getElementById('recipient-select').value;
+            var encryptedTitle = document.getElementById('capsule-title').value.trim();
+            var encryptedMessage = document.getElementById('capsule-message').value.trim();
+            var triggerType = selectedTrigger;
+            var triggerDate = triggerType === 'DATE' ? document.getElementById('trigger-date-input').value : null;
+
+            if (!recipientContactId) { showError('Palun vali saaja.'); return false; }
+            if (!encryptedTitle) { showError('Palun sisesta pealkiri.'); return false; }
+            if (!encryptedMessage) { showError('Palun kirjuta sõnum.'); return false; }
+            if (triggerType === 'DATE' && !triggerDate) { showError('Palun vali kuupäev.'); return false; }
+
+            var body = {
+                recipientContactId: recipientContactId,
+                encryptedTitle: encryptedTitle,
+                encryptedMessage: encryptedMessage,
+                triggerType: triggerType,
+                triggerDate: triggerDate
+            };
+
+            try {
+                var url = '/api/v1/capsules';
+                var method = 'POST';
+                if (editingId) {
+                    url += '/' + editingId;
+                    method = 'PUT';
+                }
+
+                var res = await fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (handleAuthError(res)) return false;
+
+                if (!res.ok) {
+                    var err = await res.json().catch(function() { return {}; });
+                    showError(err.message || err.error || 'Salvestamine ebaõnnestus');
+                    return false;
+                }
+
+                closeModal();
+                loadCapsules();
+            } catch (e) {
+                console.error('Save failed:', e);
+                showError('Salvestamine ebaõnnestus');
+            }
+            return false;
+        }
+
+        async function cancelCapsule(id) {
+            if (!confirm('Kas oled kindel, et soovid selle ajakapsli tühistada?')) return;
+
+            try {
+                var res = await fetch('/api/v1/capsules/' + id, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                if (handleAuthError(res)) return;
+                if (!res.ok) {
+                    alert('Tühistamine ebaõnnestus');
+                    return;
+                }
+                loadCapsules();
+            } catch (e) {
+                console.error('Cancel failed:', e);
+                alert('Tühistamine ebaõnnestus');
+            }
+        }
+
+        // Close modal on overlay click / Escape
+        document.getElementById('capsule-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Init
+        loadContacts();
+        loadCapsules();
+    </script>
+    <script src="/assets/session-guard.js"></script>
+    <script src="/assets/i18n.js"></script>
+</body>
+</html>

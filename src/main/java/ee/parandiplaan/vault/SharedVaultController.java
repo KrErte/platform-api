@@ -1,5 +1,7 @@
 package ee.parandiplaan.vault;
 
+import ee.parandiplaan.capsule.TimeCapsuleService;
+import ee.parandiplaan.capsule.dto.TimeCapsuleResponse;
 import ee.parandiplaan.common.security.CurrentUser;
 import ee.parandiplaan.trust.SharedVaultToken;
 import ee.parandiplaan.trust.TrustedContact;
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class SharedVaultController {
 
     private final SharedVaultService sharedVaultService;
+    private final TimeCapsuleService timeCapsuleService;
 
     // ===== Public endpoints (token-based auth) =====
 
@@ -70,6 +73,13 @@ public class SharedVaultController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + result.fileName() + "\"")
                 .contentType(MediaType.parseMediaType(result.mimeType()))
                 .body(result.data());
+    }
+
+    @GetMapping("/capsules")
+    public ResponseEntity<List<TimeCapsuleResponse>> getCapsules(@RequestParam String token) {
+        SharedVaultToken svt = sharedVaultService.validateAndTouch(token);
+        UUID contactId = svt.getTrustedContact().getId();
+        return ResponseEntity.ok(timeCapsuleService.getDeliveredForContact(contactId));
     }
 
     // ===== Authenticated endpoints (owner) =====
