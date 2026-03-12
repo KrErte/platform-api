@@ -9,5 +9,8 @@ parandiplaan.ee {
 		-Server
 	}
 
+	@static path *.html *.css *.js
+	header @static Cache-Control "no-cache, must-revalidate"
+
 	reverse_proxy api:8080
 }
