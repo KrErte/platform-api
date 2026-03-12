@@ -726,12 +726,12 @@
                         '<div class="sub-upgrade-card">' +
                             '<div class="plan-name">Plus</div>' +
                             '<div class="plan-price">79€ <span>/aastas</span></div>' +
-                            '<button class="btn btn-primary btn-sm" onclick="checkout(\'PLUS\')">Uuenda</button>' +
+                            '<button class="btn btn-primary btn-sm" data-checkout="PLUS">Uuenda</button>' +
                         '</div>' +
                         '<div class="sub-upgrade-card">' +
                             '<div class="plan-name">Perekond</div>' +
                             '<div class="plan-price">149€ <span>/aastas</span></div>' +
-                            '<button class="btn btn-primary btn-sm" onclick="checkout(\'FAMILY\')">Uuenda</button>' +
+                            '<button class="btn btn-primary btn-sm" data-checkout="FAMILY">Uuenda</button>' +
                         '</div>' +
                     '</div>';
                 } else if (sub.plan === 'PLUS') {
@@ -739,7 +739,7 @@
                         '<div class="sub-upgrade-card">' +
                             '<div class="plan-name">Perekond</div>' +
                             '<div class="plan-price">149€ <span>/aastas</span></div>' +
-                            '<button class="btn btn-primary btn-sm" onclick="checkout(\'FAMILY\')">Uuenda</button>' +
+                            '<button class="btn btn-primary btn-sm" data-checkout="FAMILY">Uuenda</button>' +
                         '</div>' +
                     '</div>';
                 }
@@ -749,6 +749,12 @@
                 console.error('Subscription load failed:', e);
             }
         }
+
+        // Checkout via event delegation (buttons are dynamically generated)
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-checkout]');
+            if (btn) checkout(btn.dataset.checkout);
+        });
 
         async function checkout(plan) {
             try {

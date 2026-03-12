@@ -232,7 +232,7 @@
                     <li>Inaktiivsuskontroll</li>
                     <li>Prioriteetne tugi</li>
                 </ul>
-                <a href="#" onclick="selectPlan('PLUS'); return false;" class="btn btn-primary">Vali Plus</a>
+                <button type="button" class="btn btn-primary" data-plan="PLUS">Vali Plus</button>
             </div>
             <div class="price-card">
                 <div class="price-tier">Perekond</div>
@@ -246,7 +246,7 @@
                     <li>Perekonna jagamine</li>
                     <li>Prioriteetne tugi</li>
                 </ul>
-                <a href="#" onclick="selectPlan('FAMILY'); return false;" class="btn btn-outline">Vali Perekond</a>
+                <button type="button" class="btn btn-outline" data-plan="FAMILY">Vali Perekond</button>
             </div>
         </div>
     </section>
@@ -317,7 +317,12 @@
             observer.observe(document.querySelector('.hero-visual'));
         }
 
-        // Plan selection / checkout
+        // Plan selection via event delegation
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-plan]');
+            if (btn) selectPlan(btn.dataset.plan);
+        });
+
         function selectPlan(plan) {
             var token = localStorage.getItem('accessToken');
             if (!token) {
