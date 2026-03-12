@@ -341,8 +341,16 @@
                     const cat = dashCategories.find(c => c.id === s.categoryId);
                     const slug = cat ? cat.slug : '';
                     const icon = cat ? (cat.icon || '📁') : '📁';
-                    const typeClass = s.type === 'MISSING' ? 'missing' : s.type === 'INCOMPLETE' ? 'incomplete' : 'default';
-                    const typeLabel = s.type === 'MISSING' ? 'Puuduv' : s.type === 'INCOMPLETE' ? 'Pooleli' : s.type;
+                    var typeMap = {
+                        MISSING_PERSONAL_WISHES: { cls: 'missing', label: 'Puuduv' },
+                        MISSING_TRUSTED_CONTACT: { cls: 'missing', label: 'Puuduv' },
+                        EMPTY_CATEGORY: { cls: 'missing', label: 'Tühi' },
+                        INCOMPLETE_ENTRIES: { cls: 'incomplete', label: 'Pooleli' },
+                        REVIEW_NEEDED: { cls: 'incomplete', label: 'Ülevaatus' }
+                    };
+                    var tm = typeMap[s.type] || { cls: 'default', label: s.type };
+                    const typeClass = tm.cls;
+                    const typeLabel = tm.label;
 
                     return '<a href="/vault.html?category=' + slug + '" class="suggestion-card">' +
                         '<span class="suggestion-icon">' + icon + '</span>' +

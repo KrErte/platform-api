@@ -49,7 +49,7 @@
                 Seadistame sinu plaani mõne minutiga. Saad igal sammul ka vahele jätta.
             </p>
             <div class="step-actions">
-                <button class="btn btn-primary" onclick="goToStep(2)" data-i18n="onboarding.letsStart">Alustame!</button>
+                <button class="btn btn-primary" data-goto-step="2" data-i18n="onboarding.letsStart">Alustame!</button>
             </div>
         </div>
 
@@ -83,7 +83,7 @@
                     </select>
                 </div>
                 <div class="step-actions">
-                    <button type="button" class="btn btn-ghost" onclick="goToStep(3)" data-i18n="onboarding.skip">Jäta vahele</button>
+                    <button type="button" class="btn btn-ghost" data-goto-step="3" data-i18n="onboarding.skip">Jäta vahele</button>
                     <button type="submit" class="btn btn-primary" id="bank-submit" data-i18n="onboarding.saveAndContinue">Salvesta ja jätka</button>
                 </div>
             </form>
@@ -125,7 +125,7 @@
                     <input type="text" id="did-puk" placeholder="PUK">
                 </div>
                 <div class="step-actions">
-                    <button type="button" class="btn btn-ghost" onclick="goToStep(4)" data-i18n="onboarding.skip">Jäta vahele</button>
+                    <button type="button" class="btn btn-ghost" data-goto-step="4" data-i18n="onboarding.skip">Jäta vahele</button>
                     <button type="submit" class="btn btn-primary" id="did-submit" data-i18n="onboarding.saveAndContinue">Salvesta ja jätka</button>
                 </div>
             </form>
@@ -150,7 +150,7 @@
                     <input type="email" id="contact-email" placeholder="nimi@example.com" required>
                 </div>
                 <div class="step-actions">
-                    <button type="button" class="btn btn-ghost" onclick="goToStep(5)" data-i18n="onboarding.skip">Jäta vahele</button>
+                    <button type="button" class="btn btn-ghost" data-goto-step="5" data-i18n="onboarding.skip">Jäta vahele</button>
                     <button type="submit" class="btn btn-primary" id="contact-submit" data-i18n="onboarding.saveAndContinue">Salvesta ja jätka</button>
                 </div>
             </form>
@@ -168,7 +168,7 @@
                 Sa saad alati oma töölaual lisada uusi kirjeid, kategooriaid täita ja seadeid muuta.
             </p>
             <div class="step-actions">
-                <button class="btn btn-primary btn-lg" onclick="completeOnboarding()" data-i18n="onboarding.openDashboard">Ava töölaud</button>
+                <button class="btn btn-primary btn-lg" id="complete-btn" data-i18n="onboarding.openDashboard">Ava töölaud</button>
             </div>
         </div>
     </main>
@@ -400,6 +400,15 @@
                 console.error('Status check failed:', e);
             }
         }
+
+        // Step navigation via event delegation (replaces inline onclick)
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-goto-step]');
+            if (btn) {
+                goToStep(parseInt(btn.dataset.gotoStep));
+            }
+        });
+        document.getElementById('complete-btn').addEventListener('click', completeOnboarding);
 
         // Init
         checkOnboardingStatus();

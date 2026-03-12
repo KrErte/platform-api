@@ -34,22 +34,22 @@
             <div id="error-message" class="auth-error" style="display: none;"></div>
             <div id="success-message" class="auth-success" style="display: none;"></div>
 
-            <form id="register-form">
+            <form id="register-form" autocomplete="off">
                 <div class="form-group">
                     <label for="fullName" data-i18n="auth.fullName">Täisnimi</label>
                     <input type="text" id="fullName" name="fullName" placeholder="Nimi Perekonnanimi" required data-i18n="auth.fullNamePlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <div class="form-group">
                     <label for="email" data-i18n="auth.email">E-posti aadress</label>
-                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required data-i18n="auth.emailPlaceholder" data-i18n-attr="placeholder">
+                    <input type="email" id="email" name="email" placeholder="sinu@email.ee" required autocomplete="off" data-i18n="auth.emailPlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <div class="form-group">
                     <label for="password" data-i18n="auth.password">Parool</label>
-                    <input type="password" id="password" name="password" placeholder="Vähemalt 8 tähemärki" required minlength="8" data-i18n="auth.passwordPlaceholder" data-i18n-attr="placeholder">
+                    <input type="password" id="password" name="password" placeholder="Vähemalt 8 tähemärki" required minlength="8" autocomplete="new-password" data-i18n="auth.passwordPlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword" data-i18n="auth.confirmPassword">Kinnita parool</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Sisesta parool uuesti" required minlength="8" data-i18n="auth.confirmPasswordPlaceholder" data-i18n-attr="placeholder">
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Sisesta parool uuesti" required minlength="8" autocomplete="new-password" data-i18n="auth.confirmPasswordPlaceholder" data-i18n-attr="placeholder">
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn" data-i18n="auth.registerBtn">Loo konto</button>
             </form>

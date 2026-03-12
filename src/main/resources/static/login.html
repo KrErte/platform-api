@@ -132,7 +132,7 @@
             </div>
 
             <p class="auth-footer" style="margin-bottom:0.5rem;">
-                <a href="#" onclick="showForgotPassword(event)" style="font-size:0.85rem;" data-i18n="auth.forgotPassword">Unustasid parooli?</a>
+                <button type="button" id="forgot-toggle" style="font-size:0.85rem;background:none;border:none;color:var(--green-700);cursor:pointer;font-weight:600;padding:0;font-family:inherit;" data-i18n="auth.forgotPassword">Unustasid parooli?</button>
             </p>
             <p class="auth-footer">
                 Pole veel kontot? <a href="/register.html">Proovi 14 päeva tasuta</a>
@@ -342,11 +342,10 @@
         }
 
         // === Forgot Password ===
-        function showForgotPassword(e) {
-            e.preventDefault();
+        document.getElementById('forgot-toggle').addEventListener('click', function() {
             var section = document.getElementById('forgot-section');
             section.style.display = section.style.display === 'none' ? '' : 'none';
-        }
+        });
 
         var backupMode = false;
         function toggleBackupCodeMode(e) {
