@@ -23,7 +23,7 @@
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
                     <a href="/dashboard.html" class="btn-logout" style="text-decoration:none;" data-i18n="nav.backToDashboard">Töölauale</a>
-                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                    <button class="btn-logout" data-action="logout" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -57,8 +57,8 @@
 
         <!-- Tabs -->
         <div class="admin-tabs">
-            <button class="admin-tab active" onclick="switchTab('users')" data-i18n="admin.users">Kasutajad</button>
-            <button class="admin-tab" onclick="switchTab('audit')" data-i18n="admin.auditLog">Tegevuslogi</button>
+            <button class="admin-tab active" data-action="switchTab" data-action-arg="users" data-i18n="admin.users">Kasutajad</button>
+            <button class="admin-tab" data-action="switchTab" data-action-arg="audit" data-i18n="admin.auditLog">Tegevuslogi</button>
         </div>
 
         <!-- Users Tab -->
@@ -179,7 +179,7 @@
                         '<td><span class="plan-badge ' + planCls + '">' + u.subscriptionPlan + '</span></td>' +
                         '<td>' + u.vaultEntryCount + '</td>' +
                         '<td>' + date + '</td>' +
-                        '<td><button class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.5rem" onclick="toggleRole(\'' + u.id + '\',\'' + u.role + '\')">Muuda rolli</button></td>' +
+                        '<td><button class="btn btn-outline" style="font-size:0.75rem;padding:0.25rem 0.5rem" data-action="toggleRole" data-action-arg="' + u.id + '" data-action-arg2="' + u.role + '">Muuda rolli</button></td>' +
                     '</tr>';
                 }).join('');
 
@@ -223,10 +223,10 @@
         }
 
         // Tabs
-        function switchTab(name) {
+        function switchTab(name, clickedBtn) {
             document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
             document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-            event.target.classList.add('active');
+            if (clickedBtn) clickedBtn.classList.add('active');
             document.getElementById('tab-' + name).classList.add('active');
             if (name === 'audit') loadAudit();
         }
@@ -235,9 +235,9 @@
         function renderPagination(containerId, totalPages, currentPage, onPageClick) {
             var el = document.getElementById(containerId);
             if (totalPages <= 1) { el.innerHTML = ''; return; }
-            var html = '<button ' + (currentPage === 0 ? 'disabled' : '') + ' onclick="void(0)">&#8592;</button>';
+            var html = '<button ' + (currentPage === 0 ? 'disabled' : '') + '>&#8592;</button>';
             html += '<span>Leht ' + (currentPage + 1) + ' / ' + totalPages + '</span>';
-            html += '<button ' + (currentPage >= totalPages - 1 ? 'disabled' : '') + ' onclick="void(0)">&#8594;</button>';
+            html += '<button ' + (currentPage >= totalPages - 1 ? 'disabled' : '') + '>&#8594;</button>';
             el.innerHTML = html;
             var btns = el.querySelectorAll('button');
             btns[0].onclick = function() { if (currentPage > 0) onPageClick(currentPage - 1); };
@@ -249,6 +249,17 @@
             d.textContent = s || '';
             return d.innerHTML;
         }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            var arg = btn.dataset.actionArg;
+            switch(btn.dataset.action) {
+                case 'logout': logout(); break;
+                case 'switchTab': switchTab(arg, btn); break;
+                case 'toggleRole': toggleRole(arg, btn.dataset.actionArg2); break;
+            }
+        });
 
         // Init
         loadStats();

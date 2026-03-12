@@ -70,7 +70,7 @@
                     <div id="totp-group" class="form-group" style="display: none;">
                         <label for="totpCode" id="totp-label" data-i18n="auth.totpCode">2FA kood</label>
                         <input type="text" id="totpCode" name="totpCode" placeholder="6-kohaline kood" maxlength="8" inputmode="numeric">
-                        <a href="#" id="backup-code-link" onclick="toggleBackupCodeMode(event)" style="font-size:0.8rem;color:var(--green-700);display:none;">Kasuta varukoodi</a>
+                        <a href="#" id="backup-code-link" data-action="toggleBackupCodeMode" style="font-size:0.8rem;color:var(--green-700);display:none;">Kasuta varukoodi</a>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg btn-full" id="submit-btn" data-i18n="auth.loginBtn">Logi sisse</button>
                 </form>
@@ -348,8 +348,7 @@
         });
 
         var backupMode = false;
-        function toggleBackupCodeMode(e) {
-            e.preventDefault();
+        function toggleBackupCodeMode() {
             backupMode = !backupMode;
             var input = document.getElementById('totpCode');
             var label = document.getElementById('totp-label');
@@ -361,6 +360,14 @@
             }
             input.value = ''; input.focus();
         }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            switch(btn.dataset.action) {
+                case 'toggleBackupCodeMode': e.preventDefault(); toggleBackupCodeMode(); break;
+            }
+        });
 
         document.getElementById('forgot-form').addEventListener('submit', async function(e) {
             e.preventDefault();

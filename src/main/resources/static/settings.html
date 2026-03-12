@@ -26,7 +26,7 @@
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
                     <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                    <button class="btn-logout" data-action="logout" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -145,7 +145,7 @@
                 <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;" data-i18n="settings.backupCodesDesc">Varukoodid võimaldavad sisse logida, kui sul pole ligipääsu oma autentimisrakendusele.</p>
                 <div id="backup-codes-message"></div>
                 <div id="backup-codes-display"></div>
-                <button class="btn btn-primary btn-sm" id="generate-backup-btn" onclick="generateBackupCodes()" data-i18n="settings.generateBackupCodes">Genereeri varukoodid</button>
+                <button class="btn btn-primary btn-sm" id="generate-backup-btn" data-action="generateBackupCodes" data-i18n="settings.generateBackupCodes">Genereeri varukoodid</button>
             </div>
         </div>
 
@@ -158,7 +158,7 @@
                 <div class="skeleton skeleton-line short" style="width:40%"></div>
             </div>
             <div class="settings-actions" id="sessions-actions" style="display:none;">
-                <button class="btn btn-ghost btn-sm" onclick="revokeAllSessions()" data-i18n="settings.revokeAll">Tühista kõik teised</button>
+                <button class="btn btn-ghost btn-sm" data-action="revokeAllSessions" data-i18n="settings.revokeAll">Tühista kõik teised</button>
             </div>
         </div>
 
@@ -199,7 +199,7 @@
         <div class="settings-card" style="border-color:#FCA5A5;">
             <h2 style="color:#DC2626;" data-i18n="settings.deleteAccount">Konto kustutamine</h2>
             <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;" data-i18n="settings.deleteWarning">Konto kustutamisel eemaldatakse pöördumatult kõik sinu andmed, sh tresori kirjed, failid ja usalduskontaktid.</p>
-            <button class="btn btn-sm" style="background:#DC2626;color:white;border:none;" onclick="showDeleteModal()" data-i18n="settings.deleteBtn">Kustuta konto</button>
+            <button class="btn btn-sm" style="background:#DC2626;color:white;border:none;" data-action="showDeleteModal" data-i18n="settings.deleteBtn">Kustuta konto</button>
         </div>
 
         <!-- Delete Account Modal -->
@@ -213,8 +213,8 @@
                     <input type="password" id="delete-password" placeholder="Sinu parool" required>
                 </div>
                 <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
-                    <button class="btn btn-ghost btn-sm" onclick="hideDeleteModal()" data-i18n="common.cancel">Tühista</button>
-                    <button class="btn btn-sm" id="delete-confirm-btn" style="background:#DC2626;color:white;border:none;" onclick="confirmDeleteAccount()" data-i18n="settings.deletePermanently">Kustuta jäädavalt</button>
+                    <button class="btn btn-ghost btn-sm" data-action="hideDeleteModal" data-i18n="common.cancel">Tühista</button>
+                    <button class="btn btn-sm" id="delete-confirm-btn" style="background:#DC2626;color:white;border:none;" data-action="confirmDeleteAccount" data-i18n="settings.deletePermanently">Kustuta jäädavalt</button>
                 </div>
             </div>
         </div>
@@ -455,7 +455,7 @@
         function renderTwofaSetup() {
             var section = document.getElementById('twofa-setup-section');
             section.innerHTML =
-                '<button class="btn btn-primary btn-sm" onclick="startTwofaSetup()">Seadista 2FA</button>';
+                '<button class="btn btn-primary btn-sm" data-action="startTwofaSetup">Seadista 2FA</button>';
         }
 
         function renderTwofaDisable() {
@@ -464,7 +464,7 @@
                 '<p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">2FA on aktiivne. Deaktiveerimiseks sisesta kood oma autentimisrakendusest.</p>' +
                 '<div class="twofa-code-input">' +
                     '<input type="text" id="twofa-disable-code" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]{6}">' +
-                    '<button class="btn btn-ghost btn-sm" onclick="disableTwofa()">Deaktiveeri</button>' +
+                    '<button class="btn btn-ghost btn-sm" data-action="disableTwofa">Deaktiveeri</button>' +
                 '</div>';
         }
 
@@ -489,8 +489,8 @@
                     '</div>' +
                     '<div class="twofa-code-input">' +
                         '<input type="text" id="twofa-enable-code" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]{6}">' +
-                        '<button class="btn btn-primary btn-sm" onclick="enableTwofa()">Aktiveeri</button>' +
-                        '<button class="btn btn-ghost btn-sm" onclick="renderTwofaSetup()">Tühista</button>' +
+                        '<button class="btn btn-primary btn-sm" data-action="enableTwofa">Aktiveeri</button>' +
+                        '<button class="btn btn-ghost btn-sm" data-action="renderTwofaSetup">Tühista</button>' +
                     '</div>';
             } catch (err) {
                 showMessage('twofa-message', err.message, true);
@@ -582,7 +582,7 @@
                 }
 
                 codesHtml += '</div>' +
-                    '<button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="copyBackupCodes(this)" data-codes="' + data.codes.join('\\n') + '">Kopeeri</button>' +
+                    '<button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" data-action="copyBackupCodes" data-codes="' + data.codes.join('\\n') + '">Kopeeri</button>' +
                     '</div>';
 
                 display.innerHTML = codesHtml;
@@ -756,6 +756,26 @@
             if (btn) checkout(btn.dataset.checkout);
         });
 
+        // Unified action delegation for all data-action buttons
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            switch(btn.dataset.action) {
+                case 'logout': logout(); break;
+                case 'generateBackupCodes': generateBackupCodes(); break;
+                case 'revokeAllSessions': revokeAllSessions(); break;
+                case 'showDeleteModal': showDeleteModal(); break;
+                case 'hideDeleteModal': hideDeleteModal(); break;
+                case 'confirmDeleteAccount': confirmDeleteAccount(); break;
+                case 'startTwofaSetup': startTwofaSetup(); break;
+                case 'disableTwofa': disableTwofa(); break;
+                case 'enableTwofa': enableTwofa(); break;
+                case 'renderTwofaSetup': renderTwofaSetup(); break;
+                case 'copyBackupCodes': copyBackupCodes(btn); break;
+                case 'revokeSession': revokeSession(btn.dataset.actionArg); break;
+            }
+        });
+
         async function checkout(plan) {
             try {
                 var res = await fetch('/api/v1/subscription/checkout', {
@@ -823,7 +843,7 @@
                                 '<span>Viimane kasutus: ' + formatSessionDate(s.lastUsedAt) + '</span>' +
                             '</div>' +
                         '</div>' +
-                        (!s.current ? '<button class="session-revoke-btn" onclick="revokeSession(\'' + s.id + '\')">Tühista</button>' : '') +
+                        (!s.current ? '<button class="session-revoke-btn" data-action="revokeSession" data-action-arg="' + s.id + '">Tühista</button>' : '') +
                     '</div>';
                 }
                 container.innerHTML = html;

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Korduma kippuvad küsimused — Pärandiplaan">
+    <title>KKK — Pärandiplaan</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .legal-page { max-width: 800px; margin: 0 auto; padding: 6rem 1.5rem 3rem; }
+        .legal-page h1 { font-size: 2rem; font-weight: 800; color: var(--green-900); margin-bottom: 1.5rem; }
+        .faq-item { border-bottom: 1px solid var(--warm-200); padding: 1.25rem 0; }
+        .faq-item:last-child { border-bottom: none; }
+        .faq-q { font-size: 1.05rem; font-weight: 700; color: var(--green-900); margin-bottom: 0.5rem; cursor: pointer; }
+        .faq-q::before { content: '+ '; color: var(--green-600); font-weight: 800; }
+        .faq-q.open::before { content: '- '; }
+        .faq-a { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; display: none; padding-left: 1.2rem; }
+        .faq-a.open { display: block; }
+        .faq-cta { text-align: center; margin-top: 2.5rem; padding: 1.5rem; background: var(--green-100); border-radius: var(--radius-lg); }
+        .faq-cta p { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo"><span class="logo-icon">🌿</span><span class="logo-text">Pärandiplaan</span></a>
+            <div class="nav-links"><a href="/login.html" class="btn btn-sm" data-i18n="nav.login">Logi sisse</a></div>
+        </div>
+    </nav>
+
+    <main class="legal-page">
+        <h1>Korduma kippuvad küsimused</h1>
+
+        <div class="faq-item">
+            <div class="faq-q">Mis on Pärandiplaan?</div>
+            <div class="faq-a">Pärandiplaan on turvaline veebiteenus, kuhu saad koondada kogu olulise eluinfo — pangakontod, kindlustused, lepingud, digiparoolid, isiklikud soovid ja palju muud. Sinu andmed on krüpteeritud ja ligipääsetavad ainult sulle ning sinu määratud usalduskontaktidele.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">Kas minu andmed on turvalised?</div>
+            <div class="faq-a">Jah. Kõik tresori andmed on krüpteeritud AES-256 algoritmiga. Meil puudub ligipääs sinu krüpteeritud andmetele — ainult sina tead oma tresorivõtit. Lisaks toetame kaheastmelist autentimist (2FA) ja Smart-ID/Mobiil-ID sisselogimist.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">Mis on usalduskontakt?</div>
+            <div class="faq-a">Usalduskontakt on isik, kelle sa määrad ligipääsu saajaks oma andmetele. Sina otsustad, millised kategooriad on talle nähtavad ja millistel tingimustel ta ligipääsu saab (käsitsi kinnitamisel või automaatselt peale inaktiivsusperioodi).</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">Kuidas toimib inaktiivsuskontroll?</div>
+            <div class="faq-a">Pärandiplaan kontrollib regulaarselt, kas oled aktiivne. Kui sa ei reageeri meeldetuletustele, saadetakse sinu usalduskontaktidele teade ja neile antakse ligipääs vastavalt sinu seadistustele. Sa saad igal hetkel reageerida ja protsessi peatada.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">Kas prooviperiood on tasuta?</div>
+            <div class="faq-a">Jah, prooviperiood kestab 14 päeva ja krediitkaardi andmeid ei küsita. Saad kasutada kuni 10 kirjet, 1 usalduskontakti ja 100 MB manuseid.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">Mis juhtub, kui ma oma parooli unustan?</div>
+            <div class="faq-a">Saad parooli lähtestada sisselogimislehel "Unustasid parooli?" lingi kaudu. Saadame sulle e-postile lähtestamislingi. Kuna parool on ka sinu tresorivõti, tuleb peale lähtestamist tresori andmed uuesti krüpteerida.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q">Kuidas saan oma kontot kustutada?</div>
+            <div class="faq-a">Ava Seaded > Konto kustutamine. Konto kustutamisel eemaldatakse pöördumatult kõik sinu andmed, sealhulgas tresori kirjed, failid ja usalduskontaktid.</div>
+        </div>
+
+        <div class="faq-cta">
+            <p>Ei leidnud vastust oma küsimusele?</p>
+            <a href="mailto:info@parandiplaan.ee" class="btn btn-primary">Kirjuta meile</a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            var q = e.target.closest('.faq-q');
+            if (!q) return;
+            q.classList.toggle('open');
+            var a = q.nextElementSibling;
+            if (a) a.classList.toggle('open');
+        });
+    </script>
+    <script src="/assets/cookie-consent.js"></script>
+    <script src="/assets/i18n.js"></script>
+</body>
+</html>

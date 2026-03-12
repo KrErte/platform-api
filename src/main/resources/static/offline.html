@@ -49,7 +49,8 @@
         <div class="error-code">📡</div>
         <div class="error-title">Ühendus puudub</div>
         <p class="error-desc">Sul puudub hetkel internetiühendus. Palun kontrolli oma ühendust ja proovi uuesti.</p>
-        <button class="btn btn-primary" onclick="window.location.reload()">Proovi uuesti</button>
+        <button class="btn btn-primary" id="retry-btn">Proovi uuesti</button>
     </main>
+    <script>document.getElementById('retry-btn').addEventListener('click', function() { window.location.reload(); });</script>
 </body>
 </html>

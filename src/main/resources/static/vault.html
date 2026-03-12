@@ -26,7 +26,7 @@
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
                     <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                    <button class="btn-logout" data-action="logout" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -39,11 +39,11 @@
                 <h1 data-i18n="vault.title">Tresor</h1>
                 <div class="vault-header-actions">
                     <div class="vault-search-wrapper">
-                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." aria-label="Otsi tresori kirjeid" oninput="handleSearch(this.value)" data-i18n="vault.searchPlaceholder" data-i18n-attr="placeholder">
+                        <input type="text" id="vault-search-input" class="vault-search-input" placeholder="Otsi kirjeid..." aria-label="Otsi tresori kirjeid" data-i18n="vault.searchPlaceholder" data-i18n-attr="placeholder">
                         <span class="vault-search-icon">&#128269;</span>
                     </div>
-                    <button class="btn btn-outline btn-sm" onclick="exportPdf()" data-i18n="vault.exportPdf">Ekspordi PDF</button>
-                    <button class="btn btn-outline btn-sm" onclick="exportJson()" data-i18n="vault.exportJson">Ekspordi JSON</button>
+                    <button class="btn btn-outline btn-sm" data-action="exportPdf" data-i18n="vault.exportPdf">Ekspordi PDF</button>
+                    <button class="btn btn-outline btn-sm" data-action="exportJson" data-i18n="vault.exportJson">Ekspordi JSON</button>
                 </div>
             </div>
             <div class="vault-categories-grid" id="categories-grid">
@@ -58,7 +58,7 @@
         <!-- View 3: Search Results -->
         <div id="view-search" style="display:none">
             <div class="vault-detail-header">
-                <button class="btn-back" onclick="closeSearch()">&#8592; Tagasi</button>
+                <button class="btn-back" data-action="closeSearch">&#8592; Tagasi</button>
                 <div class="vault-detail-title">
                     <h1 id="search-title">Otsingutulemused</h1>
                 </div>
@@ -69,13 +69,13 @@
         <!-- View 2: Category Detail (entries list) -->
         <div id="view-detail" style="display:none">
             <div class="vault-detail-header">
-                <button class="btn-back" onclick="showCategories()">&#8592; Tagasi</button>
+                <button class="btn-back" data-action="showCategories">&#8592; Tagasi</button>
                 <div class="vault-detail-title">
                     <span class="vault-icon" id="detail-icon"></span>
                     <h1 id="detail-name"></h1>
                 </div>
                 <div class="vault-detail-actions">
-                    <select id="sort-select" class="sort-dropdown" aria-label="Sorteeri kirjeid" onchange="sortEntries(this.value)">
+                    <select id="sort-select" class="sort-dropdown" aria-label="Sorteeri kirjeid">
                         <option value="newest" data-i18n="vault.sortNewest">Uuemad enne</option>
                         <option value="oldest" data-i18n="vault.sortOldest">Vanemad enne</option>
                         <option value="az" data-i18n="vault.sortAZ">A-Z</option>
@@ -83,7 +83,7 @@
                         <option value="incomplete" data-i18n="vault.sortIncomplete">Pooleli enne</option>
                         <option value="complete" data-i18n="vault.sortComplete">Valmis enne</option>
                     </select>
-                    <button class="btn btn-primary btn-sm" onclick="openEntryModal()" data-i18n="vault.addEntry">+ Lisa kirje</button>
+                    <button class="btn btn-primary btn-sm" data-action="openEntryModal" data-i18n="vault.addEntry">+ Lisa kirje</button>
                 </div>
             </div>
             <div id="entries-container"></div>
@@ -116,11 +116,11 @@
                     <div class="attachment-list" id="attachment-list"></div>
                     <div class="upload-area">
                         <input type="file" id="attachment-file" aria-label="Vali manus üleslaadimiseks">
-                        <button type="button" class="btn btn-sm btn-outline" onclick="uploadAttachment()" data-i18n="vault.upload">Laadi üles</button>
+                        <button type="button" class="btn btn-sm btn-outline" data-action="uploadAttachment" data-i18n="vault.upload">Laadi üles</button>
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="closeEntryModal()" data-i18n="common.cancel">Tühista</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-action="closeEntryModal" data-i18n="common.cancel">Tühista</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="entry-submit-btn" data-i18n="common.save">Salvesta</button>
                 </div>
             </form>
@@ -133,8 +133,8 @@
             <h2 data-i18n="vault.deleteEntry">Kustuta kirje</h2>
             <p class="modal-confirm-text" data-i18n="vault.deleteConfirm">Kas oled kindel, et soovid selle kirje kustutada? Seda toimingut ei saa tagasi võtta.</p>
             <div class="modal-actions">
-                <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()" data-i18n="common.cancel">Tühista</button>
-                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()" data-i18n="common.delete">Kustuta</button>
+                <button class="btn btn-ghost btn-sm" data-action="closeDeleteModal" data-i18n="common.cancel">Tühista</button>
+                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" data-action="confirmDelete" data-i18n="common.delete">Kustuta</button>
             </div>
         </div>
     </div>
@@ -208,7 +208,7 @@
             const grid = document.getElementById('categories-grid');
             grid.innerHTML = categories.map(cat => {
                 const pct = cat.entryCount > 0 ? Math.round((cat.completedCount / cat.entryCount) * 100) : 0;
-                return '<div class="vault-cat-card" onclick="openCategory(' + JSON.stringify(cat).replace(/"/g, '&quot;') + ')">' +
+                return '<div class="vault-cat-card" data-action="openCategory" data-cat-slug="' + cat.slug + '">' +
                     '<span class="vault-icon">' + (cat.icon || '📁') + '</span>' +
                     '<span class="vault-name">' + cat.nameEt + '</span>' +
                     '<div class="vault-progress-bar"><div class="vault-progress-fill" style="width:' + pct + '%"></div></div>' +
@@ -265,7 +265,7 @@
                 container.innerHTML =
                     '<div class="vault-empty">' +
                         '<p>Selles kategoorias pole veel kirjeid.</p>' +
-                        '<button class="btn btn-primary btn-sm" onclick="openEntryModal()">Lisa esimene kirje</button>' +
+                        '<button class="btn btn-primary btn-sm" data-action="openEntryModal">Lisa esimene kirje</button>' +
                     '</div>';
                 return;
             }
@@ -275,7 +275,7 @@
                 return '<div class="entry-card">' +
                     '<label class="entry-checkbox-wrapper" onclick="event.stopPropagation()">' +
                         '<input type="checkbox" class="entry-checkbox" ' + (entry.isComplete ? 'checked' : '') +
-                        ' onchange="toggleComplete(\'' + entry.id + '\', this)">' +
+                        ' data-action="toggleComplete" data-id="' + entry.id + '">' +
                         '<span class="entry-checkbox-custom"></span>' +
                     '</label>' +
                     '<div class="entry-info">' +
@@ -283,9 +283,9 @@
                         '<div class="entry-date">' + dateStr + '</div>' +
                     '</div>' +
                     '<div class="entry-actions">' +
-                        '<button class="btn-icon" onclick="duplicateEntry(\'' + entry.id + '\')" title="Dubleeri">&#128203;</button>' +
-                        '<button class="btn-icon" onclick="editEntry(\'' + entry.id + '\')" title="Muuda">&#9998;</button>' +
-                        '<button class="btn-icon danger" onclick="openDeleteModal(\'' + entry.id + '\')" title="Kustuta">&#128465;</button>' +
+                        '<button class="btn-icon" data-action="duplicateEntry" data-id="' + entry.id + '" title="Dubleeri">&#128203;</button>' +
+                        '<button class="btn-icon" data-action="editEntry" data-id="' + entry.id + '" title="Muuda">&#9998;</button>' +
+                        '<button class="btn-icon danger" data-action="openDeleteModal" data-id="' + entry.id + '" title="Kustuta">&#128465;</button>' +
                     '</div>' +
                 '</div>';
             }).join('') + '</div>';
@@ -595,8 +595,8 @@
                         '<span class="attachment-name">' + escapeHtml(att.fileName) + '</span>' +
                         '<span class="attachment-size">' + sizeStr + '</span>' +
                         '<div class="attachment-actions">' +
-                            '<button onclick="downloadAttachment(\'' + att.id + '\', \'' + escapeHtml(att.fileName).replace(/'/g, "\\'") + '\')" title="Laadi alla">&#8595;</button>' +
-                            '<button class="danger" onclick="deleteAttachment(\'' + att.id + '\')" title="Kustuta">&#10005;</button>' +
+                            '<button data-action="downloadAttachment" data-id="' + att.id + '" data-filename="' + escapeHtml(att.fileName).replace(/'/g, "\\'") + '" title="Laadi alla">&#8595;</button>' +
+                            '<button class="danger" data-action="deleteAttachment" data-id="' + att.id + '" title="Kustuta">&#10005;</button>' +
                         '</div>' +
                     '</div>';
                 }).join('');
@@ -828,7 +828,7 @@
                 const cat = categories.find(c => c.id === entry.categoryId);
                 const catName = cat ? cat.nameEt : '';
                 const catIcon = entry.categoryIcon || '📁';
-                return '<div class="search-result-card" onclick="goToSearchResult(\'' + entry.categorySlug + '\')">' +
+                return '<div class="search-result-card" data-action="goToSearchResult" data-slug="' + entry.categorySlug + '">' +
                     '<span class="search-result-icon">' + catIcon + '</span>' +
                     '<div class="search-result-info">' +
                         '<div class="entry-title">' + escapeHtml(entry.title || 'Nimetu') + '</div>' +
@@ -852,6 +852,45 @@
             document.getElementById('view-categories').style.display = '';
             document.getElementById('vault-search-input').value = '';
         }
+
+        // ===== Event Delegation =====
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            var action = btn.dataset.action;
+            switch(action) {
+                case 'logout': logout(); break;
+                case 'exportPdf': exportPdf(); break;
+                case 'exportJson': exportJson(); break;
+                case 'closeSearch': closeSearch(); break;
+                case 'showCategories': showCategories(); break;
+                case 'openEntryModal': openEntryModal(); break;
+                case 'uploadAttachment': uploadAttachment(); break;
+                case 'closeEntryModal': closeEntryModal(); break;
+                case 'closeDeleteModal': closeDeleteModal(); break;
+                case 'confirmDelete': confirmDelete(); break;
+                case 'openCategory':
+                    var cat = categories.find(c => c.slug === btn.dataset.catSlug);
+                    if (cat) openCategory(cat);
+                    break;
+                case 'editEntry': editEntry(btn.dataset.id); break;
+                case 'duplicateEntry': duplicateEntry(btn.dataset.id); break;
+                case 'openDeleteModal': openDeleteModal(btn.dataset.id); break;
+                case 'downloadAttachment': downloadAttachment(btn.dataset.id, btn.dataset.filename); break;
+                case 'deleteAttachment': deleteAttachment(btn.dataset.id); break;
+                case 'goToSearchResult': goToSearchResult(btn.dataset.slug); break;
+            }
+        });
+
+        // Change event delegation for toggleComplete
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('[data-action="toggleComplete"]')) {
+                toggleComplete(e.target.dataset.id, e.target);
+            }
+        });
+
+        document.getElementById('vault-search-input').addEventListener('input', function() { handleSearch(this.value); });
+        document.getElementById('sort-select').addEventListener('change', function() { sortEntries(this.value); });
 
         // Init
         loadCategories();

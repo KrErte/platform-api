@@ -129,7 +129,7 @@
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
                     <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                    <button class="btn-logout" data-action="logout" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -143,7 +143,7 @@
                 <h1 data-i18n="capsule.title">&#128140; Ajakapslid</h1>
                 <p data-i18n="capsule.subtitle">Loo krüpteeritud sõnumeid oma usalduskontaktidele, mis edastatakse tulevikus.</p>
             </div>
-            <button class="btn btn-primary" onclick="openCreateModal()" data-i18n="capsule.create">+ Loo ajakapsel</button>
+            <button class="btn btn-primary" data-action="openCreateModal" data-i18n="capsule.create">+ Loo ajakapsel</button>
         </div>
 
         <div id="capsule-container">
@@ -154,7 +154,7 @@
     <!-- Create/Edit Modal -->
     <div id="capsule-modal" class="modal-overlay" style="display:none">
         <div class="modal-card">
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <button class="modal-close" data-action="closeModal">&times;</button>
             <h2 id="modal-title" data-i18n="capsule.create">Loo ajakapsel</h2>
             <div id="form-error" class="form-error"></div>
             <form id="capsule-form" onsubmit="return saveCapsule(event)">
@@ -168,12 +168,12 @@
                 <div class="form-group">
                     <label data-i18n="capsule.triggerLabel">Edastamise tingimus</label>
                     <div class="trigger-options">
-                        <div class="trigger-option active" onclick="setTrigger('HANDOVER')" id="trigger-handover">
+                        <div class="trigger-option active" data-action="setTrigger" data-action-arg="HANDOVER" id="trigger-handover">
                             <div class="trigger-option-icon">&#128591;</div>
                             <div class="trigger-option-label" data-i18n="capsule.triggerHandover">Üleandmisel</div>
                             <div class="trigger-option-desc" data-i18n="capsule.triggerHandoverDesc">Edastatakse kinnitamisel</div>
                         </div>
-                        <div class="trigger-option" onclick="setTrigger('DATE')" id="trigger-date">
+                        <div class="trigger-option" data-action="setTrigger" data-action-arg="DATE" id="trigger-date">
                             <div class="trigger-option-icon">&#128197;</div>
                             <div class="trigger-option-label" data-i18n="capsule.triggerDate">Kindlal kuupäeval</div>
                             <div class="trigger-option-desc" data-i18n="capsule.triggerDateDesc">Edastatakse kuupäeval</div>
@@ -197,7 +197,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()" data-i18n="common.cancel">Tühista</button>
+                    <button type="button" class="btn btn-secondary" data-action="closeModal" data-i18n="common.cancel">Tühista</button>
                     <button type="submit" class="btn btn-primary" id="save-btn" data-i18n="common.save">Salvesta</button>
                 </div>
             </form>
@@ -286,7 +286,7 @@
                     '<div class="capsule-empty-icon">&#128140;</div>' +
                     '<h3 data-i18n="capsule.empty">Sul pole veel ühtegi ajakapslit loodud.</h3>' +
                     '<p>Loo isiklik sõnum oma usalduskontaktile, mis edastatakse tulevikus.</p>' +
-                    '<button class="btn btn-primary" onclick="openCreateModal()" data-i18n="capsule.createFirst">Loo esimene ajakapsel</button>' +
+                    '<button class="btn btn-primary" data-action="openCreateModal" data-i18n="capsule.createFirst">Loo esimene ajakapsel</button>' +
                 '</div>';
                 return;
             }
@@ -317,8 +317,8 @@
 
                 var actionsHtml = '';
                 if (c.status === 'PENDING') {
-                    actionsHtml = '<button class="btn btn-secondary btn-sm" onclick="openEditModal(\'' + c.id + '\')" data-i18n="common.edit">Muuda</button>' +
-                        '<button class="btn btn-danger btn-sm" onclick="cancelCapsule(\'' + c.id + '\')" data-i18n="capsule.cancel">Tühista</button>';
+                    actionsHtml = '<button class="btn btn-secondary btn-sm" data-action="openEditModal" data-action-arg="' + c.id + '" data-i18n="common.edit">Muuda</button>' +
+                        '<button class="btn btn-danger btn-sm" data-action="cancelCapsule" data-action-arg="' + c.id + '" data-i18n="capsule.cancel">Tühista</button>';
                 }
 
                 html += '<div class="capsule-card">' +
@@ -471,6 +471,20 @@
         });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeModal();
+        });
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            var arg = btn.dataset.actionArg;
+            switch(btn.dataset.action) {
+                case 'logout': logout(); break;
+                case 'openCreateModal': openCreateModal(); break;
+                case 'closeModal': closeModal(); break;
+                case 'setTrigger': setTrigger(arg); break;
+                case 'openEditModal': openEditModal(arg); break;
+                case 'cancelCapsule': cancelCapsule(arg); break;
+            }
         });
 
         // Init

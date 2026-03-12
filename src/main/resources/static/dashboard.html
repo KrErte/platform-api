@@ -25,7 +25,7 @@
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
                     <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                    <button class="btn-logout" data-action="logout" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -54,7 +54,7 @@
         <div class="quick-actions">
             <a href="/vault.html" class="quick-action-btn" data-i18n="dashboard.addEntry"><span class="qa-icon">+</span> Lisa kirje</a>
             <a href="/usaldusisikud.html" class="quick-action-btn" data-i18n="dashboard.addContact"><span class="qa-icon">&#128100;</span> Lisa kontakt</a>
-            <button class="quick-action-btn" onclick="exportPdf()" data-i18n="dashboard.exportPdf"><span class="qa-icon">&#128196;</span> Ekspordi PDF</button>
+            <button class="quick-action-btn" data-action="exportPdf" data-i18n="dashboard.exportPdf"><span class="qa-icon">&#128196;</span> Ekspordi PDF</button>
             <a href="/ajakapsel.html" class="quick-action-btn" data-i18n="nav.capsules"><span class="qa-icon">&#128140;</span> Ajakapslid</a>
             <a href="/activity.html" class="quick-action-btn" data-i18n="dashboard.activityLog"><span class="qa-icon">&#128337;</span> Tegevuslogi</a>
         </div>
@@ -439,6 +439,15 @@
                 // ignore
             }
         }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            switch(btn.dataset.action) {
+                case 'logout': logout(); break;
+                case 'exportPdf': exportPdf(); break;
+            }
+        });
 
         // Load all data in parallel
         checkOnboarding();

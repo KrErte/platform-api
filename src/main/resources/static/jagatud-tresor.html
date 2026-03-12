@@ -101,7 +101,7 @@
     <!-- Entry detail modal -->
     <div id="entry-modal" class="modal-overlay" style="display:none">
         <div class="modal-card">
-            <button class="modal-close" onclick="closeEntryModal()">&times;</button>
+            <button class="modal-close" data-action="closeEntryModal">&times;</button>
             <h2 id="modal-title"></h2>
             <div id="modal-body"></div>
         </div>
@@ -190,7 +190,7 @@
 
                 group.entries.forEach(function(entry) {
                     var status = entry.isComplete ? 'Korrastatud' : 'Pooleli';
-                    html += '<div class="entry-card" onclick="openEntry(\'' + entry.id + '\')">' +
+                    html += '<div class="entry-card" data-action="openEntry" data-action-arg="' + entry.id + '">' +
                         '<div class="entry-title">' + escapeHtml(entry.title) + '</div>' +
                         '<div class="entry-status">' + status + '</div>' +
                         (entry.hasAttachments ? '<span class="entry-attachment-badge">&#128206; Manused</span>' : '') +
@@ -222,7 +222,7 @@
 
                 capsules.forEach(function(c) {
                     var date = c.deliveredAt ? new Date(c.deliveredAt).toLocaleDateString('et-EE') : '';
-                    html += '<div class="entry-card" onclick="openCapsule(\'' + c.id + '\')" style="border-left:3px solid var(--green-600);">' +
+                    html += '<div class="entry-card" data-action="openCapsule" data-action-arg="' + c.id + '" style="border-left:3px solid var(--green-600);">' +
                         '<div class="entry-title">&#128140; ' + escapeHtml(c.encryptedTitle) + '</div>' +
                         '<div class="entry-status">Edastatud ' + date + '</div>' +
                     '</div>';
@@ -315,7 +315,7 @@
                     var sizeStr = formatFileSize(att.fileSizeBytes);
                     html += '<div class="attachment-item">' +
                         '<div><span class="attachment-name">' + escapeHtml(att.fileName) + '</span> <span class="attachment-size">(' + sizeStr + ')</span></div>' +
-                        '<button class="btn-download" onclick="downloadAttachment(\'' + att.id + '\', \'' + escapeHtml(att.fileName).replace(/'/g, "\\'") + '\')">Lae alla</button>' +
+                        '<button class="btn-download" data-action="downloadAttachment" data-action-arg="' + att.id + '" data-action-arg2="' + escapeHtml(att.fileName).replace(/"/g, '&quot;') + '">Lae alla</button>' +
                     '</div>';
                 });
                 html += '</div></div>';
@@ -378,6 +378,18 @@
             d.textContent = text;
             return d.innerHTML;
         }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            var arg = btn.dataset.actionArg;
+            switch(btn.dataset.action) {
+                case 'closeEntryModal': closeEntryModal(); break;
+                case 'openEntry': openEntry(arg); break;
+                case 'openCapsule': openCapsule(arg); break;
+                case 'downloadAttachment': downloadAttachment(arg, btn.dataset.actionArg2); break;
+            }
+        });
 
         function formatFileSize(bytes) {
             if (bytes < 1024) return bytes + ' B';

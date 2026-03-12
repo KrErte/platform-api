@@ -28,7 +28,7 @@
                 <div class="nav-user">
                     <span class="nav-user-name" id="nav-name"></span>
                     <a href="/settings.html" class="nav-settings-link" title="Seaded" data-i18n="nav.settings" data-i18n-attr="title">&#9881;</a>
-                    <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Logi välja</button>
+                    <button class="btn-logout" data-action="logout" data-i18n="nav.logout">Logi välja</button>
                 </div>
             </div>
         </nav>
@@ -39,7 +39,7 @@
         <div class="contacts-page-header">
             <h1 data-i18n="contacts.title">Usaldusisikud</h1>
             <span class="plan-limit-badge" id="plan-limit" style="display:none"></span>
-            <button class="btn btn-primary btn-sm" id="add-contact-btn" onclick="openAddModal()" data-i18n="contacts.addContact">+ Lisa kontakt</button>
+            <button class="btn btn-primary btn-sm" id="add-contact-btn" data-action="openAddModal" data-i18n="contacts.addContact">+ Lisa kontakt</button>
         </div>
 
         <!-- Contacts list -->
@@ -96,8 +96,8 @@
                 <div class="toggle-group">
                     <label data-i18n="contacts.accessLevel">Juurdepääsutase</label>
                     <div class="toggle-options">
-                        <button type="button" class="toggle-option active" onclick="setAccessLevel('FULL')" data-i18n="contacts.accessFull">Täielik</button>
-                        <button type="button" class="toggle-option" onclick="setAccessLevel('LIMITED')" data-i18n="contacts.accessLimited">Piiratud</button>
+                        <button type="button" class="toggle-option active" data-action="setAccessLevel" data-action-arg="FULL" data-i18n="contacts.accessFull">Täielik</button>
+                        <button type="button" class="toggle-option" data-action="setAccessLevel" data-action-arg="LIMITED" data-i18n="contacts.accessLimited">Piiratud</button>
                     </div>
                 </div>
                 <div id="limited-info" class="field-hint" style="display:none;margin-top:-0.25rem;margin-bottom:0.75rem;font-size:0.85rem;color:var(--text-muted);">
@@ -110,8 +110,8 @@
                 <div class="toggle-group">
                     <label data-i18n="contacts.activationMode">Aktiveerimisrežiim</label>
                     <div class="toggle-options">
-                        <button type="button" class="toggle-option active" onclick="setActivationMode('MANUAL')" data-i18n="contacts.manual">Käsitsi</button>
-                        <button type="button" class="toggle-option" onclick="setActivationMode('INACTIVITY')" data-i18n="contacts.inactivity">Inaktiivsus</button>
+                        <button type="button" class="toggle-option active" data-action="setActivationMode" data-action-arg="MANUAL" data-i18n="contacts.manual">Käsitsi</button>
+                        <button type="button" class="toggle-option" data-action="setActivationMode" data-action-arg="INACTIVITY" data-i18n="contacts.inactivity">Inaktiivsus</button>
                     </div>
                 </div>
                 <div class="inactivity-config" id="inactivity-config" style="display:none">
@@ -120,7 +120,7 @@
                     <span>päeva</span>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="closeContactModal()" data-i18n="common.cancel">Tühista</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-action="closeContactModal" data-i18n="common.cancel">Tühista</button>
                     <button type="submit" class="btn btn-primary btn-sm" id="contact-submit-btn" data-i18n="common.save">Salvesta</button>
                 </div>
             </form>
@@ -133,8 +133,8 @@
             <h2 data-i18n="contacts.deleteContact">Kustuta kontakt</h2>
             <p class="modal-confirm-text" data-i18n="contacts.deleteConfirm">Kas oled kindel, et soovid selle usaldusisiku kustutada? Seda toimingut ei saa tagasi võtta.</p>
             <div class="modal-actions">
-                <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()" data-i18n="common.cancel">Tühista</button>
-                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="confirmDelete()" data-i18n="common.delete">Kustuta</button>
+                <button class="btn btn-ghost btn-sm" data-action="closeDeleteModal" data-i18n="common.cancel">Tühista</button>
+                <button class="btn btn-danger btn-sm" id="confirm-delete-btn" data-action="confirmDelete" data-i18n="common.delete">Kustuta</button>
             </div>
         </div>
     </div>
@@ -253,7 +253,7 @@
                 container.innerHTML =
                     '<div class="contacts-empty">' +
                         '<p>Sul pole veel usaldusisikuid lisatud.</p>' +
-                        '<button class="btn btn-primary btn-sm" onclick="openAddModal()">Lisa esimene kontakt</button>' +
+                        '<button class="btn btn-primary btn-sm" data-action="openAddModal">Lisa esimene kontakt</button>' +
                     '</div>';
                 return;
             }
@@ -283,11 +283,11 @@
                     badges += '<span class="badge badge-relationship">' + relationshipLabel(c.relationship) + '</span>';
                 }
 
-                var actions = '<button class="btn-icon" onclick="editContact(\'' + c.id + '\')" title="Muuda">&#9998;</button>' +
-                    '<button class="btn-icon danger" onclick="openDeleteModal(\'' + c.id + '\')" title="Kustuta">&#128465;</button>';
+                var actions = '<button class="btn-icon" data-action="editContact" data-action-arg="' + c.id + '" title="Muuda">&#9998;</button>' +
+                    '<button class="btn-icon danger" data-action="openDeleteModal" data-action-arg="' + c.id + '" title="Kustuta">&#128465;</button>';
 
                 if (!c.inviteAccepted) {
-                    actions += '<button class="btn-icon" onclick="resendInvite(\'' + c.id + '\')" title="Saada kutse uuesti">&#9993;</button>';
+                    actions += '<button class="btn-icon" data-action="resendInvite" data-action-arg="' + c.id + '" title="Saada kutse uuesti">&#9993;</button>';
                 }
 
                 return '<div class="contact-card">' +
@@ -321,8 +321,8 @@
                         (deadlineStr ? '<div class="handover-deadline">' + deadlineStr + '</div>' : '') +
                     '</div>' +
                     '<div class="handover-actions">' +
-                        '<button class="btn-approve" onclick="approveHandover(\'' + h.id + '\')">Kinnita</button>' +
-                        '<button class="btn-deny" onclick="denyHandover(\'' + h.id + '\')">Keeldu</button>' +
+                        '<button class="btn-approve" data-action="approveHandover" data-action-arg="' + h.id + '">Kinnita</button>' +
+                        '<button class="btn-deny" data-action="denyHandover" data-action-arg="' + h.id + '">Keeldu</button>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -725,7 +725,7 @@
                         '</div>' +
                     '</div>' +
                     '<div class="handover-actions">' +
-                        '<button class="btn-deny" onclick="revokeSharedLink(\'' + t.id + '\')">Tühista</button>' +
+                        '<button class="btn-deny" data-action="revokeSharedLink" data-action-arg="' + t.id + '">Tühista</button>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -759,6 +759,27 @@
             loadPendingHandovers();
             loadSharedLinks();
         }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            var arg = btn.dataset.actionArg;
+            switch(btn.dataset.action) {
+                case 'logout': logout(); break;
+                case 'openAddModal': openAddModal(); break;
+                case 'setAccessLevel': setAccessLevel(arg); break;
+                case 'setActivationMode': setActivationMode(arg); break;
+                case 'closeContactModal': closeContactModal(); break;
+                case 'closeDeleteModal': closeDeleteModal(); break;
+                case 'confirmDelete': confirmDelete(); break;
+                case 'editContact': editContact(arg); break;
+                case 'openDeleteModal': openDeleteModal(arg); break;
+                case 'resendInvite': resendInvite(arg); break;
+                case 'approveHandover': approveHandover(arg); break;
+                case 'denyHandover': denyHandover(arg); break;
+                case 'revokeSharedLink': revokeSharedLink(arg); break;
+            }
+        });
 
         init();
     </script>
